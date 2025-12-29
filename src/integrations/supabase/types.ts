@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_providers: {
+        Row: {
+          api_key: string
+          api_url: string
+          balance: number | null
+          created_at: string
+          currency: string | null
+          id: string
+          is_active: boolean | null
+          last_sync_at: string | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key: string
+          api_url: string
+          balance?: number | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string
+          api_url?: string
+          balance?: number | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
