@@ -37,10 +37,10 @@ const mainMenuItems = [
   { id: "orders" as TabType, title: "طلباتي", icon: ShoppingBag },
   { id: "transactions" as TabType, title: "سجل العمليات", icon: Receipt },
   { id: "balance" as TabType, title: "شحن الرصيد", icon: Wallet },
+  { id: "settings" as TabType, title: "إعدادات API", icon: Settings },
 ];
 
 const secondaryMenuItems = [
-  { title: "الإعدادات", icon: Settings, href: "#" },
   { title: "المساعدة", icon: HelpCircle, href: "#" },
 ];
 

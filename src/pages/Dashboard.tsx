@@ -5,9 +5,10 @@ import OverviewTab from "@/components/dashboard/OverviewTab";
 import OrdersTab from "@/components/dashboard/OrdersTab";
 import TransactionsTab from "@/components/dashboard/TransactionsTab";
 import BalanceTab from "@/components/dashboard/BalanceTab";
+import SettingsTab from "@/components/dashboard/SettingsTab";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
-export type TabType = "overview" | "orders" | "transactions" | "balance";
+export type TabType = "overview" | "orders" | "transactions" | "balance" | "settings";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
@@ -22,6 +23,8 @@ const Dashboard = () => {
         return <TransactionsTab />;
       case "balance":
         return <BalanceTab />;
+      case "settings":
+        return <SettingsTab />;
       default:
         return <OverviewTab />;
     }
