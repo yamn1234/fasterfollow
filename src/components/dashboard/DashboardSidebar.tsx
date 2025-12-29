@@ -23,7 +23,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import type { TabType } from "@/pages/Dashboard";
 
 interface DashboardSidebarProps {
@@ -45,7 +46,14 @@ const secondaryMenuItems = [
 
 const DashboardSidebar = ({ activeTab, setActiveTab }: DashboardSidebarProps) => {
   const { state } = useSidebar();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
   const isCollapsed = state === "collapsed";
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <Sidebar className="border-l border-border" collapsible="icon">
@@ -117,7 +125,11 @@ const DashboardSidebar = ({ activeTab, setActiveTab }: DashboardSidebarProps) =>
             {!isCollapsed && <span>الصفحة الرئيسية</span>}
           </Button>
         </Link>
-        <Button variant="ghost" className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10">
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+          onClick={handleSignOut}
+        >
           <LogOut className="h-5 w-5 shrink-0" />
           {!isCollapsed && <span>تسجيل الخروج</span>}
         </Button>

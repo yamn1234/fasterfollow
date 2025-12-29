@@ -2,6 +2,8 @@ import { Bell, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +14,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const DashboardHeader = () => {
+  const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
   return (
     <header className="h-16 border-b border-border bg-card px-6 flex items-center justify-between gap-4">
       <div className="flex items-center gap-4">
@@ -29,7 +39,9 @@ const DashboardHeader = () => {
         {/* Balance */}
         <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-secondary rounded-lg">
           <span className="text-sm text-muted-foreground">رصيدك:</span>
-          <span className="font-bold text-primary">$25.50</span>
+          <span className="font-bold text-primary">
+            ${profile?.balance?.toFixed(2) || "0.00"}
+          </span>
         </div>
 
         {/* Notifications */}
@@ -67,7 +79,9 @@ const DashboardHeader = () => {
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="h-4 w-4 text-primary" />
               </div>
-              <span className="hidden md:block font-medium">أحمد محمد</span>
+              <span className="hidden md:block font-medium">
+                {profile?.full_name || "المستخدم"}
+              </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -76,7 +90,12 @@ const DashboardHeader = () => {
             <DropdownMenuItem>الملف الشخصي</DropdownMenuItem>
             <DropdownMenuItem>الإعدادات</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">تسجيل الخروج</DropdownMenuItem>
+            <DropdownMenuItem 
+              className="text-destructive"
+              onClick={handleSignOut}
+            >
+              تسجيل الخروج
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
