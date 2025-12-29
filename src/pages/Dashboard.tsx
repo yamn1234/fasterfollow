@@ -1,0 +1,45 @@
+import { useState } from "react";
+import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import OverviewTab from "@/components/dashboard/OverviewTab";
+import OrdersTab from "@/components/dashboard/OrdersTab";
+import TransactionsTab from "@/components/dashboard/TransactionsTab";
+import BalanceTab from "@/components/dashboard/BalanceTab";
+import { SidebarProvider } from "@/components/ui/sidebar";
+
+export type TabType = "overview" | "orders" | "transactions" | "balance";
+
+const Dashboard = () => {
+  const [activeTab, setActiveTab] = useState<TabType>("overview");
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "overview":
+        return <OverviewTab />;
+      case "orders":
+        return <OrdersTab />;
+      case "transactions":
+        return <TransactionsTab />;
+      case "balance":
+        return <BalanceTab />;
+      default:
+        return <OverviewTab />;
+    }
+  };
+
+  return (
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen flex w-full bg-secondary/30">
+        <DashboardSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <div className="flex-1 flex flex-col min-w-0">
+          <DashboardHeader />
+          <main className="flex-1 p-6 overflow-auto">
+            {renderContent()}
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+};
+
+export default Dashboard;
