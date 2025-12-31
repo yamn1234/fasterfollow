@@ -35,7 +35,7 @@ serve(async (req) => {
       throw new Error('Admin access required');
     }
 
-    const { providerId, categoryId, priceMultiplier = 1.0 } = await req.json();
+    const { providerId, categoryId, priceMultiplier = 1.0, action = 'import', selectedServices } = await req.json();
 
     if (!providerId) {
       throw new Error('Provider ID is required');
@@ -52,32 +52,83 @@ serve(async (req) => {
       throw new Error('Provider not found');
     }
 
+    // If action is 'fetch', just return services list for selection
+    if (action === 'fetch') {
+      console.log(`Fetching services list from provider: ${provider.name}`);
+      
+      const apiResponse = await fetch(provider.api_url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          key: provider.api_key,
+          action: 'services',
+        }),
+      });
+
+      const services = await apiResponse.json();
+      console.log(`Received ${Array.isArray(services) ? services.length : 0} services from API`);
+
+      if (!Array.isArray(services)) {
+        throw new Error('Invalid response from provider API');
+      }
+
+      // Return formatted services for selection
+      const formattedServices = services.map((service: any) => ({
+        id: String(service.service || service.id),
+        name: service.name || `Service ${service.service || service.id}`,
+        category: service.category || 'Uncategorized',
+        rate: parseFloat(service.rate || service.price || 0),
+        min: parseInt(service.min || 1),
+        max: parseInt(service.max || 10000),
+        description: service.description || service.desc || null,
+      }));
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          services: formattedServices,
+          total: formattedServices.length,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Import selected services or all services
     console.log(`Importing services from provider: ${provider.name}`);
 
-    // Call SMM Panel API to get services
-    const apiResponse = await fetch(provider.api_url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        key: provider.api_key,
-        action: 'services',
-      }),
-    });
+    let servicesToImport = selectedServices;
 
-    const services = await apiResponse.json();
-    console.log(`Received ${Array.isArray(services) ? services.length : 0} services from API`);
+    // If no selected services, fetch all from API
+    if (!servicesToImport || servicesToImport.length === 0) {
+      const apiResponse = await fetch(provider.api_url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          key: provider.api_key,
+          action: 'services',
+        }),
+      });
 
-    if (!Array.isArray(services)) {
-      throw new Error('Invalid response from provider API');
+      servicesToImport = await apiResponse.json();
+      
+      if (!Array.isArray(servicesToImport)) {
+        throw new Error('Invalid response from provider API');
+      }
     }
+
+    console.log(`Processing ${servicesToImport.length} services for import`);
 
     let imported = 0;
     let updated = 0;
     let failed = 0;
 
-    for (const service of services) {
+    for (const service of servicesToImport) {
       try {
         const externalId = String(service.service || service.id);
         const name = service.name || `Service ${externalId}`;
@@ -154,7 +205,7 @@ serve(async (req) => {
         imported,
         updated,
         failed,
-        total: services.length,
+        total: servicesToImport.length,
         message: `تم استيراد ${imported} خدمة جديدة وتحديث ${updated} خدمة`,
       }),
       {
