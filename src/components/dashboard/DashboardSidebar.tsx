@@ -8,7 +8,8 @@ import {
   LogOut,
   ShoppingCart,
   ChevronRight,
-  Zap
+  Zap,
+  MessageSquare,
 } from "lucide-react";
 import {
   Sidebar,
@@ -39,6 +40,7 @@ const mainMenuItems = [
   { id: "orders" as TabType, title: "طلباتي", icon: ShoppingBag },
   { id: "transactions" as TabType, title: "سجل العمليات", icon: Receipt },
   { id: "balance" as TabType, title: "شحن الرصيد", icon: Wallet },
+  { id: "support" as TabType, title: "الدعم الفني", icon: MessageSquare },
 ];
 
 const secondaryMenuItems = [
