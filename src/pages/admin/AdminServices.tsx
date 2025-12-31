@@ -3,25 +3,24 @@ import {
   Search,
   Plus,
   MoreVertical,
-  Download,
   Upload,
-  Eye,
   Pencil,
   Archive,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
   FolderPlus,
   Settings2,
   ArchiveRestore,
   Loader2,
-  RefreshCw,
+  CheckSquare,
+  Square,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -41,7 +40,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -59,8 +57,19 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -97,6 +106,16 @@ interface Category {
   is_active: boolean;
 }
 
+interface ProviderService {
+  id: string;
+  name: string;
+  category: string;
+  rate: number;
+  min: number;
+  max: number;
+  description: string | null;
+}
+
 const AdminServices = () => {
   const { toast } = useToast();
   const [services, setServices] = useState<Service[]>([]);
@@ -112,6 +131,20 @@ const AdminServices = () => {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [activeTab, setActiveTab] = useState('basic');
 
+  // Multi-select state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // Import dialog state
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importStep, setImportStep] = useState<'config' | 'select'>('config');
+  const [providerServices, setProviderServices] = useState<ProviderService[]>([]);
+  const [loadingProviderServices, setLoadingProviderServices] = useState(false);
+  const [importSearchQuery, setImportSearchQuery] = useState('');
+  const [importCategoryFilter, setImportCategoryFilter] = useState('all');
+  const [selectedImportIds, setSelectedImportIds] = useState<Set<string>>(new Set());
+
   const [formData, setFormData] = useState({
     name: '',
     name_ar: '',
@@ -124,7 +157,6 @@ const AdminServices = () => {
     category_id: '',
     provider_id: '',
     is_active: true,
-    // SEO
     seo_title: '',
     seo_description: '',
     seo_keywords: '',
@@ -141,7 +173,6 @@ const AdminServices = () => {
     is_active: true,
   });
 
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importFormData, setImportFormData] = useState({
     provider_id: '',
     category_id: '',
@@ -202,7 +233,7 @@ const AdminServices = () => {
     }
   };
 
-  const handleImportServices = async () => {
+  const fetchProviderServices = async () => {
     if (!importFormData.provider_id) {
       toast({
         title: 'خطأ',
@@ -212,14 +243,60 @@ const AdminServices = () => {
       return;
     }
 
+    setLoadingProviderServices(true);
+    try {
+      const response = await supabase.functions.invoke('smm-import-services', {
+        body: {
+          providerId: importFormData.provider_id,
+          action: 'fetch',
+        },
+      });
+
+      if (response.error) throw response.error;
+
+      const result = response.data;
+      if (result.success) {
+        setProviderServices(result.services);
+        setImportStep('select');
+        setSelectedImportIds(new Set());
+        setImportSearchQuery('');
+        setImportCategoryFilter('all');
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      console.error('Fetch error:', error);
+      toast({
+        title: 'خطأ',
+        description: error.message || 'حدث خطأ في جلب الخدمات',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingProviderServices(false);
+    }
+  };
+
+  const handleImportServices = async () => {
+    if (selectedImportIds.size === 0) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى تحديد خدمة واحدة على الأقل',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setImporting(true);
     try {
-      const { data: session } = await supabase.auth.getSession();
+      const selectedServices = providerServices.filter(s => selectedImportIds.has(s.id));
+      
       const response = await supabase.functions.invoke('smm-import-services', {
         body: {
           providerId: importFormData.provider_id,
           categoryId: importFormData.category_id || null,
           priceMultiplier: parseFloat(importFormData.price_multiplier) || 1.0,
+          action: 'import',
+          selectedServices: selectedServices,
         },
       });
 
@@ -232,6 +309,8 @@ const AdminServices = () => {
           description: result.message,
         });
         setImportDialogOpen(false);
+        setImportStep('config');
+        setProviderServices([]);
         fetchServices();
       } else {
         throw new Error(result.error);
@@ -246,6 +325,73 @@ const AdminServices = () => {
     } finally {
       setImporting(false);
     }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('services')
+        .delete()
+        .in('id', Array.from(selectedIds));
+
+      if (error) throw error;
+
+      toast({
+        title: 'تم بنجاح',
+        description: `تم حذف ${selectedIds.size} خدمة`,
+      });
+
+      setSelectedIds(new Set());
+      setDeleteDialogOpen(false);
+      fetchServices();
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message || 'حدث خطأ في حذف الخدمات',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredServices.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredServices.map(s => s.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const toggleImportSelectAll = () => {
+    if (selectedImportIds.size === filteredProviderServices.length) {
+      setSelectedImportIds(new Set());
+    } else {
+      setSelectedImportIds(new Set(filteredProviderServices.map(s => s.id)));
+    }
+  };
+
+  const toggleImportSelect = (id: string) => {
+    const newSelected = new Set(selectedImportIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedImportIds(newSelected);
   };
 
   const generateSlug = (name: string) => {
@@ -425,6 +571,16 @@ const AdminServices = () => {
     return matchesSearch && matchesCategory;
   });
 
+  const providerCategories = [...new Set(providerServices.map(s => s.category))].sort();
+
+  const filteredProviderServices = providerServices.filter((service) => {
+    const matchesSearch = 
+      service.name.toLowerCase().includes(importSearchQuery.toLowerCase()) ||
+      service.id.includes(importSearchQuery);
+    const matchesCategory = importCategoryFilter === 'all' || service.category === importCategoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -435,7 +591,7 @@ const AdminServices = () => {
             {showArchived ? 'الخدمات المؤرشفة' : 'إدارة وتعديل الخدمات'}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant={showArchived ? 'default' : 'outline'}
             onClick={() => setShowArchived(!showArchived)}
@@ -449,7 +605,12 @@ const AdminServices = () => {
           </Button>
           <Button 
             variant="outline" 
-            onClick={() => setImportDialogOpen(true)}
+            onClick={() => {
+              setImportDialogOpen(true);
+              setImportStep('config');
+              setProviderServices([]);
+              setImportFormData({ provider_id: '', category_id: '', price_multiplier: '1.0' });
+            }}
           >
             <Upload className="w-4 h-4 ml-2" />
             استيراد من مزود
@@ -466,6 +627,38 @@ const AdminServices = () => {
           </Button>
         </div>
       </div>
+
+      {/* Bulk Actions Bar */}
+      {selectedIds.size > 0 && (
+        <Card className="border-primary bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckSquare className="w-5 h-5 text-primary" />
+                <span className="font-medium">تم تحديد {selectedIds.size} خدمة</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedIds(new Set())}
+                >
+                  <X className="w-4 h-4 ml-1" />
+                  إلغاء التحديد
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="w-4 h-4 ml-1" />
+                  حذف المحدد
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters */}
       <Card>
@@ -502,6 +695,12 @@ const AdminServices = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedIds.size === filteredServices.length && filteredServices.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
                   <TableHead>الخدمة</TableHead>
                   <TableHead>الفئة</TableHead>
                   <TableHead>السعر</TableHead>
@@ -514,19 +713,25 @@ const AdminServices = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10">
+                    <TableCell colSpan={8} className="text-center py-10">
                       جاري التحميل...
                     </TableCell>
                   </TableRow>
                 ) : filteredServices.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10">
+                    <TableCell colSpan={8} className="text-center py-10">
                       لا توجد خدمات
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredServices.map((service) => (
-                    <TableRow key={service.id}>
+                    <TableRow key={service.id} className={selectedIds.has(service.id) ? 'bg-primary/5' : ''}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.has(service.id)}
+                          onCheckedChange={() => toggleSelect(service.id)}
+                        />
+                      </TableCell>
                       <TableCell>
                         <div>
                           <p className="font-medium">{service.name}</p>
@@ -697,13 +902,14 @@ const AdminServices = () => {
                 <div className="space-y-2">
                   <Label>الفئة</Label>
                   <Select
-                    value={formData.category_id}
-                    onValueChange={(v) => setFormData({ ...formData, category_id: v })}
+                    value={formData.category_id || 'none'}
+                    onValueChange={(v) => setFormData({ ...formData, category_id: v === 'none' ? '' : v })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="اختر الفئة" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none">بدون فئة</SelectItem>
                       {categories.map((cat) => (
                         <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                       ))}
@@ -830,83 +1036,239 @@ const AdminServices = () => {
       </Dialog>
 
       {/* Import Services Dialog */}
-      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-        <DialogContent>
+      <Dialog open={importDialogOpen} onOpenChange={(open) => {
+        setImportDialogOpen(open);
+        if (!open) {
+          setImportStep('config');
+          setProviderServices([]);
+        }
+      }}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>استيراد خدمات من المزود</DialogTitle>
+            <DialogTitle>
+              {importStep === 'config' ? 'استيراد خدمات من المزود' : 'اختر الخدمات للاستيراد'}
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>اختر المزود</Label>
-              <Select
-                value={importFormData.provider_id}
-                onValueChange={(v) => setImportFormData({ ...importFormData, provider_id: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر مزود API" />
-                </SelectTrigger>
-                <SelectContent>
-                  {providers.map((provider) => (
-                    <SelectItem key={provider.id} value={provider.id}>
-                      {provider.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          
+          {importStep === 'config' ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>اختر المزود</Label>
+                <Select
+                  value={importFormData.provider_id || 'none'}
+                  onValueChange={(v) => setImportFormData({ ...importFormData, provider_id: v === 'none' ? '' : v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر مزود API" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">اختر مزود</SelectItem>
+                    {providers.map((provider) => (
+                      <SelectItem key={provider.id} value={provider.id}>
+                        {provider.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>الفئة الافتراضية (اختياري)</Label>
+                <Select
+                  value={importFormData.category_id || 'none'}
+                  onValueChange={(v) => setImportFormData({ ...importFormData, category_id: v === 'none' ? '' : v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="بدون فئة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">بدون فئة</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>مضاعف السعر</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={importFormData.price_multiplier}
+                  onChange={(e) => setImportFormData({ ...importFormData, price_multiplier: e.target.value })}
+                  placeholder="1.0"
+                />
+                <p className="text-xs text-muted-foreground">
+                  مثال: 1.5 = زيادة 50% على سعر المزود
+                </p>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setImportDialogOpen(false)}>
+                  إلغاء
+                </Button>
+                <Button onClick={fetchProviderServices} disabled={loadingProviderServices || !importFormData.provider_id}>
+                  {loadingProviderServices ? (
+                    <>
+                      <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                      جاري الجلب...
+                    </>
+                  ) : (
+                    'جلب الخدمات'
+                  )}
+                </Button>
+              </DialogFooter>
             </div>
-            <div className="space-y-2">
-              <Label>الفئة الافتراضية (اختياري)</Label>
-              <Select
-                value={importFormData.category_id || 'none'}
-                onValueChange={(v) => setImportFormData({ ...importFormData, category_id: v === 'none' ? '' : v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="بدون فئة" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">بدون فئة</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          ) : (
+            <div className="space-y-4">
+              {/* Search and Filter */}
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="بحث بالاسم أو ID..."
+                    value={importSearchQuery}
+                    onChange={(e) => setImportSearchQuery(e.target.value)}
+                    className="pr-10"
+                  />
+                </div>
+                <Select value={importCategoryFilter} onValueChange={setImportCategoryFilter}>
+                  <SelectTrigger className="w-full md:w-64">
+                    <SelectValue placeholder="تصفية حسب الفئة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع الفئات ({providerServices.length})</SelectItem>
+                    {providerCategories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat} ({providerServices.filter(s => s.category === cat).length})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Selection Info */}
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={selectedImportIds.size === filteredProviderServices.length && filteredProviderServices.length > 0}
+                    onCheckedChange={toggleImportSelectAll}
+                  />
+                  <span className="text-sm">
+                    {selectedImportIds.size > 0 
+                      ? `تم تحديد ${selectedImportIds.size} من ${filteredProviderServices.length}`
+                      : `${filteredProviderServices.length} خدمة متاحة`
+                    }
+                  </span>
+                </div>
+                {selectedImportIds.size > 0 && (
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedImportIds(new Set())}>
+                    إلغاء التحديد
+                  </Button>
+                )}
+              </div>
+
+              {/* Services List */}
+              <ScrollArea className="h-[400px] border rounded-lg">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12"></TableHead>
+                      <TableHead>ID</TableHead>
+                      <TableHead>الخدمة</TableHead>
+                      <TableHead>الفئة</TableHead>
+                      <TableHead>السعر</TableHead>
+                      <TableHead>Min/Max</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredProviderServices.map((service) => (
+                      <TableRow 
+                        key={service.id}
+                        className={`cursor-pointer ${selectedImportIds.has(service.id) ? 'bg-primary/5' : ''}`}
+                        onClick={() => toggleImportSelect(service.id)}
+                      >
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedImportIds.has(service.id)}
+                            onCheckedChange={() => toggleImportSelect(service.id)}
+                          />
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">{service.id}</TableCell>
+                        <TableCell>
+                          <div className="max-w-xs truncate" title={service.name}>
+                            {service.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">
+                            {service.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>${service.rate.toFixed(4)}</TableCell>
+                        <TableCell className="text-xs">
+                          {service.min.toLocaleString()} / {service.max.toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setImportStep('config')}>
+                  رجوع
+                </Button>
+                <Button 
+                  onClick={handleImportServices} 
+                  disabled={importing || selectedImportIds.size === 0}
+                >
+                  {importing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                      جاري الاستيراد...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 ml-2" />
+                      استيراد {selectedImportIds.size} خدمة
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
             </div>
-            <div className="space-y-2">
-              <Label>مضاعف السعر</Label>
-              <Input
-                type="number"
-                step="0.1"
-                value={importFormData.price_multiplier}
-                onChange={(e) => setImportFormData({ ...importFormData, price_multiplier: e.target.value })}
-                placeholder="1.0"
-              />
-              <p className="text-xs text-muted-foreground">
-                مثال: 1.5 = زيادة 50% على سعر المزود
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setImportDialogOpen(false)}>
-              إلغاء
-            </Button>
-            <Button onClick={handleImportServices} disabled={importing}>
-              {importing ? (
-                <>
-                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                  جاري الاستيراد...
-                </>
-              ) : (
-                <>
-                  <Upload className="w-4 h-4 ml-2" />
-                  استيراد
-                </>
-              )}
-            </Button>
-          </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف {selectedIds.size} خدمة؟ هذا الإجراء لا يمكن التراجع عنه.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteSelected}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                  جاري الحذف...
+                </>
+              ) : (
+                'حذف'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
