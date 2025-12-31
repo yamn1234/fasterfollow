@@ -6,9 +6,9 @@ import {
   Home,
   HelpCircle,
   LogOut,
-  Plus,
-  User,
-  ChevronRight
+  ShoppingCart,
+  ChevronRight,
+  Zap
 } from "lucide-react";
 import {
   Sidebar,
@@ -35,7 +35,7 @@ interface DashboardSidebarProps {
 
 const mainMenuItems = [
   { id: "overview" as TabType, title: "نظرة عامة", icon: LayoutDashboard },
-  { id: "new-order" as TabType, title: "طلب جديد", icon: Plus, highlight: true },
+  { id: "new-order" as TabType, title: "طلب جديد", icon: Zap, highlight: true },
   { id: "orders" as TabType, title: "طلباتي", icon: ShoppingBag },
   { id: "transactions" as TabType, title: "سجل العمليات", icon: Receipt },
   { id: "balance" as TabType, title: "شحن الرصيد", icon: Wallet },
