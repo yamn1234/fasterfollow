@@ -1,0 +1,365 @@
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { 
+  ShoppingCart, 
+  Loader2, 
+  Link as LinkIcon, 
+  Package,
+  Sparkles,
+  Info
+} from "lucide-react";
+
+interface ServiceCategory {
+  id: string;
+  name: string;
+  name_ar: string | null;
+  icon: string | null;
+}
+
+interface Service {
+  id: string;
+  name: string;
+  name_ar: string | null;
+  price: number;
+  min_quantity: number | null;
+  max_quantity: number | null;
+  description: string | null;
+  description_ar: string | null;
+  category_id: string | null;
+}
+
+const NewOrderTab = () => {
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
+  
+  const [categories, setCategories] = useState<ServiceCategory[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedService, setSelectedService] = useState<string>("");
+  const [link, setLink] = useState("");
+  const [quantity, setQuantity] = useState<number>(100);
+
+  const selectedServiceData = services.find(s => s.id === selectedService);
+  const totalPrice = selectedServiceData ? (selectedServiceData.price * quantity / 1000) : 0;
+  const userBalance = profile?.balance || 0;
+  const canAfford = userBalance >= totalPrice;
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (selectedCategory) {
+      setFilteredServices(services.filter(s => s.category_id === selectedCategory));
+      setSelectedService("");
+    } else {
+      setFilteredServices(services);
+    }
+  }, [selectedCategory, services]);
+
+  useEffect(() => {
+    if (selectedServiceData) {
+      setQuantity(selectedServiceData.min_quantity || 100);
+    }
+  }, [selectedService]);
+
+  const fetchData = async () => {
+    try {
+      const [categoriesRes, servicesRes] = await Promise.all([
+        supabase.from("service_categories").select("*").eq("is_active", true).order("sort_order"),
+        supabase.from("services").select("*").eq("is_active", true).order("sort_order")
+      ]);
+
+      if (categoriesRes.data) setCategories(categoriesRes.data);
+      if (servicesRes.data) {
+        setServices(servicesRes.data);
+        setFilteredServices(servicesRes.data);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!user || !selectedServiceData) return;
+
+    if (!link.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال الرابط",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!canAfford) {
+      toast({
+        title: "رصيد غير كافٍ",
+        description: "يرجى شحن رصيدك أولاً",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const minQty = selectedServiceData.min_quantity || 1;
+    const maxQty = selectedServiceData.max_quantity || 1000000;
+    
+    if (quantity < minQty || quantity > maxQty) {
+      toast({
+        title: "خطأ في الكمية",
+        description: `الكمية يجب أن تكون بين ${minQty} و ${maxQty}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const { error } = await supabase.from("orders").insert({
+        user_id: user.id,
+        service_id: selectedService,
+        link: link.trim(),
+        quantity,
+        price: totalPrice,
+        status: "pending"
+      });
+
+      if (error) throw error;
+
+      // Update user balance
+      await supabase
+        .from("profiles")
+        .update({ balance: userBalance - totalPrice })
+        .eq("user_id", user.id);
+
+      toast({
+        title: "تم إنشاء الطلب بنجاح! 🎉",
+        description: "سيتم تنفيذ طلبك قريباً",
+      });
+
+      // Reset form
+      setLink("");
+      setQuantity(100);
+      setSelectedService("");
+    } catch (error: any) {
+      console.error("Error creating order:", error);
+      toast({
+        title: "خطأ",
+        description: "فشل في إنشاء الطلب",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
+          <Sparkles className="h-7 w-7 text-primary" />
+          طلب خدمة جديدة
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          اختر الخدمة المطلوبة وأدخل تفاصيل الطلب
+        </p>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Order Form */}
+        <div className="lg:col-span-2">
+          <Card variant="elevated">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                تفاصيل الطلب
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Category Selection */}
+              <div className="space-y-2">
+                <Label>اختر التصنيف</Label>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="جميع التصنيفات" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">جميع التصنيفات</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name_ar || cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Service Selection */}
+              <div className="space-y-2">
+                <Label>اختر الخدمة</Label>
+                <Select value={selectedService} onValueChange={setSelectedService}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="اختر الخدمة المطلوبة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredServices.map((service) => (
+                      <SelectItem key={service.id} value={service.id}>
+                        <div className="flex justify-between items-center w-full gap-4">
+                          <span>{service.name_ar || service.name}</span>
+                          <span className="text-primary font-medium">
+                            ${service.price.toFixed(2)}/1000
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedServiceData?.description_ar && (
+                  <p className="text-sm text-muted-foreground flex items-start gap-2 mt-2">
+                    <Info className="h-4 w-4 shrink-0 mt-0.5" />
+                    {selectedServiceData.description_ar}
+                  </p>
+                )}
+              </div>
+
+              {/* Link Input */}
+              <div className="space-y-2">
+                <Label>الرابط</Label>
+                <div className="relative">
+                  <LinkIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="https://instagram.com/username"
+                    value={link}
+                    onChange={(e) => setLink(e.target.value)}
+                    className="pr-10"
+                  />
+                </div>
+              </div>
+
+              {/* Quantity Input */}
+              <div className="space-y-2">
+                <Label>الكمية</Label>
+                <Input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
+                  min={selectedServiceData?.min_quantity || 1}
+                  max={selectedServiceData?.max_quantity || 1000000}
+                />
+                {selectedServiceData && (
+                  <p className="text-xs text-muted-foreground">
+                    الحد الأدنى: {selectedServiceData.min_quantity || 1} | 
+                    الحد الأقصى: {selectedServiceData.max_quantity?.toLocaleString() || "غير محدود"}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Order Summary */}
+        <div className="lg:col-span-1">
+          <Card variant="elevated" className="sticky top-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5" />
+                ملخص الطلب
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">الخدمة</span>
+                  <span className="font-medium text-left max-w-[60%] truncate">
+                    {selectedServiceData?.name_ar || selectedServiceData?.name || "-"}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">الكمية</span>
+                  <span className="font-medium">{quantity.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">سعر الألف</span>
+                  <span className="font-medium">
+                    ${selectedServiceData?.price.toFixed(2) || "0.00"}
+                  </span>
+                </div>
+                <div className="border-t pt-3">
+                  <div className="flex justify-between">
+                    <span className="font-medium">الإجمالي</span>
+                    <span className="text-xl font-bold text-primary">
+                      ${totalPrice.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-secondary/50 rounded-lg p-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">رصيدك الحالي</span>
+                  <span className={`font-bold ${canAfford ? "text-green-500" : "text-destructive"}`}>
+                    ${userBalance.toFixed(2)}
+                  </span>
+                </div>
+                {!canAfford && totalPrice > 0 && (
+                  <p className="text-xs text-destructive mt-2">
+                    رصيدك غير كافٍ. تحتاج ${(totalPrice - userBalance).toFixed(2)} إضافي
+                  </p>
+                )}
+              </div>
+
+              <Button 
+                className="w-full" 
+                size="lg"
+                onClick={handleSubmit}
+                disabled={!selectedService || !link || submitting || !canAfford}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                    جاري الإرسال...
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="h-4 w-4 ml-2" />
+                    إرسال الطلب
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default NewOrderTab;
