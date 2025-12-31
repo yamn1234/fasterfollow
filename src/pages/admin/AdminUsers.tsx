@@ -86,16 +86,26 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     try {
+      setLoading(true);
+      
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Profile fetch error:', error);
+        throw error;
+      }
+
+      if (!profiles || profiles.length === 0) {
+        setUsers([]);
+        return;
+      }
 
       // Fetch roles for each user
       const usersWithRoles = await Promise.all(
-        (profiles || []).map(async (profile) => {
+        profiles.map(async (profile) => {
           const { data: roleData } = await supabase
             .from('user_roles')
             .select('role')
@@ -105,7 +115,7 @@ const AdminUsers = () => {
           return {
             ...profile,
             role: roleData?.role || 'user',
-            status: 'active', // Default status
+            status: 'active',
           };
         })
       );
