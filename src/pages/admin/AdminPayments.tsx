@@ -12,6 +12,7 @@ import {
   Clock,
   Plus,
   Pencil,
+  Trash2,
   ExternalLink,
   Link as LinkIcon,
 } from 'lucide-react';
@@ -149,14 +150,25 @@ const AdminPayments = () => {
   };
 
   const handleSaveGateway = async () => {
+    if (!gatewayFormData.name.trim()) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى إدخال اسم طريقة الدفع',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
+      const slug = gatewayFormData.slug || generateSlug(gatewayFormData.name);
+      
       const gatewayData = {
-        name: gatewayFormData.name,
-        slug: gatewayFormData.slug || generateSlug(gatewayFormData.name),
+        name: gatewayFormData.name.trim(),
+        slug: slug,
         gateway_type: gatewayFormData.gateway_type,
-        redirect_url: gatewayFormData.redirect_url || null,
-        instructions: gatewayFormData.instructions || null,
-        instructions_ar: gatewayFormData.instructions_ar || null,
+        redirect_url: gatewayFormData.redirect_url.trim() || null,
+        instructions: gatewayFormData.instructions.trim() || null,
+        instructions_ar: gatewayFormData.instructions_ar.trim() || null,
         fee_percentage: parseFloat(gatewayFormData.fee_percentage) || 0,
         fee_fixed: parseFloat(gatewayFormData.fee_fixed) || 0,
         min_amount: parseFloat(gatewayFormData.min_amount) || 1,
@@ -183,9 +195,30 @@ const AdminPayments = () => {
       resetGatewayForm();
       fetchData();
     } catch (error: any) {
+      console.error('Gateway save error:', error);
       toast({
         title: 'خطأ',
-        description: error.message || 'حدث خطأ',
+        description: error.message || 'حدث خطأ في حفظ طريقة الدفع',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteGateway = async (id: string) => {
+    if (!confirm('هل أنت متأكد من حذف طريقة الدفع هذه؟')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('payment_gateways')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      toast({ title: 'تم بنجاح', description: 'تم حذف طريقة الدفع' });
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message || 'حدث خطأ في الحذف',
         variant: 'destructive',
       });
     }
@@ -508,13 +541,23 @@ const AdminPayments = () => {
                           />
                         </TableCell>
                         <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEditGateway(gateway)}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditGateway(gateway)}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteGateway(gateway.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))

@@ -425,20 +425,24 @@ const AdminSettings = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>العنوان الرئيسي</Label>
-                <Input
+                <Textarea
                   value={heroSettings.title}
                   onChange={(e) =>
                     setHeroSettings({ ...heroSettings, title: e.target.value })
                   }
+                  rows={2}
+                  placeholder="زيادة متابعينك بسهولة"
                 />
               </div>
               <div className="space-y-2">
                 <Label>العنوان الفرعي</Label>
-                <Input
+                <Textarea
                   value={heroSettings.subtitle}
                   onChange={(e) =>
                     setHeroSettings({ ...heroSettings, subtitle: e.target.value })
                   }
+                  rows={2}
+                  placeholder="أفضل منصة لخدمات التواصل الاجتماعي"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -449,6 +453,7 @@ const AdminSettings = () => {
                     onChange={(e) =>
                       setHeroSettings({ ...heroSettings, button_text: e.target.value })
                     }
+                    placeholder="ابدأ الآن"
                   />
                 </div>
                 <div className="space-y-2">
@@ -459,6 +464,7 @@ const AdminSettings = () => {
                       setHeroSettings({ ...heroSettings, button_link: e.target.value })
                     }
                     dir="ltr"
+                    placeholder="/auth"
                   />
                 </div>
               </div>
@@ -474,6 +480,48 @@ const AdminSettings = () => {
                   onCheckedChange={(checked) =>
                     setHeroSettings({ ...heroSettings, show_stats: checked })
                   }
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>نصوص الصفحة الرئيسية</CardTitle>
+              <CardDescription>تخصيص اسم الموقع والوصف</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>اسم الموقع (English)</Label>
+                  <Input
+                    value={settings.site_name}
+                    onChange={(e) =>
+                      setSettings({ ...settings, site_name: e.target.value })
+                    }
+                    placeholder="SMM Panel"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>اسم الموقع (العربية)</Label>
+                  <Input
+                    value={settings.site_name_ar}
+                    onChange={(e) =>
+                      setSettings({ ...settings, site_name_ar: e.target.value })
+                    }
+                    placeholder="متجر المتابعين"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>وصف الموقع</Label>
+                <Textarea
+                  value={settings.site_description}
+                  onChange={(e) =>
+                    setSettings({ ...settings, site_description: e.target.value })
+                  }
+                  rows={3}
+                  placeholder="نقدم لك أسهل وأبسط وأسرع خدمة لزيادة المتابعين..."
                 />
               </div>
             </CardContent>
