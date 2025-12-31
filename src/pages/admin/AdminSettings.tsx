@@ -145,27 +145,46 @@ const AdminSettings = () => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      const allSettings = {
-        ...settings,
-        homepage_sections: homepageSections,
-        theme_settings: themeSettings,
-        hero_settings: heroSettings,
-      };
+      // حفظ الإعدادات المتعددة بشكل صحيح
+      const settingsToSave = [
+        { key: 'site_name', value: settings.site_name, group_name: 'general' },
+        { key: 'site_name_ar', value: settings.site_name_ar, group_name: 'general' },
+        { key: 'site_description', value: settings.site_description, group_name: 'general' },
+        { key: 'site_email', value: settings.site_email, group_name: 'general' },
+        { key: 'default_currency', value: settings.default_currency, group_name: 'general' },
+        { key: 'default_language', value: settings.default_language, group_name: 'localization' },
+        { key: 'timezone', value: settings.timezone, group_name: 'localization' },
+        { key: 'maintenance_mode', value: settings.maintenance_mode, group_name: 'general' },
+        { key: 'allow_registration', value: settings.allow_registration, group_name: 'security' },
+        { key: 'require_email_verification', value: settings.require_email_verification, group_name: 'security' },
+        { key: 'min_deposit', value: settings.min_deposit, group_name: 'payments' },
+        { key: 'max_deposit', value: settings.max_deposit, group_name: 'payments' },
+        { key: 'referral_enabled', value: settings.referral_enabled, group_name: 'payments' },
+        { key: 'referral_commission', value: settings.referral_commission, group_name: 'payments' },
+        { key: 'homepage_sections', value: homepageSections, group_name: 'homepage' },
+        { key: 'theme_settings', value: themeSettings, group_name: 'appearance' },
+        { key: 'hero_settings', value: heroSettings, group_name: 'homepage' },
+      ];
 
-      for (const [key, value] of Object.entries(allSettings)) {
+      for (const setting of settingsToSave) {
         await supabase
           .from('site_settings')
           .upsert(
-            { key, value: JSON.stringify(value), group_name: 'general' },
+            { 
+              key: setting.key, 
+              value: setting.value as any, 
+              group_name: setting.group_name 
+            },
             { onConflict: 'key' }
           );
       }
 
       toast({
         title: 'تم الحفظ',
-        description: 'تم حفظ الإعدادات بنجاح',
+        description: 'تم حفظ الإعدادات بنجاح - قم بتحديث الصفحة الرئيسية لرؤية التغييرات',
       });
     } catch (error) {
+      console.error('Error saving settings:', error);
       toast({
         title: 'خطأ',
         description: 'حدث خطأ في حفظ الإعدادات',
