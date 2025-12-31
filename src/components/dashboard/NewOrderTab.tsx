@@ -207,12 +207,12 @@ const NewOrderTab = () => {
               {/* Category Selection */}
               <div className="space-y-2">
                 <Label>اختر التصنيف</Label>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <Select value={selectedCategory || "all"} onValueChange={(val) => setSelectedCategory(val === "all" ? "" : val)}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="جميع التصنيفات" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">جميع التصنيفات</SelectItem>
+                    <SelectItem value="all">جميع التصنيفات</SelectItem>
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         {cat.name_ar || cat.name}
