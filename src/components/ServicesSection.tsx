@@ -20,6 +20,7 @@ interface Service {
     name: string;
     name_ar: string | null;
     icon: string | null;
+    image_url: string | null;
   } | null;
 }
 
@@ -43,7 +44,7 @@ const ServicesSection = () => {
             average_rating,
             reviews_count,
             slug,
-            category:service_categories(name, name_ar, icon)
+            category:service_categories(name, name_ar, icon, image_url)
           `)
           .eq('is_active', true)
           .eq('is_archived', false)
@@ -62,17 +63,29 @@ const ServicesSection = () => {
     fetchServices();
   }, []);
 
-  const getPlatformIcon = (categoryName: string | null | undefined) => {
-    if (!categoryName) return '📱';
-    const name = categoryName.toLowerCase();
-    if (name.includes('instagram') || name.includes('انستجرام') || name.includes('انستقرام')) return '📸';
-    if (name.includes('tiktok') || name.includes('تيك توك')) return '🎵';
-    if (name.includes('youtube') || name.includes('يوتيوب')) return '▶️';
-    if (name.includes('twitter') || name.includes('تويتر')) return '🐦';
-    if (name.includes('facebook') || name.includes('فيسبوك')) return '👍';
-    if (name.includes('snapchat') || name.includes('سناب')) return '👻';
-    if (name.includes('threads') || name.includes('ثريدز')) return '🧵';
-    return '📱';
+  const getCategoryVisual = (category: Service['category']): { type: 'emoji' | 'image'; value: string } => {
+    if (!category) return { type: 'emoji', value: '📱' };
+    
+    // If icon is an emoji (short string, not a URL)
+    if (category.icon && !category.icon.startsWith('http') && category.icon.length <= 4) {
+      return { type: 'emoji', value: category.icon };
+    }
+    
+    // If there's an image URL
+    if (category.image_url || (category.icon && category.icon.startsWith('http'))) {
+      return { type: 'image', value: category.image_url || category.icon || '' };
+    }
+    
+    // Fallback to platform detection
+    const name = category.name?.toLowerCase() || '';
+    if (name.includes('instagram') || name.includes('انستجرام') || name.includes('انستقرام')) return { type: 'emoji', value: '📸' };
+    if (name.includes('tiktok') || name.includes('تيك توك')) return { type: 'emoji', value: '🎵' };
+    if (name.includes('youtube') || name.includes('يوتيوب')) return { type: 'emoji', value: '▶️' };
+    if (name.includes('twitter') || name.includes('تويتر')) return { type: 'emoji', value: '🐦' };
+    if (name.includes('facebook') || name.includes('فيسبوك')) return { type: 'emoji', value: '👍' };
+    if (name.includes('snapchat') || name.includes('سناب')) return { type: 'emoji', value: '👻' };
+    if (name.includes('threads') || name.includes('ثريدز')) return { type: 'emoji', value: '🧵' };
+    return { type: 'emoji', value: '📱' };
   };
 
   if (loading) {
@@ -102,7 +115,9 @@ const ServicesSection = () => {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
-          {services.map((service, index) => (
+          {services.map((service, index) => {
+            const visual = getCategoryVisual(service.category);
+            return (
             <Card key={service.id} variant="service" className="relative group">
               {index < 3 && (
                 <div className="absolute -top-3 right-4 z-10">
@@ -115,9 +130,17 @@ const ServicesSection = () => {
 
               <CardContent className="p-6">
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center text-2xl shrink-0">
-                    {service.category?.icon || getPlatformIcon(service.category?.name)}
-                  </div>
+                  {visual.type === 'image' ? (
+                    <img 
+                      src={visual.value} 
+                      alt={service.name_ar || service.name}
+                      className="w-14 h-14 rounded-xl object-cover shrink-0"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center text-2xl shrink-0">
+                      {visual.value}
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-lg mb-1 truncate">
                       {service.name_ar || service.name}
@@ -175,7 +198,7 @@ const ServicesSection = () => {
                 </Button>
               </CardFooter>
             </Card>
-          ))}
+          )})}
         </div>
 
         <div className="text-center mt-12">

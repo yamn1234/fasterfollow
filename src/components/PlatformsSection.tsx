@@ -10,6 +10,7 @@ interface Category {
   name_ar: string | null;
   slug: string;
   icon: string | null;
+  image_url: string | null;
   description: string | null;
   description_ar: string | null;
 }
@@ -62,15 +63,27 @@ const getPlatformColor = (name: string) => {
   return 'from-primary to-primary-glow';
 };
 
-const getPlatformIcon = (name: string, icon: string | null) => {
-  if (icon) return icon;
-  const lowerName = name.toLowerCase();
+const getCategoryVisual = (category: Category): { type: 'emoji' | 'image'; value: string; color: string } => {
+  const color = getPlatformColor(category.name);
+  
+  // If icon is an emoji (short string, not a URL)
+  if (category.icon && !category.icon.startsWith('http') && category.icon.length <= 4) {
+    return { type: 'emoji', value: category.icon, color };
+  }
+  
+  // If there's an image URL
+  if (category.image_url || (category.icon && category.icon.startsWith('http'))) {
+    return { type: 'image', value: category.image_url || category.icon || '', color };
+  }
+  
+  // Fallback to platform icon detection from platformIcons map
+  const lowerName = category.name.toLowerCase();
   for (const [key, value] of Object.entries(platformIcons)) {
     if (lowerName.includes(key.toLowerCase())) {
-      return value;
+      return { type: 'emoji', value, color };
     }
   }
-  return '📱';
+  return { type: 'emoji', value: '📱', color };
 };
 
 const PlatformsSection = () => {
@@ -82,7 +95,7 @@ const PlatformsSection = () => {
       try {
         const { data, error } = await supabase
           .from('service_categories')
-          .select('id, name, name_ar, slug, icon, description, description_ar')
+          .select('id, name, name_ar, slug, icon, image_url, description, description_ar')
           .eq('is_active', true)
           .is('parent_id', null)
           .order('sort_order', { ascending: true })
@@ -127,15 +140,25 @@ const PlatformsSection = () => {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 stagger-children">
-          {categories.map((category) => (
+          {categories.map((category) => {
+            const visual = getCategoryVisual(category);
+            return (
             <Link key={category.id} to={`/services?category=${category.slug}`}>
               <Card variant="platform" className="cursor-pointer group h-full">
                 <CardContent className="p-6 text-center">
-                  <div
-                    className={`mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br ${getPlatformColor(category.name)} flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}
-                  >
-                    {getPlatformIcon(category.name, category.icon)}
-                  </div>
+                  {visual.type === 'image' ? (
+                    <img
+                      src={visual.value}
+                      alt={category.name_ar || category.name}
+                      className="mx-auto w-16 h-16 rounded-2xl object-cover mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg"
+                    />
+                  ) : (
+                    <div
+                      className={`mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br ${visual.color} flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}
+                    >
+                      {visual.value}
+                    </div>
+                  )}
                   <h3 className="font-bold text-lg mb-2">
                     {category.name_ar || category.name}
                   </h3>
@@ -147,7 +170,7 @@ const PlatformsSection = () => {
                 </CardContent>
               </Card>
             </Link>
-          ))}
+          )})}
         </div>
       </div>
     </section>
