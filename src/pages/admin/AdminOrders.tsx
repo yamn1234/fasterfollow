@@ -70,6 +70,7 @@ interface Order {
   status: OrderStatus;
   start_count: number | null;
   remains: number | null;
+  external_order_id: string | null;
   created_at: string;
   updated_at: string;
   service?: { name: string };
@@ -80,6 +81,8 @@ const AdminOrders = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [placingOrder, setPlacingOrder] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -174,13 +177,11 @@ const AdminOrders = () => {
 
   const handleRefund = async (order: Order) => {
     try {
-      // Update order status
       await supabase
         .from('orders')
         .update({ status: 'refunded' })
         .eq('id', order.id);
 
-      // Refund user balance
       const { data: profile } = await supabase
         .from('profiles')
         .select('balance')
@@ -193,7 +194,6 @@ const AdminOrders = () => {
           .update({ balance: profile.balance + order.price })
           .eq('user_id', order.user_id);
 
-        // Create refund transaction
         await supabase.from('transactions').insert({
           user_id: order.user_id,
           order_id: order.id,
@@ -217,6 +217,66 @@ const AdminOrders = () => {
         description: 'حدث خطأ في استرداد الطلب',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handlePlaceOrder = async (order: Order) => {
+    setPlacingOrder(order.id);
+    try {
+      const response = await supabase.functions.invoke('smm-place-order', {
+        body: { orderId: order.id },
+      });
+
+      if (response.error) throw response.error;
+
+      const result = response.data;
+      if (result.success) {
+        toast({
+          title: 'تم بنجاح',
+          description: result.message,
+        });
+        fetchOrders();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message || 'حدث خطأ في إرسال الطلب',
+        variant: 'destructive',
+      });
+    } finally {
+      setPlacingOrder(null);
+    }
+  };
+
+  const handleSyncAllStatuses = async () => {
+    setSyncing(true);
+    try {
+      const response = await supabase.functions.invoke('smm-check-order-status', {
+        body: { checkAll: true },
+      });
+
+      if (response.error) throw response.error;
+
+      const result = response.data;
+      if (result.success) {
+        toast({
+          title: 'تم بنجاح',
+          description: result.message,
+        });
+        fetchOrders();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message || 'حدث خطأ في مزامنة الحالات',
+        variant: 'destructive',
+      });
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -251,6 +311,18 @@ const AdminOrders = () => {
           <Button variant="outline" onClick={fetchOrders}>
             <RefreshCw className="w-4 h-4 ml-2" />
             تحديث
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleSyncAllStatuses}
+            disabled={syncing}
+          >
+            {syncing ? (
+              <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4 ml-2" />
+            )}
+            مزامنة الحالات
           </Button>
           <Button variant="outline">
             <Download className="w-4 h-4 ml-2" />
@@ -395,6 +467,19 @@ const AdminOrders = () => {
                                 <Pencil className="w-4 h-4 ml-2" />
                                 تحديث الحالة
                               </DropdownMenuItem>
+                              {order.status === 'pending' && !order.external_order_id && (
+                                <DropdownMenuItem
+                                  onClick={() => handlePlaceOrder(order)}
+                                  disabled={placingOrder === order.id}
+                                >
+                                  {placingOrder === order.id ? (
+                                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                                  ) : (
+                                    <RefreshCw className="w-4 h-4 ml-2" />
+                                  )}
+                                  إرسال للمزود
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem>
                                 <RefreshCw className="w-4 h-4 ml-2" />
                                 إعادة التعبئة

@@ -14,6 +14,8 @@ import {
   FolderPlus,
   Settings2,
   ArchiveRestore,
+  Loader2,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +64,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+interface Provider {
+  id: string;
+  name: string;
+}
+
 interface Service {
   id: string;
   name: string;
@@ -94,7 +101,9 @@ const AdminServices = () => {
   const { toast } = useToast();
   const [services, setServices] = useState<Service[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
+  const [importing, setImporting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showArchived, setShowArchived] = useState(false);
@@ -132,9 +141,17 @@ const AdminServices = () => {
     is_active: true,
   });
 
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importFormData, setImportFormData] = useState({
+    provider_id: '',
+    category_id: '',
+    price_multiplier: '1.0',
+  });
+
   useEffect(() => {
     fetchServices();
     fetchCategories();
+    fetchProviders();
   }, [showArchived]);
 
   const fetchServices = async () => {
@@ -167,6 +184,67 @@ const AdminServices = () => {
       setCategories(data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchProviders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('api_providers')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setProviders(data || []);
+    } catch (error) {
+      console.error('Error fetching providers:', error);
+    }
+  };
+
+  const handleImportServices = async () => {
+    if (!importFormData.provider_id) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى اختيار مزود',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const response = await supabase.functions.invoke('smm-import-services', {
+        body: {
+          providerId: importFormData.provider_id,
+          categoryId: importFormData.category_id || null,
+          priceMultiplier: parseFloat(importFormData.price_multiplier) || 1.0,
+        },
+      });
+
+      if (response.error) throw response.error;
+
+      const result = response.data;
+      if (result.success) {
+        toast({
+          title: 'تم بنجاح',
+          description: result.message,
+        });
+        setImportDialogOpen(false);
+        fetchServices();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      console.error('Import error:', error);
+      toast({
+        title: 'خطأ',
+        description: error.message || 'حدث خطأ في استيراد الخدمات',
+        variant: 'destructive',
+      });
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -368,6 +446,13 @@ const AdminServices = () => {
           <Button variant="outline" onClick={() => setCategoryDialogOpen(true)}>
             <FolderPlus className="w-4 h-4 ml-2" />
             فئة جديدة
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => setImportDialogOpen(true)}
+          >
+            <Upload className="w-4 h-4 ml-2" />
+            استيراد من مزود
           </Button>
           <Button
             className="gradient-primary text-primary-foreground"
@@ -739,6 +824,85 @@ const AdminServices = () => {
             </Button>
             <Button onClick={handleSaveCategory}>
               إضافة الفئة
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Services Dialog */}
+      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>استيراد خدمات من المزود</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>اختر المزود</Label>
+              <Select
+                value={importFormData.provider_id}
+                onValueChange={(v) => setImportFormData({ ...importFormData, provider_id: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر مزود API" />
+                </SelectTrigger>
+                <SelectContent>
+                  {providers.map((provider) => (
+                    <SelectItem key={provider.id} value={provider.id}>
+                      {provider.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>الفئة الافتراضية (اختياري)</Label>
+              <Select
+                value={importFormData.category_id}
+                onValueChange={(v) => setImportFormData({ ...importFormData, category_id: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="بدون فئة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">بدون فئة</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>مضاعف السعر</Label>
+              <Input
+                type="number"
+                step="0.1"
+                value={importFormData.price_multiplier}
+                onChange={(e) => setImportFormData({ ...importFormData, price_multiplier: e.target.value })}
+                placeholder="1.0"
+              />
+              <p className="text-xs text-muted-foreground">
+                مثال: 1.5 = زيادة 50% على سعر المزود
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImportDialogOpen(false)}>
+              إلغاء
+            </Button>
+            <Button onClick={handleImportServices} disabled={importing}>
+              {importing ? (
+                <>
+                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                  جاري الاستيراد...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 ml-2" />
+                  استيراد
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
