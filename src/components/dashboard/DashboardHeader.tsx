@@ -42,7 +42,20 @@ const currencies = [
 const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
-  const [selectedCurrency, setSelectedCurrency] = useState(currencies[0]);
+  
+  const [selectedCurrency, setSelectedCurrency] = useState(() => {
+    const saved = localStorage.getItem("preferred_currency");
+    if (saved) {
+      const found = currencies.find(c => c.code === saved);
+      if (found) return found;
+    }
+    return currencies[0];
+  });
+
+  const handleCurrencyChange = (currency: typeof currencies[0]) => {
+    setSelectedCurrency(currency);
+    localStorage.setItem("preferred_currency", currency.code);
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -103,7 +116,7 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
                 className={`cursor-pointer flex justify-between ${
                   selectedCurrency.code === currency.code ? "bg-primary/10 text-primary" : ""
                 }`}
-                onClick={() => setSelectedCurrency(currency)}
+                onClick={() => handleCurrencyChange(currency)}
               >
                 <span>{currency.name}</span>
                 <span className="text-muted-foreground">{currency.symbol}</span>
