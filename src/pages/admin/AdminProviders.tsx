@@ -64,6 +64,7 @@ const AdminProviders = () => {
   const { toast } = useToast();
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncingId, setSyncingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
@@ -167,6 +168,36 @@ const AdminProviders = () => {
   const resetForm = () => {
     setFormData({ name: '', api_url: '', api_key: '', is_active: true });
     setEditingProvider(null);
+  };
+
+  const handleSyncBalance = async (provider: Provider) => {
+    setSyncingId(provider.id);
+    try {
+      const response = await supabase.functions.invoke('sync-api-balance', {
+        body: { providerId: provider.id },
+      });
+
+      if (response.error) throw response.error;
+
+      const result = response.data;
+      if (result.success) {
+        toast({
+          title: 'تم بنجاح',
+          description: `الرصيد: $${result.balance} ${result.currency}`,
+        });
+        fetchProviders();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message || 'حدث خطأ في مزامنة الرصيد',
+        variant: 'destructive',
+      });
+    } finally {
+      setSyncingId(null);
+    }
   };
 
   const openEditDialog = (provider: Provider) => {
@@ -342,8 +373,15 @@ const AdminProviders = () => {
                             <Pencil className="w-4 h-4 ml-2" />
                             تعديل
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <RefreshCw className="w-4 h-4 ml-2" />
+                          <DropdownMenuItem 
+                            onClick={() => handleSyncBalance(provider)}
+                            disabled={syncingId === provider.id}
+                          >
+                            {syncingId === provider.id ? (
+                              <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                            ) : (
+                              <RefreshCw className="w-4 h-4 ml-2" />
+                            )}
                             مزامنة الرصيد
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
