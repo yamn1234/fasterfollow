@@ -111,8 +111,36 @@ const OrdersTab = () => {
   useEffect(() => {
     if (user) {
       fetchOrders();
+      
+      // Auto-sync orders every 30 seconds
+      const syncInterval = setInterval(async () => {
+        console.log('Auto-syncing orders...');
+        try {
+          // Check and update order statuses from provider
+          const pendingOrders = orders.filter(o => 
+            o.status === 'pending' || o.status === 'processing' || o.status === 'in_progress'
+          );
+          
+          for (const order of pendingOrders) {
+            try {
+              await supabase.functions.invoke('smm-check-order-status', {
+                body: { orderId: order.id },
+              });
+            } catch (e) {
+              console.log('Status check failed for order:', order.id);
+            }
+          }
+          
+          // Refetch orders to get updated statuses
+          fetchOrders();
+        } catch (error) {
+          console.error('Auto-sync error:', error);
+        }
+      }, 30000); // 30 seconds
+
+      return () => clearInterval(syncInterval);
     }
-  }, [user]);
+  }, [user, orders.length]);
 
   // Realtime subscription for order updates
   useEffect(() => {

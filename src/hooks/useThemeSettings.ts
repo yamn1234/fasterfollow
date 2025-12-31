@@ -17,6 +17,17 @@ const defaultTheme: ThemeSettings = {
   custom_secondary: '',
 };
 
+// Validate that a color is in HSL format (H S% L%)
+const isValidHSL = (color: string): boolean => {
+  if (!color || typeof color !== 'string') return false;
+  const parts = color.trim().split(/\s+/);
+  if (parts.length !== 3) return false;
+  const h = parseFloat(parts[0]);
+  const s = parts[1];
+  const l = parts[2];
+  return !isNaN(h) && s.endsWith('%') && l.endsWith('%');
+};
+
 export const useThemeSettings = () => {
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>(defaultTheme);
   const [loading, setLoading] = useState(true);
@@ -35,13 +46,13 @@ export const useThemeSettings = () => {
         .from('site_settings')
         .select('value')
         .eq('key', 'theme_settings')
-        .single();
+        .maybeSingle();
 
       if (data?.value) {
         const parsed = typeof data.value === 'string' 
           ? JSON.parse(data.value) 
           : data.value;
-        setThemeSettings(parsed);
+        setThemeSettings({ ...defaultTheme, ...parsed });
       }
     } catch (error) {
       console.error('Error loading theme settings:', error);
@@ -60,19 +71,25 @@ export const useThemeSettings = () => {
       root.classList.remove('dark');
     }
     
-    // Apply custom colors
-    const primaryColor = settings.custom_primary || settings.primary_color;
-    const secondaryColor = settings.custom_secondary || settings.secondary_color;
+    // Get colors with validation - use defaults if invalid
+    const primaryColor = settings.custom_primary && isValidHSL(settings.custom_primary) 
+      ? settings.custom_primary 
+      : (isValidHSL(settings.primary_color) ? settings.primary_color : defaultTheme.primary_color);
     
-    if (primaryColor) {
+    const secondaryColor = settings.custom_secondary && isValidHSL(settings.custom_secondary)
+      ? settings.custom_secondary
+      : (isValidHSL(settings.secondary_color) ? settings.secondary_color : defaultTheme.secondary_color);
+    
+    // Only apply if we have valid HSL colors
+    if (isValidHSL(primaryColor)) {
       root.style.setProperty('--primary', primaryColor);
       root.style.setProperty('--ring', primaryColor);
       root.style.setProperty('--accent', primaryColor);
       
-      // Update gradients
+      // Update gradients with proper HSL values
       root.style.setProperty(
         '--gradient-primary',
-        `linear-gradient(135deg, hsl(${primaryColor}) 0%, hsl(${secondaryColor || primaryColor}) 100%)`
+        `linear-gradient(135deg, hsl(${primaryColor}) 0%, hsl(${secondaryColor}) 100%)`
       );
       
       // Update shadows
@@ -94,7 +111,7 @@ export const useThemeSettings = () => {
       );
     }
     
-    if (secondaryColor) {
+    if (isValidHSL(secondaryColor)) {
       root.style.setProperty('--primary-glow', secondaryColor);
     }
   };

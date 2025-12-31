@@ -520,11 +520,15 @@ export type Database = {
           created_at: string
           fee_fixed: number | null
           fee_percentage: number | null
+          gateway_type: string | null
           id: string
+          instructions: string | null
+          instructions_ar: string | null
           is_active: boolean | null
           max_amount: number | null
           min_amount: number | null
           name: string
+          redirect_url: string | null
           slug: string
           sort_order: number | null
           updated_at: string
@@ -534,11 +538,15 @@ export type Database = {
           created_at?: string
           fee_fixed?: number | null
           fee_percentage?: number | null
+          gateway_type?: string | null
           id?: string
+          instructions?: string | null
+          instructions_ar?: string | null
           is_active?: boolean | null
           max_amount?: number | null
           min_amount?: number | null
           name: string
+          redirect_url?: string | null
           slug: string
           sort_order?: number | null
           updated_at?: string
@@ -548,11 +556,15 @@ export type Database = {
           created_at?: string
           fee_fixed?: number | null
           fee_percentage?: number | null
+          gateway_type?: string | null
           id?: string
+          instructions?: string | null
+          instructions_ar?: string | null
           is_active?: boolean | null
           max_amount?: number | null
           min_amount?: number | null
           name?: string
+          redirect_url?: string | null
           slug?: string
           sort_order?: number | null
           updated_at?: string
