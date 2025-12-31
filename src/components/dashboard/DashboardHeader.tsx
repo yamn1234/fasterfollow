@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { Bell, Search, Home, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Bell, Search, Home, ChevronDown, Check, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,9 +27,21 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatDistanceToNow } from "date-fns";
+import { ar } from "date-fns/locale";
 
 interface DashboardHeaderProps {
   onGoHome?: () => void;
+}
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string | null;
+  type: string;
+  is_read: boolean;
+  link: string | null;
+  created_at: string;
 }
 
 const currencies = [
@@ -40,7 +53,7 @@ const currencies = [
 ];
 
 const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
-  const { profile, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
@@ -55,6 +68,81 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
   const handleCurrencyChange = (currency: typeof currencies[0]) => {
     setSelectedCurrency(currency);
     localStorage.setItem("preferred_currency", currency.code);
+  };
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  // Fetch notifications
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchNotifications = async () => {
+      const { data } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      
+      if (data) setNotifications(data);
+    };
+
+    fetchNotifications();
+
+    // Realtime subscription
+    const channel = supabase
+      .channel('notifications-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setNotifications(prev => [payload.new as Notification, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setNotifications(prev => prev.map(n => 
+              n.id === payload.new.id ? payload.new as Notification : n
+            ));
+          } else if (payload.eventType === 'DELETE') {
+            setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  const markAsRead = async (id: string) => {
+    await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("id", id);
+  };
+
+  const markAllAsRead = async () => {
+    if (!user) return;
+    await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("user_id", user.id)
+      .eq("is_read", false);
+  };
+
+  const deleteNotification = async (id: string) => {
+    await supabase
+      .from("notifications")
+      .delete()
+      .eq("id", id);
   };
 
   const handleSignOut = async () => {
@@ -134,32 +222,85 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
         </div>
 
         {/* Notifications */}
-        <Sheet>
+        <Sheet open={notificationsOpen} onOpenChange={setNotificationsOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="relative h-9 w-9 md:h-10 md:w-10">
               <Bell className="h-4 w-4 md:h-5 md:w-5" />
-              <span className="absolute -top-0.5 -left-0.5 md:-top-1 md:-left-1 h-4 w-4 rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground flex items-center justify-center">
-                3
-              </span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -left-0.5 md:-top-1 md:-left-1 h-4 w-4 rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[300px] sm:w-[350px]">
-            <SheetHeader>
+          <SheetContent side="left" className="w-[300px] sm:w-[380px]">
+            <SheetHeader className="flex flex-row items-center justify-between">
               <SheetTitle>الإشعارات</SheetTitle>
+              {unreadCount > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-xs"
+                  onClick={markAllAsRead}
+                >
+                  <Check className="h-3 w-3 ml-1" />
+                  تحديد الكل كمقروء
+                </Button>
+              )}
             </SheetHeader>
-            <div className="mt-6 space-y-4">
-              <div className="p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors cursor-pointer">
-                <p className="font-medium">تم إكمال طلبك #1234</p>
-                <p className="text-xs text-muted-foreground mt-1">منذ 5 دقائق</p>
-              </div>
-              <div className="p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors cursor-pointer">
-                <p className="font-medium">تم شحن رصيدك بنجاح</p>
-                <p className="text-xs text-muted-foreground mt-1">منذ ساعة</p>
-              </div>
-              <div className="p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors cursor-pointer">
-                <p className="font-medium">خدمة جديدة متاحة الآن</p>
-                <p className="text-xs text-muted-foreground mt-1">منذ يوم</p>
-              </div>
+            <div className="mt-6 space-y-3 max-h-[calc(100vh-120px)] overflow-y-auto">
+              {notifications.length === 0 ? (
+                <div className="text-center py-12">
+                  <Bell className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+                  <p className="text-muted-foreground text-sm">لا توجد إشعارات</p>
+                </div>
+              ) : (
+                notifications.map((notification) => (
+                  <div 
+                    key={notification.id}
+                    className={`p-4 rounded-xl transition-colors cursor-pointer group relative ${
+                      notification.is_read 
+                        ? "bg-secondary/30 hover:bg-secondary/50" 
+                        : "bg-primary/10 hover:bg-primary/15 border-r-2 border-primary"
+                    }`}
+                    onClick={() => {
+                      if (!notification.is_read) markAsRead(notification.id);
+                      if (notification.link) {
+                        setNotificationsOpen(false);
+                        navigate(notification.link);
+                      }
+                    }}
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{notification.title}</p>
+                        {notification.message && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {notification.message}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {formatDistanceToNow(new Date(notification.created_at), { 
+                            addSuffix: true, 
+                            locale: ar 
+                          })}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteNotification(notification.id);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </SheetContent>
         </Sheet>
