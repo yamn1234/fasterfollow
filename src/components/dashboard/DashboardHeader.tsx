@@ -1,4 +1,4 @@
-import { Bell, Search, Menu } from "lucide-react";
+import { Bell, Search, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -20,6 +20,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const DashboardHeader = () => {
   const { profile, signOut } = useAuth();
@@ -37,6 +42,21 @@ const DashboardHeader = () => {
     <header className="h-14 md:h-16 border-b border-border/50 bg-card/50 backdrop-blur-sm px-3 md:px-6 flex items-center justify-between gap-2 md:gap-4 sticky top-0 z-10">
       <div className="flex items-center gap-2 md:gap-4">
         <SidebarTrigger className="h-9 w-9" />
+        
+        {/* Home Button */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-9 w-9"
+              onClick={() => navigate("/")}
+            >
+              <Home className="h-4 w-4 md:h-5 md:w-5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>الصفحة الرئيسية</TooltipContent>
+        </Tooltip>
         
         {/* Search - Hidden on mobile */}
         <div className="relative hidden md:block">
