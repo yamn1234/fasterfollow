@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useServices } from "@/hooks/useServices";
 import { 
   Select, 
   SelectContent, 
@@ -22,33 +23,12 @@ import {
   Info
 } from "lucide-react";
 
-interface ServiceCategory {
-  id: string;
-  name: string;
-  name_ar: string | null;
-  icon: string | null;
-}
-
-interface Service {
-  id: string;
-  name: string;
-  name_ar: string | null;
-  price: number;
-  min_quantity: number | null;
-  max_quantity: number | null;
-  description: string | null;
-  description_ar: string | null;
-  category_id: string | null;
-}
-
 const NewOrderTab = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const { categories, services, loading } = useServices();
   
-  const [categories, setCategories] = useState<ServiceCategory[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
-  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [filteredServices, setFilteredServices] = useState(services);
   const [submitting, setSubmitting] = useState(false);
   
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -60,10 +40,6 @@ const NewOrderTab = () => {
   const totalPrice = selectedServiceData ? (selectedServiceData.price * quantity / 1000) : 0;
   const userBalance = profile?.balance || 0;
   const canAfford = userBalance >= totalPrice;
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   useEffect(() => {
     if (selectedCategory) {
@@ -79,25 +55,6 @@ const NewOrderTab = () => {
       setQuantity(selectedServiceData.min_quantity || 100);
     }
   }, [selectedService]);
-
-  const fetchData = async () => {
-    try {
-      const [categoriesRes, servicesRes] = await Promise.all([
-        supabase.from("service_categories").select("*").eq("is_active", true).order("sort_order"),
-        supabase.from("services").select("*").eq("is_active", true).order("sort_order")
-      ]);
-
-      if (categoriesRes.data) setCategories(categoriesRes.data);
-      if (servicesRes.data) {
-        setServices(servicesRes.data);
-        setFilteredServices(servicesRes.data);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async () => {
     if (!user || !selectedServiceData) return;
