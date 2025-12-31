@@ -857,14 +857,14 @@ const AdminServices = () => {
             <div className="space-y-2">
               <Label>الفئة الافتراضية (اختياري)</Label>
               <Select
-                value={importFormData.category_id}
-                onValueChange={(v) => setImportFormData({ ...importFormData, category_id: v })}
+                value={importFormData.category_id || 'none'}
+                onValueChange={(v) => setImportFormData({ ...importFormData, category_id: v === 'none' ? '' : v })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="بدون فئة" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">بدون فئة</SelectItem>
+                  <SelectItem value="none">بدون فئة</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
