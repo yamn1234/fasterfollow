@@ -43,6 +43,15 @@ interface Ticket {
   updated_at: string;
 }
 
+type RequestType = "speedup" | "refund" | "cancel" | "other";
+
+const requestTypeLabels: Record<RequestType, string> = {
+  speedup: "تسريع",
+  refund: "تعويض",
+  cancel: "إلغاء",
+  other: "أخرى",
+};
+
 interface TicketReply {
   id: string;
   ticket_id: string;
@@ -63,9 +72,9 @@ const SupportTab = () => {
   const [submitting, setSubmitting] = useState(false);
 
   // New ticket form
-  const [newSubject, setNewSubject] = useState("");
+  const [newOrderId, setNewOrderId] = useState("");
   const [newMessage, setNewMessage] = useState("");
-  const [newPriority, setNewPriority] = useState<"low" | "medium" | "high">("medium");
+  const [newRequestType, setNewRequestType] = useState<RequestType>("other");
 
   useEffect(() => {
     if (user) {
@@ -134,27 +143,31 @@ const SupportTab = () => {
   };
 
   const handleCreateTicket = async () => {
-    if (!newSubject.trim() || !newMessage.trim()) {
-      toast.error("يرجى ملء جميع الحقول");
+    if (!newMessage.trim()) {
+      toast.error("يرجى كتابة الرسالة");
       return;
     }
 
     setSubmitting(true);
     try {
+      const subject = newOrderId.trim() 
+        ? `طلب #${newOrderId} - ${requestTypeLabels[newRequestType]}`
+        : requestTypeLabels[newRequestType];
+
       const { error } = await supabase.from("tickets").insert({
         user_id: user?.id,
-        subject: newSubject,
+        subject: subject,
         message: newMessage,
-        priority: newPriority,
+        priority: newRequestType === "speedup" ? "high" : "medium",
       });
 
       if (error) throw error;
 
       toast.success("تم إنشاء التذكرة بنجاح");
       setIsCreateDialogOpen(false);
-      setNewSubject("");
+      setNewOrderId("");
       setNewMessage("");
-      setNewPriority("medium");
+      setNewRequestType("other");
       fetchTickets();
     } catch (error) {
       console.error("Error creating ticket:", error);
@@ -213,6 +226,13 @@ const SupportTab = () => {
       default:
         return null;
     }
+  };
+
+  const getRequestTypeBadge = (subject: string) => {
+    if (subject.includes("تسريع")) return <Badge variant="destructive">تسريع</Badge>;
+    if (subject.includes("تعويض")) return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">تعويض</Badge>;
+    if (subject.includes("إلغاء")) return <Badge variant="secondary">إلغاء</Badge>;
+    return <Badge variant="outline">أخرى</Badge>;
   };
 
   const getPriorityBadge = (priority: string) => {
@@ -275,10 +295,10 @@ const SupportTab = () => {
             >
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
                       {getStatusBadge(ticket.status)}
-                      {getPriorityBadge(ticket.priority)}
+                      {getRequestTypeBadge(ticket.subject)}
                     </div>
                     <h3 className="font-medium truncate">{ticket.subject}</h3>
                     <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
@@ -303,25 +323,26 @@ const SupportTab = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">الموضوع</label>
-              <Input
-                placeholder="أدخل موضوع التذكرة"
-                value={newSubject}
-                onChange={(e) => setNewSubject(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">الأولوية</label>
-              <Select value={newPriority} onValueChange={(v: "low" | "medium" | "high") => setNewPriority(v)}>
+              <label className="text-sm font-medium mb-2 block">نوع الطلب</label>
+              <Select value={newRequestType} onValueChange={(v: RequestType) => setNewRequestType(v)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">منخفضة</SelectItem>
-                  <SelectItem value="medium">متوسطة</SelectItem>
-                  <SelectItem value="high">عالية</SelectItem>
+                  <SelectItem value="speedup">تسريع</SelectItem>
+                  <SelectItem value="refund">تعويض</SelectItem>
+                  <SelectItem value="cancel">إلغاء</SelectItem>
+                  <SelectItem value="other">أخرى</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">رقم الطلب (اختياري)</label>
+              <Input
+                placeholder="أدخل رقم الطلب"
+                value={newOrderId}
+                onChange={(e) => setNewOrderId(e.target.value)}
+              />
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">الرسالة</label>
@@ -350,7 +371,7 @@ const SupportTab = () => {
           <DialogHeader>
             <div className="flex items-center gap-2">
               {selectedTicket && getStatusBadge(selectedTicket.status)}
-              {selectedTicket && getPriorityBadge(selectedTicket.priority)}
+              {selectedTicket && getRequestTypeBadge(selectedTicket.subject)}
             </div>
             <DialogTitle>{selectedTicket?.subject}</DialogTitle>
           </DialogHeader>
