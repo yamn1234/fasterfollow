@@ -156,7 +156,9 @@ const AdminServices = () => {
     max_quantity: '10000',
     category_id: '',
     provider_id: '',
+    external_service_id: '',
     is_active: true,
+    // SEO
     seo_title: '',
     seo_description: '',
     seo_keywords: '',
@@ -415,6 +417,7 @@ const AdminServices = () => {
         max_quantity: parseInt(formData.max_quantity) || 10000,
         category_id: formData.category_id || null,
         provider_id: formData.provider_id || null,
+        external_service_id: formData.external_service_id || null,
         is_active: formData.is_active,
         seo_title: formData.seo_title || null,
         seo_description: formData.seo_description || null,
@@ -526,6 +529,7 @@ const AdminServices = () => {
       max_quantity: '10000',
       category_id: '',
       provider_id: '',
+      external_service_id: '',
       is_active: true,
       seo_title: '',
       seo_description: '',
@@ -551,6 +555,7 @@ const AdminServices = () => {
       max_quantity: service.max_quantity.toString(),
       category_id: service.category_id || '',
       provider_id: service.provider_id || '',
+      external_service_id: (service as any).external_service_id || '',
       is_active: service.is_active,
       seo_title: service.seo_title || '',
       seo_description: service.seo_description || '',
@@ -934,6 +939,21 @@ const AdminServices = () => {
                   </Select>
                 </div>
               </div>
+
+              {formData.provider_id && (
+                <div className="space-y-2">
+                  <Label>معرف الخدمة عند المزود (External Service ID)</Label>
+                  <Input
+                    value={formData.external_service_id}
+                    onChange={(e) => setFormData({ ...formData, external_service_id: e.target.value })}
+                    placeholder="مثال: 1234"
+                    dir="ltr"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    رقم الخدمة في API المزود - مطلوب لتنفيذ الطلبات تلقائياً
+                  </p>
+                </div>
+              )}
 
               <div className="flex items-center gap-2">
                 <Switch
