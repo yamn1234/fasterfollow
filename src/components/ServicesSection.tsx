@@ -1,89 +1,94 @@
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Star, Zap } from "lucide-react";
+import { ShoppingCart, Star, Zap, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-const services = [
-  {
-    id: 1,
-    title: "زيادة متابعين انستجرام",
-    description: "متابعين حقيقيين عرب وأجانب بجودة عالية",
-    platform: "انستجرام",
-    platformIcon: "📸",
-    price: 0.99,
-    unit: "1000",
-    rating: 4.9,
-    orders: 2340,
-    isBestSeller: true,
-    features: ["سريع", "ضمان", "حقيقي"],
-  },
-  {
-    id: 2,
-    title: "زيادة مشاهدات تيك توك",
-    description: "مشاهدات سريعة تساعد في الظهور بالاكسبلور",
-    platform: "تيك توك",
-    platformIcon: "🎵",
-    price: 0.49,
-    unit: "1000",
-    rating: 4.8,
-    orders: 3120,
-    isBestSeller: true,
-    features: ["أسرع خدمة", "ضمان"],
-  },
-  {
-    id: 3,
-    title: "زيادة لايكات انستجرام",
-    description: "لايكات من حسابات حقيقية ونشطة",
-    platform: "انستجرام",
-    platformIcon: "📸",
-    price: 0.79,
-    unit: "1000",
-    rating: 4.7,
-    orders: 1890,
-    isBestSeller: false,
-    features: ["حقيقي", "سريع"],
-  },
-  {
-    id: 4,
-    title: "زيادة متابعين تيك توك",
-    description: "متابعين حقيقيين يتفاعلون مع المحتوى",
-    platform: "تيك توك",
-    platformIcon: "🎵",
-    price: 1.29,
-    unit: "1000",
-    rating: 4.9,
-    orders: 2670,
-    isBestSeller: true,
-    features: ["ضمان", "حقيقي", "نشط"],
-  },
-  {
-    id: 5,
-    title: "زيادة مشتركين يوتيوب",
-    description: "مشتركين حقيقيين لقناتك على يوتيوب",
-    platform: "يوتيوب",
-    platformIcon: "▶️",
-    price: 2.99,
-    unit: "100",
-    rating: 4.6,
-    orders: 980,
-    isBestSeller: false,
-    features: ["حقيقي", "ضمان"],
-  },
-  {
-    id: 6,
-    title: "زيادة متابعين تويتر",
-    description: "متابعين حقيقيين لحسابك على تويتر",
-    platform: "تويتر",
-    platformIcon: "🐦",
-    price: 1.49,
-    unit: "1000",
-    rating: 4.7,
-    orders: 1450,
-    isBestSeller: false,
-    features: ["سريع", "ضمان"],
-  },
-];
+interface Service {
+  id: string;
+  name: string;
+  name_ar: string | null;
+  description: string | null;
+  description_ar: string | null;
+  price: number;
+  min_quantity: number | null;
+  average_rating: number | null;
+  reviews_count: number | null;
+  slug: string;
+  category?: {
+    name: string;
+    name_ar: string | null;
+    icon: string | null;
+  } | null;
+}
 
 const ServicesSection = () => {
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('services')
+          .select(`
+            id,
+            name,
+            name_ar,
+            description,
+            description_ar,
+            price,
+            min_quantity,
+            average_rating,
+            reviews_count,
+            slug,
+            category:service_categories(name, name_ar, icon)
+          `)
+          .eq('is_active', true)
+          .eq('is_archived', false)
+          .order('reviews_count', { ascending: false })
+          .limit(6);
+
+        if (error) throw error;
+        setServices(data || []);
+      } catch (error) {
+        console.error('Error fetching services:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  const getPlatformIcon = (categoryName: string | null | undefined) => {
+    if (!categoryName) return '📱';
+    const name = categoryName.toLowerCase();
+    if (name.includes('instagram') || name.includes('انستجرام') || name.includes('انستقرام')) return '📸';
+    if (name.includes('tiktok') || name.includes('تيك توك')) return '🎵';
+    if (name.includes('youtube') || name.includes('يوتيوب')) return '▶️';
+    if (name.includes('twitter') || name.includes('تويتر')) return '🐦';
+    if (name.includes('facebook') || name.includes('فيسبوك')) return '👍';
+    if (name.includes('snapchat') || name.includes('سناب')) return '👻';
+    if (name.includes('threads') || name.includes('ثريدز')) return '🧵';
+    return '📱';
+  };
+
+  if (loading) {
+    return (
+      <section className="py-16 lg:py-24" id="services">
+        <div className="container flex justify-center items-center min-h-[300px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
+  if (services.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-16 lg:py-24" id="services">
       <div className="container">
@@ -97,9 +102,9 @@ const ServicesSection = () => {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
-          {services.map((service) => (
+          {services.map((service, index) => (
             <Card key={service.id} variant="service" className="relative group">
-              {service.isBestSeller && (
+              {index < 3 && (
                 <div className="absolute -top-3 right-4 z-10">
                   <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold gradient-primary text-primary-foreground shadow-md">
                     <Zap className="h-3 w-3" />
@@ -111,12 +116,14 @@ const ServicesSection = () => {
               <CardContent className="p-6">
                 <div className="flex items-start gap-4 mb-4">
                   <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center text-2xl shrink-0">
-                    {service.platformIcon}
+                    {service.category?.icon || getPlatformIcon(service.category?.name)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-lg mb-1 truncate">{service.title}</h3>
+                    <h3 className="font-bold text-lg mb-1 truncate">
+                      {service.name_ar || service.name}
+                    </h3>
                     <p className="text-sm text-muted-foreground line-clamp-2">
-                      {service.description}
+                      {service.description_ar || service.description || 'خدمة مميزة بجودة عالية'}
                     </p>
                   </div>
                 </div>
@@ -124,40 +131,47 @@ const ServicesSection = () => {
                 <div className="flex items-center gap-4 mb-4">
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-primary text-primary" />
-                    <span className="text-sm font-medium">{service.rating}</span>
+                    <span className="text-sm font-medium">
+                      {service.average_rating?.toFixed(1) || '5.0'}
+                    </span>
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    {service.orders.toLocaleString()} طلب
+                    {(service.reviews_count || 0).toLocaleString()} تقييم
                   </span>
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {service.features.map((feature) => (
-                    <span
-                      key={feature}
-                      className="text-xs px-2 py-1 rounded-md bg-primary/10 text-primary font-medium"
-                    >
-                      {feature}
+                  <span className="text-xs px-2 py-1 rounded-md bg-primary/10 text-primary font-medium">
+                    سريع
+                  </span>
+                  <span className="text-xs px-2 py-1 rounded-md bg-primary/10 text-primary font-medium">
+                    ضمان
+                  </span>
+                  {service.category?.name_ar && (
+                    <span className="text-xs px-2 py-1 rounded-md bg-primary/10 text-primary font-medium">
+                      {service.category.name_ar}
                     </span>
-                  ))}
+                  )}
                 </div>
 
                 <div className="flex items-end justify-between pt-4 border-t border-border">
                   <div>
                     <span className="text-2xl font-bold text-gradient">
-                      ${service.price}
+                      ${service.price.toFixed(2)}
                     </span>
                     <span className="text-sm text-muted-foreground mr-1">
-                      / {service.unit}
+                      / {service.min_quantity || 1000}
                     </span>
                   </div>
                 </div>
               </CardContent>
 
               <CardFooter className="px-6 pb-6">
-                <Button variant="hero" className="w-full group-hover:shadow-lg">
-                  <ShoppingCart className="h-4 w-4" />
-                  اطلب الآن
+                <Button variant="hero" className="w-full group-hover:shadow-lg" asChild>
+                  <Link to={`/service/${service.slug}`}>
+                    <ShoppingCart className="h-4 w-4" />
+                    اطلب الآن
+                  </Link>
                 </Button>
               </CardFooter>
             </Card>
@@ -165,8 +179,8 @@ const ServicesSection = () => {
         </div>
 
         <div className="text-center mt-12">
-          <Button variant="outline" size="lg">
-            عرض جميع الخدمات
+          <Button variant="outline" size="lg" asChild>
+            <Link to="/services">عرض جميع الخدمات</Link>
           </Button>
         </div>
       </div>
