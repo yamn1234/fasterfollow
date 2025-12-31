@@ -71,6 +71,74 @@ const OrdersTab = () => {
     }
   }, [user]);
 
+  // Realtime subscription for order updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('orders-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `user_id=eq.${user.id}`
+        },
+        async (payload) => {
+          console.log('Order update received:', payload);
+          
+          if (payload.eventType === 'INSERT') {
+            // Fetch the new order with service info
+            const { data } = await supabase
+              .from("orders")
+              .select(`
+                id, link, quantity, price, status, start_count, remains,
+                created_at, completed_at, service:services(name, name_ar)
+              `)
+              .eq("id", payload.new.id)
+              .single();
+            
+            if (data) {
+              setOrders(prev => [data, ...prev]);
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            setOrders(prev => prev.map(order => {
+              if (order.id === payload.new.id) {
+                return {
+                  ...order,
+                  status: payload.new.status,
+                  start_count: payload.new.start_count,
+                  remains: payload.new.remains,
+                  completed_at: payload.new.completed_at,
+                  error_message: payload.new.error_message
+                };
+              }
+              return order;
+            }));
+            
+            // Update selected order if viewing details
+            if (selectedOrder?.id === payload.new.id) {
+              setSelectedOrder(prev => prev ? {
+                ...prev,
+                status: payload.new.status,
+                start_count: payload.new.start_count,
+                remains: payload.new.remains,
+                completed_at: payload.new.completed_at
+              } : null);
+            }
+          } else if (payload.eventType === 'DELETE') {
+            setOrders(prev => prev.filter(order => order.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, selectedOrder?.id]);
+
   const fetchOrders = async () => {
     try {
       const { data, error } = await supabase
