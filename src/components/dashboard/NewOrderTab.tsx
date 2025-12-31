@@ -135,14 +135,15 @@ const NewOrderTab = () => {
     setSubmitting(true);
 
     try {
-      const { error } = await supabase.from("orders").insert({
+      // Create order in database
+      const { data: orderData, error } = await supabase.from("orders").insert({
         user_id: user.id,
         service_id: selectedService,
         link: link.trim(),
         quantity,
         price: totalPrice,
         status: "pending"
-      });
+      }).select().single();
 
       if (error) throw error;
 
@@ -152,10 +153,39 @@ const NewOrderTab = () => {
         .update({ balance: userBalance - totalPrice })
         .eq("user_id", user.id);
 
-      toast({
-        title: "تم إنشاء الطلب بنجاح! 🎉",
-        description: "سيتم تنفيذ طلبك قريباً",
-      });
+      // Send order to provider via edge function
+      const { data: session } = await supabase.auth.getSession();
+      if (session?.session?.access_token && orderData?.id) {
+        const { data: placeResult, error: placeError } = await supabase.functions.invoke(
+          'smm-place-order',
+          {
+            body: { orderId: orderData.id }
+          }
+        );
+
+        if (placeError) {
+          console.error("Error placing order with provider:", placeError);
+          toast({
+            title: "تم إنشاء الطلب",
+            description: "الطلب في انتظار الإرسال للمزود",
+          });
+        } else if (placeResult?.success) {
+          toast({
+            title: "تم إرسال الطلب بنجاح! 🎉",
+            description: `رقم الطلب الخارجي: ${placeResult.externalOrderId}`,
+          });
+        } else {
+          toast({
+            title: "تم إنشاء الطلب",
+            description: placeResult?.error || "في انتظار المعالجة",
+          });
+        }
+      } else {
+        toast({
+          title: "تم إنشاء الطلب بنجاح! 🎉",
+          description: "سيتم تنفيذ طلبك قريباً",
+        });
+      }
 
       // Reset form
       setLink("");
@@ -165,7 +195,7 @@ const NewOrderTab = () => {
       console.error("Error creating order:", error);
       toast({
         title: "خطأ",
-        description: "فشل في إنشاء الطلب",
+        description: error.message || "فشل في إنشاء الطلب",
         variant: "destructive",
       });
     } finally {
