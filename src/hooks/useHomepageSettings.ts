@@ -65,23 +65,32 @@ export const useHomepageSettings = () => {
       if (data) {
         data.forEach(item => {
           try {
-            const value = typeof item.value === 'string' 
-              ? JSON.parse(item.value) 
-              : item.value;
+            // القيمة قد تكون JSONB مباشرة أو نص JSON
+            let value = item.value;
+            if (typeof value === 'string') {
+              try {
+                value = JSON.parse(value);
+              } catch {
+                // إذا لم يكن JSON صالح، استخدم القيمة كما هي
+              }
+            }
 
             if (item.key === 'homepage_sections' && Array.isArray(value)) {
-              setSections(value);
-            } else if (item.key === 'hero_settings' && value) {
-              setHeroSettings(prev => ({ ...prev, ...value }));
+              setSections(value as unknown as HomepageSection[]);
+            } else if (item.key === 'hero_settings' && value && typeof value === 'object' && !Array.isArray(value)) {
+              setHeroSettings(prev => ({ ...prev, ...(value as unknown as Partial<HeroSettings>) }));
             } else if (item.key === 'site_name' && value) {
-              setSiteSettings(prev => ({ ...prev, site_name: value }));
+              const siteName = typeof value === 'string' ? value : String(value);
+              setSiteSettings(prev => ({ ...prev, site_name: siteName }));
             } else if (item.key === 'site_name_ar' && value) {
-              setSiteSettings(prev => ({ ...prev, site_name_ar: value }));
+              const siteNameAr = typeof value === 'string' ? value : String(value);
+              setSiteSettings(prev => ({ ...prev, site_name_ar: siteNameAr }));
             } else if (item.key === 'site_description' && value) {
-              setSiteSettings(prev => ({ ...prev, site_description: value }));
+              const desc = typeof value === 'string' ? value : String(value);
+              setSiteSettings(prev => ({ ...prev, site_description: desc }));
             }
-          } catch {
-            // Skip invalid JSON
+          } catch (e) {
+            console.warn('Error parsing setting:', item.key, e);
           }
         });
       }
