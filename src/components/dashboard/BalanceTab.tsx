@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,30 +10,27 @@ import {
   Gift, 
   Sparkles,
   CheckCircle,
-  Info
+  Info,
+  ExternalLink,
+  Loader2
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-const paymentMethods = [
-  {
-    id: "paypal",
-    name: "PayPal",
-    icon: "💳",
-    description: "الدفع عبر حساب PayPal",
-  },
-  {
-    id: "card",
-    name: "بطاقة ائتمان",
-    icon: "💎",
-    description: "Visa, Mastercard, Amex",
-  },
-  {
-    id: "vodafone",
-    name: "فودافون كاش",
-    icon: "📱",
-    description: "الدفع عبر فودافون كاش",
-  },
-];
+interface PaymentGateway {
+  id: string;
+  name: string;
+  slug: string;
+  is_active: boolean;
+  fee_percentage: number;
+  fee_fixed: number;
+  min_amount: number;
+  max_amount: number;
+  redirect_url: string | null;
+  instructions: string | null;
+  instructions_ar: string | null;
+  gateway_type: string | null;
+}
 
 const presetAmounts = [5, 10, 25, 50, 100];
 
@@ -46,18 +43,66 @@ const bonusRates = [
 
 const BalanceTab = () => {
   const [amount, setAmount] = useState<string>("10");
-  const [paymentMethod, setPaymentMethod] = useState("paypal");
+  const [paymentMethod, setPaymentMethod] = useState<string>("");
+  const [gateways, setGateways] = useState<PaymentGateway[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchGateways();
+  }, []);
+
+  const fetchGateways = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('payment_gateways')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+
+      if (error) throw error;
+      
+      setGateways(data || []);
+      if (data && data.length > 0) {
+        setPaymentMethod(data[0].id);
+      }
+    } catch (error) {
+      console.error('Error fetching gateways:', error);
+      toast.error('حدث خطأ في جلب طرق الدفع');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const numericAmount = parseFloat(amount) || 0;
   const bonusRate = bonusRates.find((r) => numericAmount >= r.min)?.bonus || 0;
   const bonusAmount = (numericAmount * bonusRate) / 100;
   const totalAmount = numericAmount + bonusAmount;
 
+  const selectedGateway = gateways.find(g => g.id === paymentMethod);
+
   const handleSubmit = () => {
-    if (numericAmount < 1) {
-      toast.error("الحد الأدنى للشحن هو $1");
+    if (!selectedGateway) {
+      toast.error("يرجى اختيار طريقة الدفع");
       return;
     }
+    
+    if (numericAmount < selectedGateway.min_amount) {
+      toast.error(`الحد الأدنى للشحن هو $${selectedGateway.min_amount}`);
+      return;
+    }
+
+    if (numericAmount > selectedGateway.max_amount) {
+      toast.error(`الحد الأقصى للشحن هو $${selectedGateway.max_amount}`);
+      return;
+    }
+
+    // إذا كانت طريقة دفع يدوية مع رابط توجيه
+    if (selectedGateway.gateway_type === 'manual' && selectedGateway.redirect_url) {
+      window.open(selectedGateway.redirect_url, '_blank');
+      toast.success('تم فتح صفحة الدفع في نافذة جديدة');
+      return;
+    }
+
     toast.success(`تم إرسال طلب شحن بقيمة $${numericAmount.toFixed(2)}`);
   };
 
@@ -81,7 +126,10 @@ const BalanceTab = () => {
                 اختر المبلغ
               </CardTitle>
               <CardDescription>
-                الحد الأدنى للشحن هو $1 فقط
+                {selectedGateway 
+                  ? `الحد الأدنى $${selectedGateway.min_amount} - الحد الأقصى $${selectedGateway.max_amount}`
+                  : 'اختر طريقة الدفع أولاً'
+                }
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -123,35 +171,54 @@ const BalanceTab = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <RadioGroup
-                value={paymentMethod}
-                onValueChange={setPaymentMethod}
-                className="space-y-3"
-              >
-                {paymentMethods.map((method) => (
-                  <Label
-                    key={method.id}
-                    htmlFor={method.id}
-                    className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      paymentMethod === method.id
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/30"
-                    }`}
-                  >
-                    <RadioGroupItem value={method.id} id={method.id} />
-                    <span className="text-2xl">{method.icon}</span>
-                    <div className="flex-1">
-                      <p className="font-medium">{method.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {method.description}
-                      </p>
-                    </div>
-                    {paymentMethod === method.id && (
-                      <CheckCircle className="h-5 w-5 text-primary" />
-                    )}
-                  </Label>
-                ))}
-              </RadioGroup>
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : gateways.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  لا توجد طرق دفع متاحة حالياً
+                </div>
+              ) : (
+                <RadioGroup
+                  value={paymentMethod}
+                  onValueChange={setPaymentMethod}
+                  className="space-y-3"
+                >
+                  {gateways.map((gateway) => (
+                    <Label
+                      key={gateway.id}
+                      htmlFor={gateway.id}
+                      className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        paymentMethod === gateway.id
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/30"
+                      }`}
+                    >
+                      <RadioGroupItem value={gateway.id} id={gateway.id} />
+                      <span className="text-2xl">
+                        {gateway.gateway_type === 'manual' ? '🔗' : '💳'}
+                      </span>
+                      <div className="flex-1">
+                        <p className="font-medium">{gateway.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {gateway.gateway_type === 'manual' ? 'دفع يدوي' : 'دفع تلقائي'}
+                          {gateway.fee_percentage > 0 && ` • رسوم ${gateway.fee_percentage}%`}
+                          {gateway.fee_fixed > 0 && ` + $${gateway.fee_fixed}`}
+                        </p>
+                        {gateway.instructions_ar && paymentMethod === gateway.id && (
+                          <p className="text-sm text-primary mt-2 bg-primary/10 p-2 rounded">
+                            {gateway.instructions_ar}
+                          </p>
+                        )}
+                      </div>
+                      {paymentMethod === gateway.id && (
+                        <CheckCircle className="h-5 w-5 text-primary" />
+                      )}
+                    </Label>
+                  ))}
+                </RadioGroup>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -194,6 +261,14 @@ const BalanceTab = () => {
                 <span className="text-muted-foreground">المبلغ</span>
                 <span className="font-medium">${numericAmount.toFixed(2)}</span>
               </div>
+              {selectedGateway && (selectedGateway.fee_percentage > 0 || selectedGateway.fee_fixed > 0) && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>رسوم الدفع</span>
+                  <span>
+                    ${((numericAmount * selectedGateway.fee_percentage / 100) + selectedGateway.fee_fixed).toFixed(2)}
+                  </span>
+                </div>
+              )}
               {bonusAmount > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span className="flex items-center gap-1">
@@ -215,10 +290,19 @@ const BalanceTab = () => {
                 size="lg"
                 className="w-full mt-4"
                 onClick={handleSubmit}
-                disabled={numericAmount < 1}
+                disabled={numericAmount < 1 || !selectedGateway || loading}
               >
-                <CreditCard className="h-5 w-5" />
-                شحن الآن
+                {selectedGateway?.gateway_type === 'manual' && selectedGateway?.redirect_url ? (
+                  <>
+                    <ExternalLink className="h-5 w-5" />
+                    الذهاب للدفع
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="h-5 w-5" />
+                    شحن الآن
+                  </>
+                )}
               </Button>
 
               <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
