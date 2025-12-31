@@ -45,7 +45,11 @@ const statusLabels: Record<string, { label: string; color: string }> = {
   failed: { label: "فشل", color: "bg-red-500" },
 };
 
-const OverviewTab = () => {
+interface OverviewTabProps {
+  onNavigate?: (tab: string) => void;
+}
+
+const OverviewTab = ({ onNavigate }: OverviewTabProps) => {
   const { profile, user } = useAuth();
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<OrderStats>({ total: 0, completed: 0, inProgress: 0 });
@@ -151,11 +155,11 @@ const OverviewTab = () => {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => onNavigate?.("balance")}>
             <Plus className="h-4 w-4" />
             شحن الرصيد
           </Button>
-          <Button variant="default">
+          <Button variant="default" onClick={() => onNavigate?.("new-order")}>
             <Zap className="h-4 w-4" />
             طلب جديد
           </Button>
@@ -191,7 +195,7 @@ const OverviewTab = () => {
       <Card variant="elevated">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>آخر الطلبات</CardTitle>
-          <Button variant="ghost" size="sm" className="gap-1">
+          <Button variant="ghost" size="sm" className="gap-1" onClick={() => onNavigate?.("orders")}>
             عرض الكل
             <ArrowUpLeft className="h-4 w-4" />
           </Button>
@@ -236,7 +240,7 @@ const OverviewTab = () => {
             <div className="text-center py-12">
               <ShoppingBag className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
               <p className="text-muted-foreground">لا توجد طلبات بعد</p>
-              <Button variant="default" className="mt-4">
+              <Button variant="default" className="mt-4" onClick={() => onNavigate?.("new-order")}>
                 <Zap className="h-4 w-4" />
                 ابدأ طلبك الأول
               </Button>
