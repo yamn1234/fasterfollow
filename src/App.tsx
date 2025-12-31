@@ -16,6 +16,7 @@ import AdminOverview from "./pages/admin/AdminOverview";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminServices from "./pages/admin/AdminServices";
+import AdminCategories from "./pages/admin/AdminCategories";
 import AdminProviders from "./pages/admin/AdminProviders";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminContent from "./pages/admin/AdminContent";
@@ -28,6 +29,9 @@ import AdminTickets from "./pages/admin/AdminTickets";
 import Services from "./pages/Services";
 import ServiceDetail from "./pages/ServiceDetail";
 import AdminReviews from "./pages/admin/AdminReviews";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
+import PageView from "./pages/Page";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +48,9 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/services" element={<Services />} />
               <Route path="/services/:slug" element={<ServiceDetail />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/page/:slug" element={<PageView />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin/login" element={<AdminAuth />} />
               <Route
@@ -73,6 +80,7 @@ const App = () => (
                 <Route path="reviews" element={<AdminReviews />} />
                 <Route path="services" element={<AdminServices />} />
                 <Route path="services/*" element={<AdminServices />} />
+                <Route path="categories" element={<AdminCategories />} />
                 <Route path="providers" element={<AdminProviders />} />
                 <Route path="providers/*" element={<AdminProviders />} />
                 <Route path="payments" element={<AdminPayments />} />

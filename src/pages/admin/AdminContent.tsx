@@ -12,6 +12,7 @@ import {
   Loader2,
   Globe,
   CheckCircle,
+  ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,6 +46,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -391,9 +393,12 @@ const AdminContent = () => {
                             <Pencil className="w-4 h-4 ml-2" />
                             تعديل
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => window.open(`/page/${page.slug}`, '_blank')}
+                          >
                             <Eye className="w-4 h-4 ml-2" />
                             معاينة
+                            <ExternalLink className="w-3 h-3 mr-auto" />
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleArchive(page)}>
@@ -454,10 +459,9 @@ const AdminContent = () => {
             </div>
             <div className="space-y-2">
               <Label>المحتوى</Label>
-              <Textarea
+              <RichTextEditor
                 value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                rows={6}
+                onChange={(value) => setFormData({ ...formData, content: value })}
               />
             </div>
             <div className="border-t pt-4">
