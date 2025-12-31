@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Wallet, 
   ShoppingBag, 
@@ -8,84 +10,135 @@ import {
   Clock, 
   TrendingUp,
   ArrowUpLeft,
-  Plus
+  Plus,
+  Loader2,
+  Zap
 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { ar } from "date-fns/locale";
 
-const recentOrders = [
-  {
-    id: "#1234",
-    service: "متابعين انستجرام",
-    quantity: 1000,
-    status: "مكتمل",
-    statusColor: "bg-green-500",
-    date: "منذ ساعة",
-  },
-  {
-    id: "#1233",
-    service: "مشاهدات تيك توك",
-    quantity: 5000,
-    status: "قيد التنفيذ",
-    statusColor: "bg-yellow-500",
-    date: "منذ 3 ساعات",
-  },
-  {
-    id: "#1232",
-    service: "لايكات انستجرام",
-    quantity: 500,
-    status: "مكتمل",
-    statusColor: "bg-green-500",
-    date: "أمس",
-  },
-  {
-    id: "#1231",
-    service: "متابعين تيك توك",
-    quantity: 2000,
-    status: "مكتمل",
-    statusColor: "bg-green-500",
-    date: "منذ يومين",
-  },
-];
+interface Order {
+  id: string;
+  quantity: number;
+  status: string;
+  created_at: string;
+  service: {
+    name: string;
+    name_ar: string | null;
+  } | null;
+}
 
-const quickActions = [
-  { label: "شحن الرصيد", icon: Plus },
-  { label: "طلب جديد", icon: ShoppingBag },
-];
+interface OrderStats {
+  total: number;
+  completed: number;
+  inProgress: number;
+}
+
+const statusLabels: Record<string, { label: string; color: string }> = {
+  pending: { label: "في الانتظار", color: "bg-yellow-500" },
+  processing: { label: "قيد المعالجة", color: "bg-blue-500" },
+  in_progress: { label: "قيد التنفيذ", color: "bg-orange-500" },
+  completed: { label: "مكتمل", color: "bg-green-500" },
+  partial: { label: "جزئي", color: "bg-purple-500" },
+  cancelled: { label: "ملغي", color: "bg-gray-500" },
+  refunded: { label: "مسترد", color: "bg-blue-400" },
+  failed: { label: "فشل", color: "bg-red-500" },
+};
 
 const OverviewTab = () => {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const [stats, setStats] = useState<OrderStats>({ total: 0, completed: 0, inProgress: 0 });
+  const [loading, setLoading] = useState(true);
 
-  const stats = [
+  useEffect(() => {
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
+
+  const fetchData = async () => {
+    try {
+      // Fetch recent orders with service info
+      const { data: ordersData, error: ordersError } = await supabase
+        .from("orders")
+        .select(`
+          id,
+          quantity,
+          status,
+          created_at,
+          service:services(name, name_ar)
+        `)
+        .eq("user_id", user?.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (ordersError) throw ordersError;
+
+      // Fetch order stats
+      const { data: allOrders, error: statsError } = await supabase
+        .from("orders")
+        .select("status")
+        .eq("user_id", user?.id);
+
+      if (statsError) throw statsError;
+
+      const total = allOrders?.length || 0;
+      const completed = allOrders?.filter(o => o.status === "completed").length || 0;
+      const inProgress = allOrders?.filter(o => 
+        ["pending", "processing", "in_progress"].includes(o.status || "")
+      ).length || 0;
+
+      setRecentOrders(ordersData || []);
+      setStats({ total, completed, inProgress });
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const firstName = profile?.full_name?.split(" ")[0] || "المستخدم";
+  const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+
+  const statsData = [
     {
       title: "الرصيد الحالي",
       value: `$${profile?.balance?.toFixed(2) || "0.00"}`,
       icon: Wallet,
-      trend: "+$10.00 هذا الشهر",
-      trendUp: true,
+      trend: "رصيدك المتاح للشراء",
+      trendUp: (profile?.balance || 0) > 0,
     },
     {
       title: "إجمالي الطلبات",
-      value: "0",
+      value: stats.total.toString(),
       icon: ShoppingBag,
-      trend: "ابدأ طلبك الأول",
-      trendUp: false,
+      trend: stats.total > 0 ? `${stats.total} طلب حتى الآن` : "ابدأ طلبك الأول",
+      trendUp: stats.total > 0,
     },
     {
       title: "طلبات مكتملة",
-      value: "0",
+      value: stats.completed.toString(),
       icon: CheckCircle,
-      trend: "0% نسبة الإكمال",
-      trendUp: false,
+      trend: `${completionRate}% نسبة الإكمال`,
+      trendUp: completionRate > 50,
     },
     {
       title: "طلبات قيد التنفيذ",
-      value: "0",
+      value: stats.inProgress.toString(),
       icon: Clock,
-      trend: "لا توجد طلبات نشطة",
+      trend: stats.inProgress > 0 ? `${stats.inProgress} طلب نشط` : "لا توجد طلبات نشطة",
       trendUp: false,
     },
   ];
 
-  const firstName = profile?.full_name?.split(" ")[0] || "المستخدم";
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -94,28 +147,30 @@ const OverviewTab = () => {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">مرحباً، {firstName}! 👋</h1>
           <p className="text-muted-foreground mt-1">
-            إليك ملخص نشاطك في متجر المتابعين
+            إليك ملخص نشاطك في FasterFollow
           </p>
         </div>
         <div className="flex gap-3">
-          {quickActions.map((action) => (
-            <Button key={action.label} variant="hero">
-              <action.icon className="h-4 w-4" />
-              {action.label}
-            </Button>
-          ))}
+          <Button variant="outline">
+            <Plus className="h-4 w-4" />
+            شحن الرصيد
+          </Button>
+          <Button variant="default">
+            <Zap className="h-4 w-4" />
+            طلب جديد
+          </Button>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
+        {statsData.map((stat) => (
           <Card key={stat.title} variant="elevated">
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{stat.title}</p>
-                  <p className="text-2xl md:text-3xl font-bold mt-1">{stat.value}</p>
+                  <p className="text-xl md:text-2xl font-bold mt-1">{stat.value}</p>
                   <p className={`text-xs mt-2 flex items-center gap-1 ${
                     stat.trendUp ? "text-green-600" : "text-muted-foreground"
                   }`}>
@@ -123,8 +178,8 @@ const OverviewTab = () => {
                     {stat.trend}
                   </p>
                 </div>
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <stat.icon className="h-6 w-6 text-primary" />
+                <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <stat.icon className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                 </div>
               </div>
             </CardContent>
@@ -143,39 +198,46 @@ const OverviewTab = () => {
         </CardHeader>
         <CardContent>
           {recentOrders.length > 0 ? (
-            <div className="space-y-4">
-              {recentOrders.map((order) => (
-                <div
-                  key={order.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <ShoppingBag className="h-5 w-5 text-primary" />
+            <div className="space-y-3">
+              {recentOrders.map((order) => {
+                const statusInfo = statusLabels[order.status || "pending"];
+                return (
+                  <div
+                    key={order.id}
+                    className="flex items-center justify-between p-3 md:p-4 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
+                  >
+                    <div className="flex items-center gap-3 md:gap-4">
+                      <div className="h-9 w-9 md:h-10 md:w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <ShoppingBag className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm md:text-base">
+                          {order.service?.name_ar || order.service?.name || "خدمة محذوفة"}
+                        </p>
+                        <p className="text-xs md:text-sm text-muted-foreground">
+                          #{order.id.slice(0, 8)} • {order.quantity.toLocaleString()} وحدة
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">{order.service}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {order.id} • {order.quantity.toLocaleString()} وحدة
+                    <div className="text-left">
+                      <div className="flex items-center gap-2">
+                        <span className={`h-2 w-2 rounded-full ${statusInfo.color}`} />
+                        <span className="text-xs md:text-sm font-medium">{statusInfo.label}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDistanceToNow(new Date(order.created_at), { addSuffix: true, locale: ar })}
                       </p>
                     </div>
                   </div>
-                  <div className="text-left">
-                    <div className="flex items-center gap-2">
-                      <span className={`h-2 w-2 rounded-full ${order.statusColor}`} />
-                      <span className="text-sm font-medium">{order.status}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">{order.date}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12">
               <ShoppingBag className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
               <p className="text-muted-foreground">لا توجد طلبات بعد</p>
-              <Button variant="hero" className="mt-4">
-                <Plus className="h-4 w-4" />
+              <Button variant="default" className="mt-4">
+                <Zap className="h-4 w-4" />
                 ابدأ طلبك الأول
               </Button>
             </div>
