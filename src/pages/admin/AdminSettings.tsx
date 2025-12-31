@@ -100,6 +100,28 @@ const AdminSettings = () => {
     show_stats: true,
   });
 
+  const [featuresSettings, setFeaturesSettings] = useState({
+    title: 'لماذا متجر المتابعين؟',
+    subtitle: 'نقدم لك تجربة فريدة ومميزة تجعلنا الخيار الأول لآلاف العملاء',
+    features: [
+      { icon: 'Zap', title: 'سرعة فائقة', description: 'تبدأ الخدمة خلال دقائق من الطلب مع تسليم تدريجي طبيعي' },
+      { icon: 'Shield', title: 'ضمان كامل', description: 'نضمن جميع خدماتنا مع تعويض فوري في حالة النقص' },
+      { icon: 'DollarSign', title: 'أسعار تنافسية', description: 'أفضل الأسعار في السوق مع جودة عالية لا مثيل لها' },
+      { icon: 'Headphones', title: 'دعم فني 24/7', description: 'فريق دعم متخصص جاهز لمساعدتك في أي وقت' },
+      { icon: 'Gift', title: 'هدايا مجانية', description: 'احصل على رصيد مجاني عند كل شحن وخدمات مجانية' },
+      { icon: 'Clock', title: 'تشغيل آلي', description: 'نظام آلي متطور لبدء الخدمة فوراً بدون تأخير' },
+    ],
+  });
+
+  const [ctaSettings, setCtaSettings] = useState({
+    badge_text: 'احصل على رصيد مجاني للتجربة',
+    title: 'ابدأ رحلتك نحو النجاح',
+    subtitle: 'على السوشيال ميديا',
+    description: 'سجل الآن واحصل على رصيد مجاني لتجربة جميع خدماتنا. لا يوجد حد أدنى للشحن!',
+    button_text: 'سجل الآن مجاناً',
+    button_link: '/auth',
+  });
+
   useEffect(() => {
     loadSettings();
   }, []);
@@ -127,7 +149,13 @@ const AdminSettings = () => {
           setThemeSettings(settingsMap.theme_settings);
         }
         if (settingsMap.hero_settings) {
-          setHeroSettings(settingsMap.hero_settings);
+          setHeroSettings(prev => ({ ...prev, ...settingsMap.hero_settings }));
+        }
+        if (settingsMap.features_settings) {
+          setFeaturesSettings(prev => ({ ...prev, ...settingsMap.features_settings }));
+        }
+        if (settingsMap.cta_settings) {
+          setCtaSettings(prev => ({ ...prev, ...settingsMap.cta_settings }));
         }
         
         setSettings(prev => ({
@@ -164,6 +192,8 @@ const AdminSettings = () => {
         { key: 'homepage_sections', value: homepageSections, group_name: 'homepage' },
         { key: 'theme_settings', value: themeSettings, group_name: 'appearance' },
         { key: 'hero_settings', value: heroSettings, group_name: 'homepage' },
+        { key: 'features_settings', value: featuresSettings, group_name: 'homepage' },
+        { key: 'cta_settings', value: ctaSettings, group_name: 'homepage' },
       ];
 
       for (const setting of settingsToSave) {
@@ -542,6 +572,141 @@ const AdminSettings = () => {
                   rows={3}
                   placeholder="نقدم لك أسهل وأبسط وأسرع خدمة لزيادة المتابعين..."
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Features Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle>إعدادات قسم المميزات</CardTitle>
+              <CardDescription>تخصيص عناوين ونصوص قسم المميزات</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>عنوان القسم</Label>
+                  <Input
+                    value={featuresSettings.title}
+                    onChange={(e) =>
+                      setFeaturesSettings({ ...featuresSettings, title: e.target.value })
+                    }
+                    placeholder="لماذا متجر المتابعين؟"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>العنوان الفرعي</Label>
+                  <Input
+                    value={featuresSettings.subtitle}
+                    onChange={(e) =>
+                      setFeaturesSettings({ ...featuresSettings, subtitle: e.target.value })
+                    }
+                    placeholder="نقدم لك تجربة فريدة..."
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <Label>المميزات (6 مميزات)</Label>
+                {featuresSettings.features.map((feature, index) => (
+                  <div key={index} className="grid grid-cols-3 gap-2 p-3 border rounded-lg">
+                    <Input
+                      value={feature.title}
+                      onChange={(e) => {
+                        const newFeatures = [...featuresSettings.features];
+                        newFeatures[index] = { ...newFeatures[index], title: e.target.value };
+                        setFeaturesSettings({ ...featuresSettings, features: newFeatures });
+                      }}
+                      placeholder="عنوان الميزة"
+                    />
+                    <Input
+                      value={feature.description}
+                      onChange={(e) => {
+                        const newFeatures = [...featuresSettings.features];
+                        newFeatures[index] = { ...newFeatures[index], description: e.target.value };
+                        setFeaturesSettings({ ...featuresSettings, features: newFeatures });
+                      }}
+                      placeholder="وصف الميزة"
+                      className="col-span-2"
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* CTA Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle>إعدادات قسم دعوة للعمل (CTA)</CardTitle>
+              <CardDescription>تخصيص نصوص وأزرار القسم الختامي</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>نص الشارة</Label>
+                <Input
+                  value={ctaSettings.badge_text}
+                  onChange={(e) =>
+                    setCtaSettings({ ...ctaSettings, badge_text: e.target.value })
+                  }
+                  placeholder="احصل على رصيد مجاني للتجربة"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>العنوان الرئيسي</Label>
+                  <Input
+                    value={ctaSettings.title}
+                    onChange={(e) =>
+                      setCtaSettings({ ...ctaSettings, title: e.target.value })
+                    }
+                    placeholder="ابدأ رحلتك نحو النجاح"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>العنوان الفرعي</Label>
+                  <Input
+                    value={ctaSettings.subtitle}
+                    onChange={(e) =>
+                      setCtaSettings({ ...ctaSettings, subtitle: e.target.value })
+                    }
+                    placeholder="على السوشيال ميديا"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>الوصف</Label>
+                <Textarea
+                  value={ctaSettings.description}
+                  onChange={(e) =>
+                    setCtaSettings({ ...ctaSettings, description: e.target.value })
+                  }
+                  rows={2}
+                  placeholder="سجل الآن واحصل على رصيد مجاني..."
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>نص الزر</Label>
+                  <Input
+                    value={ctaSettings.button_text}
+                    onChange={(e) =>
+                      setCtaSettings({ ...ctaSettings, button_text: e.target.value })
+                    }
+                    placeholder="سجل الآن مجاناً"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>رابط الزر</Label>
+                  <Input
+                    value={ctaSettings.button_link}
+                    onChange={(e) =>
+                      setCtaSettings({ ...ctaSettings, button_link: e.target.value })
+                    }
+                    dir="ltr"
+                    placeholder="/auth"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
