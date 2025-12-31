@@ -10,6 +10,10 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  Plus,
+  Pencil,
+  ExternalLink,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +35,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -57,6 +71,10 @@ interface PaymentGateway {
   fee_fixed: number;
   min_amount: number;
   max_amount: number;
+  redirect_url: string | null;
+  instructions: string | null;
+  instructions_ar: string | null;
+  gateway_type: string | null;
 }
 
 interface Coupon {
@@ -78,6 +96,21 @@ const AdminPayments = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [gatewayDialogOpen, setGatewayDialogOpen] = useState(false);
+  const [selectedGateway, setSelectedGateway] = useState<PaymentGateway | null>(null);
+  const [gatewayFormData, setGatewayFormData] = useState({
+    name: '',
+    slug: '',
+    gateway_type: 'manual',
+    redirect_url: '',
+    instructions: '',
+    instructions_ar: '',
+    fee_percentage: '0',
+    fee_fixed: '0',
+    min_amount: '1',
+    max_amount: '10000',
+    is_active: true,
+  });
 
   useEffect(() => {
     fetchData();
@@ -103,6 +136,106 @@ const AdminPayments = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+  };
+
+  const handleSaveGateway = async () => {
+    try {
+      const gatewayData = {
+        name: gatewayFormData.name,
+        slug: gatewayFormData.slug || generateSlug(gatewayFormData.name),
+        gateway_type: gatewayFormData.gateway_type,
+        redirect_url: gatewayFormData.redirect_url || null,
+        instructions: gatewayFormData.instructions || null,
+        instructions_ar: gatewayFormData.instructions_ar || null,
+        fee_percentage: parseFloat(gatewayFormData.fee_percentage) || 0,
+        fee_fixed: parseFloat(gatewayFormData.fee_fixed) || 0,
+        min_amount: parseFloat(gatewayFormData.min_amount) || 1,
+        max_amount: parseFloat(gatewayFormData.max_amount) || 10000,
+        is_active: gatewayFormData.is_active,
+      };
+
+      if (selectedGateway) {
+        const { error } = await supabase
+          .from('payment_gateways')
+          .update(gatewayData)
+          .eq('id', selectedGateway.id);
+        if (error) throw error;
+        toast({ title: 'تم بنجاح', description: 'تم تحديث طريقة الدفع' });
+      } else {
+        const { error } = await supabase
+          .from('payment_gateways')
+          .insert(gatewayData);
+        if (error) throw error;
+        toast({ title: 'تم بنجاح', description: 'تم إضافة طريقة الدفع' });
+      }
+
+      setGatewayDialogOpen(false);
+      resetGatewayForm();
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message || 'حدث خطأ',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const resetGatewayForm = () => {
+    setGatewayFormData({
+      name: '',
+      slug: '',
+      gateway_type: 'manual',
+      redirect_url: '',
+      instructions: '',
+      instructions_ar: '',
+      fee_percentage: '0',
+      fee_fixed: '0',
+      min_amount: '1',
+      max_amount: '10000',
+      is_active: true,
+    });
+    setSelectedGateway(null);
+  };
+
+  const openEditGateway = (gateway: PaymentGateway) => {
+    setSelectedGateway(gateway);
+    setGatewayFormData({
+      name: gateway.name,
+      slug: gateway.slug,
+      gateway_type: gateway.gateway_type || 'manual',
+      redirect_url: gateway.redirect_url || '',
+      instructions: gateway.instructions || '',
+      instructions_ar: gateway.instructions_ar || '',
+      fee_percentage: gateway.fee_percentage.toString(),
+      fee_fixed: gateway.fee_fixed.toString(),
+      min_amount: gateway.min_amount.toString(),
+      max_amount: gateway.max_amount.toString(),
+      is_active: gateway.is_active,
+    });
+    setGatewayDialogOpen(true);
+  };
+
+  const toggleGatewayActive = async (gateway: PaymentGateway) => {
+    try {
+      const { error } = await supabase
+        .from('payment_gateways')
+        .update({ is_active: !gateway.is_active })
+        .eq('id', gateway.id);
+      if (error) throw error;
+      fetchData();
+    } catch (error) {
+      toast({ title: 'خطأ', description: 'حدث خطأ', variant: 'destructive' });
     }
   };
 
@@ -204,7 +337,7 @@ const AdminPayments = () => {
       <Tabs defaultValue="transactions" className="space-y-4">
         <TabsList>
           <TabsTrigger value="transactions">المعاملات</TabsTrigger>
-          <TabsTrigger value="gateways">بوابات الدفع</TabsTrigger>
+          <TabsTrigger value="gateways">طرق الدفع</TabsTrigger>
           <TabsTrigger value="coupons">الكوبونات</TabsTrigger>
         </TabsList>
 
@@ -305,23 +438,37 @@ const AdminPayments = () => {
         </TabsContent>
 
         <TabsContent value="gateways" className="space-y-4">
+          <div className="flex justify-end">
+            <Button
+              className="gradient-primary text-primary-foreground"
+              onClick={() => {
+                resetGatewayForm();
+                setGatewayDialogOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4 ml-2" />
+              إضافة طريقة دفع
+            </Button>
+          </div>
           <Card>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>البوابة</TableHead>
+                    <TableHead>النوع</TableHead>
                     <TableHead>الرسوم</TableHead>
-                    <TableHead>الحد الأدنى</TableHead>
-                    <TableHead>الحد الأقصى</TableHead>
+                    <TableHead>الحدود</TableHead>
+                    <TableHead>الرابط</TableHead>
                     <TableHead>الحالة</TableHead>
+                    <TableHead>إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {gateways.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-10">
-                        لا توجد بوابات دفع
+                      <TableCell colSpan={7} className="text-center py-10">
+                        لا توجد طرق دفع
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -329,20 +476,45 @@ const AdminPayments = () => {
                       <TableRow key={gateway.id}>
                         <TableCell className="font-medium">{gateway.name}</TableCell>
                         <TableCell>
+                          <Badge variant="outline">
+                            {gateway.gateway_type === 'manual' ? 'يدوي' : 'تلقائي'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
                           {gateway.fee_percentage}% + ${gateway.fee_fixed}
                         </TableCell>
-                        <TableCell>${gateway.min_amount}</TableCell>
-                        <TableCell>${gateway.max_amount}</TableCell>
                         <TableCell>
-                          <Badge
-                            className={
-                              gateway.is_active
-                                ? 'bg-green-500/10 text-green-500'
-                                : 'bg-gray-500/10 text-gray-500'
-                            }
+                          ${gateway.min_amount} - ${gateway.max_amount}
+                        </TableCell>
+                        <TableCell>
+                          {gateway.redirect_url ? (
+                            <a
+                              href={gateway.redirect_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline flex items-center gap-1"
+                            >
+                              <LinkIcon className="w-3 h-3" />
+                              رابط
+                            </a>
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Switch
+                            checked={gateway.is_active}
+                            onCheckedChange={() => toggleGatewayActive(gateway)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEditGateway(gateway)}
                           >
-                            {gateway.is_active ? 'نشط' : 'معطل'}
-                          </Badge>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))
@@ -414,6 +586,172 @@ const AdminPayments = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Gateway Dialog */}
+      <Dialog open={gatewayDialogOpen} onOpenChange={setGatewayDialogOpen}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedGateway ? 'تعديل طريقة الدفع' : 'إضافة طريقة دفع جديدة'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>الاسم</Label>
+                <Input
+                  value={gatewayFormData.name}
+                  onChange={(e) => {
+                    setGatewayFormData({
+                      ...gatewayFormData,
+                      name: e.target.value,
+                      slug: generateSlug(e.target.value),
+                    });
+                  }}
+                  placeholder="PayPal, Vodafone Cash..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>الرابط (Slug)</Label>
+                <Input
+                  value={gatewayFormData.slug}
+                  onChange={(e) =>
+                    setGatewayFormData({ ...gatewayFormData, slug: e.target.value })
+                  }
+                  placeholder="paypal"
+                  dir="ltr"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>النوع</Label>
+              <Select
+                value={gatewayFormData.gateway_type}
+                onValueChange={(v) =>
+                  setGatewayFormData({ ...gatewayFormData, gateway_type: v })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manual">يدوي (تحويل لرابط خارجي)</SelectItem>
+                  <SelectItem value="automatic">تلقائي (API)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {gatewayFormData.gateway_type === 'manual' && (
+              <>
+                <div className="space-y-2">
+                  <Label>رابط التحويل</Label>
+                  <Input
+                    value={gatewayFormData.redirect_url}
+                    onChange={(e) =>
+                      setGatewayFormData({ ...gatewayFormData, redirect_url: e.target.value })
+                    }
+                    placeholder="https://payment-link.com/..."
+                    dir="ltr"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    سيتم توجيه المستخدم لهذا الرابط عند اختيار طريقة الدفع
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>تعليمات (إنجليزي)</Label>
+                    <Textarea
+                      value={gatewayFormData.instructions}
+                      onChange={(e) =>
+                        setGatewayFormData({ ...gatewayFormData, instructions: e.target.value })
+                      }
+                      rows={3}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>تعليمات (عربي)</Label>
+                    <Textarea
+                      value={gatewayFormData.instructions_ar}
+                      onChange={(e) =>
+                        setGatewayFormData({ ...gatewayFormData, instructions_ar: e.target.value })
+                      }
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>نسبة الرسوم (%)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={gatewayFormData.fee_percentage}
+                  onChange={(e) =>
+                    setGatewayFormData({ ...gatewayFormData, fee_percentage: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>رسوم ثابتة ($)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={gatewayFormData.fee_fixed}
+                  onChange={(e) =>
+                    setGatewayFormData({ ...gatewayFormData, fee_fixed: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>الحد الأدنى ($)</Label>
+                <Input
+                  type="number"
+                  value={gatewayFormData.min_amount}
+                  onChange={(e) =>
+                    setGatewayFormData({ ...gatewayFormData, min_amount: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>الحد الأقصى ($)</Label>
+                <Input
+                  type="number"
+                  value={gatewayFormData.max_amount}
+                  onChange={(e) =>
+                    setGatewayFormData({ ...gatewayFormData, max_amount: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label>نشط</Label>
+              <Switch
+                checked={gatewayFormData.is_active}
+                onCheckedChange={(checked) =>
+                  setGatewayFormData({ ...gatewayFormData, is_active: checked })
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGatewayDialogOpen(false)}>
+              إلغاء
+            </Button>
+            <Button onClick={handleSaveGateway}>
+              {selectedGateway ? 'تحديث' : 'إضافة'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
