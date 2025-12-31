@@ -14,6 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: string | null
+          module: string | null
+          target_id: string | null
+          target_type: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          module?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          module?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      announcements: {
+        Row: {
+          content: string | null
+          content_ar: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          show_on_homepage: boolean | null
+          starts_at: string | null
+          title: string
+          title_ar: string | null
+          type: string | null
+        }
+        Insert: {
+          content?: string | null
+          content_ar?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          show_on_homepage?: boolean | null
+          starts_at?: string | null
+          title: string
+          title_ar?: string | null
+          type?: string | null
+        }
+        Update: {
+          content?: string | null
+          content_ar?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          show_on_homepage?: boolean | null
+          starts_at?: string | null
+          title?: string
+          title_ar?: string | null
+          type?: string | null
+        }
+        Relationships: []
+      }
       api_providers: {
         Row: {
           api_key: string
@@ -56,6 +137,419 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          description_ar: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          name_ar: string | null
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          description_ar?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          name_ar?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          description_ar?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          name_ar?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
+      blog_posts: {
+        Row: {
+          archived_at: string | null
+          author_id: string
+          canonical_url: string | null
+          category_id: string | null
+          content: string | null
+          content_ar: string | null
+          created_at: string
+          excerpt: string | null
+          excerpt_ar: string | null
+          featured_image: string | null
+          id: string
+          is_archived: boolean | null
+          is_indexable: boolean | null
+          og_description: string | null
+          og_image: string | null
+          og_title: string | null
+          published_at: string | null
+          reading_time: number | null
+          scheduled_at: string | null
+          schema_markup: Json | null
+          seo_description: string | null
+          seo_keywords: string | null
+          seo_title: string | null
+          slug: string
+          status: string | null
+          tags: string[] | null
+          title: string
+          title_ar: string | null
+          twitter_description: string | null
+          twitter_title: string | null
+          updated_at: string
+          views_count: number | null
+        }
+        Insert: {
+          archived_at?: string | null
+          author_id: string
+          canonical_url?: string | null
+          category_id?: string | null
+          content?: string | null
+          content_ar?: string | null
+          created_at?: string
+          excerpt?: string | null
+          excerpt_ar?: string | null
+          featured_image?: string | null
+          id?: string
+          is_archived?: boolean | null
+          is_indexable?: boolean | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          published_at?: string | null
+          reading_time?: number | null
+          scheduled_at?: string | null
+          schema_markup?: Json | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          slug: string
+          status?: string | null
+          tags?: string[] | null
+          title: string
+          title_ar?: string | null
+          twitter_description?: string | null
+          twitter_title?: string | null
+          updated_at?: string
+          views_count?: number | null
+        }
+        Update: {
+          archived_at?: string | null
+          author_id?: string
+          canonical_url?: string | null
+          category_id?: string | null
+          content?: string | null
+          content_ar?: string | null
+          created_at?: string
+          excerpt?: string | null
+          excerpt_ar?: string | null
+          featured_image?: string | null
+          id?: string
+          is_archived?: boolean | null
+          is_indexable?: boolean | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          published_at?: string | null
+          reading_time?: number | null
+          scheduled_at?: string | null
+          schema_markup?: Json | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          slug?: string
+          status?: string | null
+          tags?: string[] | null
+          title?: string
+          title_ar?: string | null
+          twitter_description?: string | null
+          twitter_title?: string | null
+          updated_at?: string
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "blog_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          min_order_amount: number | null
+          starts_at: string | null
+          uses_count: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          discount_type?: string
+          discount_value: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_order_amount?: number | null
+          starts_at?: string | null
+          uses_count?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_order_amount?: number | null
+          starts_at?: string | null
+          uses_count?: number | null
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          external_order_id: string | null
+          id: string
+          ip_address: string | null
+          link: string
+          price: number
+          provider_id: string | null
+          quantity: number
+          refill_id: string | null
+          remains: number | null
+          service_id: string
+          start_count: number | null
+          status: Database["public"]["Enums"]["order_status"] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          external_order_id?: string | null
+          id?: string
+          ip_address?: string | null
+          link: string
+          price: number
+          provider_id?: string | null
+          quantity: number
+          refill_id?: string | null
+          remains?: number | null
+          service_id: string
+          start_count?: number | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          external_order_id?: string | null
+          id?: string
+          ip_address?: string | null
+          link?: string
+          price?: number
+          provider_id?: string | null
+          quantity?: number
+          refill_id?: string | null
+          remains?: number | null
+          service_id?: string
+          start_count?: number | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "api_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pages: {
+        Row: {
+          archived_at: string | null
+          canonical_url: string | null
+          content: string | null
+          content_ar: string | null
+          created_at: string
+          id: string
+          is_archived: boolean | null
+          is_indexable: boolean | null
+          is_published: boolean | null
+          og_description: string | null
+          og_image: string | null
+          og_title: string | null
+          published_at: string | null
+          schema_markup: Json | null
+          seo_description: string | null
+          seo_keywords: string | null
+          seo_title: string | null
+          slug: string
+          title: string
+          title_ar: string | null
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          canonical_url?: string | null
+          content?: string | null
+          content_ar?: string | null
+          created_at?: string
+          id?: string
+          is_archived?: boolean | null
+          is_indexable?: boolean | null
+          is_published?: boolean | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          published_at?: string | null
+          schema_markup?: Json | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          slug: string
+          title: string
+          title_ar?: string | null
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          canonical_url?: string | null
+          content?: string | null
+          content_ar?: string | null
+          created_at?: string
+          id?: string
+          is_archived?: boolean | null
+          is_indexable?: boolean | null
+          is_published?: boolean | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          published_at?: string | null
+          schema_markup?: Json | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          slug?: string
+          title?: string
+          title_ar?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_gateways: {
+        Row: {
+          config: Json | null
+          created_at: string
+          fee_fixed: number | null
+          fee_percentage: number | null
+          id: string
+          is_active: boolean | null
+          max_amount: number | null
+          min_amount: number | null
+          name: string
+          slug: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string
+          fee_fixed?: number | null
+          fee_percentage?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_amount?: number | null
+          min_amount?: number | null
+          name: string
+          slug: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string
+          fee_fixed?: number | null
+          fee_percentage?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_amount?: number | null
+          min_amount?: number | null
+          name?: string
+          slug?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      permissions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          module: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          module: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          module?: string
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -86,15 +580,365 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          commission_rate: number | null
+          created_at: string
+          id: string
+          referred_id: string
+          referrer_id: string
+          status: string | null
+          total_earnings: number | null
+        }
+        Insert: {
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          referred_id: string
+          referrer_id: string
+          status?: string | null
+          total_earnings?: number | null
+        }
+        Update: {
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          referred_id?: string
+          referrer_id?: string
+          status?: string | null
+          total_earnings?: number | null
+        }
+        Relationships: []
+      }
+      role_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          permission_id: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission_id: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_categories: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          name_ar: string | null
+          parent_id: string | null
+          seo_description: string | null
+          seo_keywords: string | null
+          seo_title: string | null
+          slug: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          name_ar?: string | null
+          parent_id?: string | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          slug: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          name_ar?: string | null
+          parent_id?: string | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          slug?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          archived_at: string | null
+          canonical_url: string | null
+          category_id: string | null
+          created_at: string
+          description: string | null
+          description_ar: string | null
+          external_service_id: string | null
+          id: string
+          is_active: boolean | null
+          is_archived: boolean | null
+          is_indexable: boolean | null
+          max_quantity: number | null
+          min_quantity: number | null
+          name: string
+          name_ar: string | null
+          og_description: string | null
+          og_image: string | null
+          og_title: string | null
+          price: number
+          provider_id: string | null
+          schema_markup: Json | null
+          seo_description: string | null
+          seo_keywords: string | null
+          seo_title: string | null
+          slug: string
+          sort_order: number | null
+          twitter_description: string | null
+          twitter_image: string | null
+          twitter_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          canonical_url?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          description_ar?: string | null
+          external_service_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_archived?: boolean | null
+          is_indexable?: boolean | null
+          max_quantity?: number | null
+          min_quantity?: number | null
+          name: string
+          name_ar?: string | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          price?: number
+          provider_id?: string | null
+          schema_markup?: Json | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          slug: string
+          sort_order?: number | null
+          twitter_description?: string | null
+          twitter_image?: string | null
+          twitter_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          canonical_url?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          description_ar?: string | null
+          external_service_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_archived?: boolean | null
+          is_indexable?: boolean | null
+          max_quantity?: number | null
+          min_quantity?: number | null
+          name?: string
+          name_ar?: string | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          price?: number
+          provider_id?: string | null
+          schema_markup?: Json | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          slug?: string
+          sort_order?: number | null
+          twitter_description?: string | null
+          twitter_image?: string | null
+          twitter_title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "api_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_settings: {
+        Row: {
+          created_at: string
+          group_name: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: Json | null
+        }
+        Insert: {
+          created_at?: string
+          group_name?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value?: Json | null
+        }
+        Update: {
+          created_at?: string
+          group_name?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json | null
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at: string
+          description: string | null
+          id: string
+          order_id: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          type: Database["public"]["Enums"]["transaction_type"]
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after?: number
+          balance_before?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          type: Database["public"]["Enums"]["transaction_type"]
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          balance_before?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          type?: Database["public"]["Enums"]["transaction_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "support" | "user"
+      order_status:
+        | "pending"
+        | "processing"
+        | "in_progress"
+        | "completed"
+        | "partial"
+        | "cancelled"
+        | "refunded"
+        | "failed"
+      transaction_type:
+        | "deposit"
+        | "purchase"
+        | "refund"
+        | "bonus"
+        | "manual"
+        | "referral"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -221,6 +1065,26 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "support", "user"],
+      order_status: [
+        "pending",
+        "processing",
+        "in_progress",
+        "completed",
+        "partial",
+        "cancelled",
+        "refunded",
+        "failed",
+      ],
+      transaction_type: [
+        "deposit",
+        "purchase",
+        "refund",
+        "bonus",
+        "manual",
+        "referral",
+      ],
+    },
   },
 } as const
