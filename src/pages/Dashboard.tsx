@@ -35,7 +35,7 @@ const Dashboard = () => {
       <div className="min-h-screen flex w-full bg-background">
         <DashboardSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <div className="flex-1 flex flex-col min-w-0">
-          <DashboardHeader />
+          <DashboardHeader onGoHome={() => setActiveTab("overview")} />
           <main className="flex-1 p-3 md:p-6 overflow-auto">
             {renderContent()}
           </main>

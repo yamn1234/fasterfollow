@@ -26,7 +26,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-const DashboardHeader = () => {
+interface DashboardHeaderProps {
+  onGoHome?: () => void;
+}
+
+const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -50,7 +54,7 @@ const DashboardHeader = () => {
               variant="ghost" 
               size="icon" 
               className="h-9 w-9"
-              onClick={() => navigate("/")}
+              onClick={onGoHome}
             >
               <Home className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
