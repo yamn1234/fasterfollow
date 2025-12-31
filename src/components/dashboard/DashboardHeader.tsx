@@ -1,4 +1,5 @@
-import { Bell, Search, Home } from "lucide-react";
+import { useState } from "react";
+import { Bell, Search, Home, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -30,9 +31,18 @@ interface DashboardHeaderProps {
   onGoHome?: () => void;
 }
 
+const currencies = [
+  { code: "USD", symbol: "$", name: "دولار أمريكي", rate: 1 },
+  { code: "SAR", symbol: "ر.س", name: "ريال سعودي", rate: 3.75 },
+  { code: "AED", symbol: "د.إ", name: "درهم إماراتي", rate: 3.67 },
+  { code: "EGP", symbol: "ج.م", name: "جنيه مصري", rate: 50.85 },
+  { code: "KWD", symbol: "د.ك", name: "دينار كويتي", rate: 0.31 },
+];
+
 const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const [selectedCurrency, setSelectedCurrency] = useState(currencies[0]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -41,6 +51,9 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
 
   const firstName = profile?.full_name?.split(" ")[0] || "المستخدم";
   const initials = profile?.full_name?.charAt(0) || "م";
+  
+  // Convert balance to selected currency
+  const convertedBalance = ((profile?.balance || 0) * selectedCurrency.rate).toFixed(2);
 
   return (
     <header className="h-14 md:h-16 border-b border-border/50 bg-card/50 backdrop-blur-sm px-3 md:px-6 flex items-center justify-between gap-2 md:gap-4 sticky top-0 z-10">
@@ -73,11 +86,37 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
       </div>
 
       <div className="flex items-center gap-2 md:gap-3">
+        {/* Currency Selector */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-1 h-9 px-2 md:px-3">
+              <span className="font-medium">{selectedCurrency.code}</span>
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 bg-popover z-50">
+            <DropdownMenuLabel>اختر العملة</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {currencies.map((currency) => (
+              <DropdownMenuItem
+                key={currency.code}
+                className={`cursor-pointer flex justify-between ${
+                  selectedCurrency.code === currency.code ? "bg-primary/10 text-primary" : ""
+                }`}
+                onClick={() => setSelectedCurrency(currency)}
+              >
+                <span>{currency.name}</span>
+                <span className="text-muted-foreground">{currency.symbol}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         {/* Balance - Compact on mobile */}
         <div className="flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 bg-secondary/50 rounded-lg md:rounded-xl">
           <span className="text-xs md:text-sm text-muted-foreground hidden sm:inline">رصيدك:</span>
           <span className="text-sm md:text-base font-bold text-primary">
-            ${profile?.balance?.toFixed(2) || "0.00"}
+            {selectedCurrency.symbol}{convertedBalance}
           </span>
         </div>
 
