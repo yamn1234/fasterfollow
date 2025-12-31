@@ -1,1 +1,4 @@
 project_id = "jljizjuzliucwcvzrtkr"
+
+[functions.sync-api-balance]
+verify_jwt = false
