@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Gift, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const CTASection = () => {
   return (
@@ -31,17 +32,23 @@ const CTASection = () => {
             <Button
               size="xl"
               className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-lg hover:shadow-xl"
+              asChild
             >
-              <Sparkles className="h-5 w-5" />
-              سجل الآن مجاناً
-              <ArrowLeft className="h-5 w-5" />
+              <Link to="/auth">
+                <Sparkles className="h-5 w-5" />
+                سجل الآن مجاناً
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
             </Button>
             <Button
               size="xl"
               variant="outline"
               className="border-primary-foreground/30 text-primary-foreground bg-primary-foreground/10 hover:bg-primary-foreground/20"
+              asChild
             >
-              تواصل معنا
+              <Link to="/dashboard">
+                تواصل معنا
+              </Link>
             </Button>
           </div>
 

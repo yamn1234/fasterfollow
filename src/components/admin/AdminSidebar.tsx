@@ -167,7 +167,7 @@ const AdminSidebar = ({ isOpen, onToggle }: AdminSidebarProps) => {
       label: 'الخدمات',
       children: [
         { label: 'جميع الخدمات', path: '/admin/services' },
-        { label: 'الفئات', path: '/admin/services/categories' },
+        { label: 'الأقسام', path: '/admin/categories' },
         { label: 'المؤرشفة', path: '/admin/services/archived' },
         { label: 'استيراد الخدمات', path: '/admin/services/import' },
       ],

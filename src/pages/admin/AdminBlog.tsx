@@ -12,6 +12,7 @@ import {
   Loader2,
   Calendar,
   Tag,
+  ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,6 +52,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -432,9 +434,12 @@ const AdminBlog = () => {
                             <Pencil className="w-4 h-4 ml-2" />
                             تعديل
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => window.open(`/blog/${post.slug}`, '_blank')}
+                          >
                             <Eye className="w-4 h-4 ml-2" />
                             معاينة
+                            <ExternalLink className="w-3 h-3 mr-auto" />
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleArchive(post)}>
@@ -522,10 +527,9 @@ const AdminBlog = () => {
             </div>
             <div className="space-y-2">
               <Label>المحتوى</Label>
-              <Textarea
+              <RichTextEditor
                 value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                rows={8}
+                onChange={(value) => setFormData({ ...formData, content: value })}
               />
             </div>
             <div className="border-t pt-4">

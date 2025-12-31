@@ -732,8 +732,11 @@ export type Database = {
       service_categories: {
         Row: {
           created_at: string
+          description: string | null
+          description_ar: string | null
           icon: string | null
           id: string
+          image_url: string | null
           is_active: boolean | null
           name: string
           name_ar: string | null
@@ -747,8 +750,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string | null
+          description_ar?: string | null
           icon?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           name: string
           name_ar?: string | null
@@ -762,8 +768,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string | null
+          description_ar?: string | null
           icon?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           name?: string
           name_ar?: string | null
