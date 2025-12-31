@@ -5,11 +5,8 @@ import {
   MoreVertical,
   FolderOpen,
   Pencil,
-  Archive,
-  RotateCcw,
   Loader2,
   Image as ImageIcon,
-  GripVertical,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +40,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import ImageIconPicker from '@/components/admin/ImageIconPicker';
 
 interface Category {
   id: string;
@@ -306,9 +304,13 @@ const AdminCategories = () => {
                   <TableRow key={category.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        {category.image_url ? (
+                        {category.icon && !category.icon.startsWith('http') && category.icon.length <= 4 ? (
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-xl">
+                            {category.icon}
+                          </div>
+                        ) : category.image_url || (category.icon && category.icon.startsWith('http')) ? (
                           <img
-                            src={category.image_url}
+                            src={category.image_url || category.icon || ''}
                             alt={category.name}
                             className="w-10 h-10 rounded-lg object-cover"
                           />
@@ -329,10 +331,10 @@ const AdminCategories = () => {
                       <span className="text-sm text-muted-foreground">/{category.slug}</span>
                     </TableCell>
                     <TableCell>
-                      {category.image_url ? (
+                      {category.image_url || category.icon ? (
                         <Badge variant="secondary" className="gap-1">
                           <ImageIcon className="w-3 h-3" />
-                          موجودة
+                          {category.icon && !category.icon.startsWith('http') ? 'إيموجي' : 'صورة'}
                         </Badge>
                       ) : (
                         <Badge variant="outline">لا توجد</Badge>
@@ -410,31 +412,18 @@ const AdminCategories = () => {
                 dir="ltr"
               />
             </div>
-            <div className="space-y-2">
-              <Label>رابط الصورة</Label>
-              <Input
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                placeholder="https://example.com/image.jpg"
-                dir="ltr"
-              />
-              {formData.image_url && (
-                <img
-                  src={formData.image_url}
-                  alt="Preview"
-                  className="w-32 h-32 object-cover rounded-lg mt-2"
-                />
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label>أيقونة (اسم الأيقونة)</Label>
-              <Input
-                value={formData.icon}
-                onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                placeholder="instagram, facebook, youtube..."
-                dir="ltr"
-              />
-            </div>
+            <ImageIconPicker
+              label="أيقونة/صورة القسم"
+              value={formData.icon || formData.image_url}
+              onChange={(value) => {
+                if (value && !value.startsWith('http') && value.length <= 4) {
+                  setFormData({ ...formData, icon: value, image_url: '' });
+                } else {
+                  setFormData({ ...formData, image_url: value, icon: '' });
+                }
+              }}
+              folder="categories"
+            />
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>الوصف (إنجليزي)</Label>
