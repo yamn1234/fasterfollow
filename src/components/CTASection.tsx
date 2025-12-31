@@ -2,7 +2,27 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Gift, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const CTASection = () => {
+interface CTASettings {
+  badge_text: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  button_text: string;
+  button_link: string;
+}
+
+interface CTASectionProps {
+  settings?: CTASettings;
+}
+
+const CTASection = ({ settings }: CTASectionProps) => {
+  const badgeText = settings?.badge_text || 'احصل على رصيد مجاني للتجربة';
+  const title = settings?.title || 'ابدأ رحلتك نحو النجاح';
+  const subtitle = settings?.subtitle || 'على السوشيال ميديا';
+  const description = settings?.description || 'سجل الآن واحصل على رصيد مجاني لتجربة جميع خدماتنا. لا يوجد حد أدنى للشحن!';
+  const buttonText = settings?.button_text || 'سجل الآن مجاناً';
+  const buttonLink = settings?.button_link || '/auth';
+
   return (
     <section className="py-16 lg:py-24 relative overflow-hidden">
       {/* Background */}
@@ -14,18 +34,18 @@ const CTASection = () => {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/10 backdrop-blur-sm mb-6">
             <Gift className="h-4 w-4 text-primary-foreground" />
             <span className="text-sm font-medium text-primary-foreground">
-              احصل على رصيد مجاني للتجربة
+              {badgeText}
             </span>
           </div>
 
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-6">
-            ابدأ رحلتك نحو النجاح
+            {title}
             <br />
-            <span className="opacity-90">على السوشيال ميديا</span>
+            <span className="opacity-90">{subtitle}</span>
           </h2>
 
           <p className="text-lg text-primary-foreground/80 mb-8 max-w-xl mx-auto">
-            سجل الآن واحصل على رصيد مجاني لتجربة جميع خدماتنا. لا يوجد حد أدنى للشحن!
+            {description}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -34,9 +54,9 @@ const CTASection = () => {
               className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-lg hover:shadow-xl"
               asChild
             >
-              <Link to="/auth">
+              <Link to={buttonLink}>
                 <Sparkles className="h-5 w-5" />
-                سجل الآن مجاناً
+                {buttonText}
                 <ArrowLeft className="h-5 w-5" />
               </Link>
             </Button>

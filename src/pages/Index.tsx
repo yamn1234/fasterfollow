@@ -8,16 +8,8 @@ import Footer from "@/components/Footer";
 import { useHomepageSettings } from "@/hooks/useHomepageSettings";
 import { Loader2 } from "lucide-react";
 
-const sectionComponents: Record<string, React.ComponentType<any>> = {
-  hero: HeroSection,
-  features: FeaturesSection,
-  services: ServicesSection,
-  platforms: PlatformsSection,
-  cta: CTASection,
-};
-
 const Index = () => {
-  const { sections, heroSettings, siteSettings, loading } = useHomepageSettings();
+  const { sections, heroSettings, siteSettings, featuresSettings, ctaSettings, loading } = useHomepageSettings();
 
   if (loading) {
     return (
@@ -31,21 +23,28 @@ const Index = () => {
     );
   }
 
+  const renderSection = (sectionId: string) => {
+    switch (sectionId) {
+      case 'hero':
+        return <HeroSection key="hero" settings={heroSettings} siteSettings={siteSettings} />;
+      case 'features':
+        return <FeaturesSection key="features" settings={featuresSettings} />;
+      case 'services':
+        return <ServicesSection key="services" />;
+      case 'platforms':
+        return <PlatformsSection key="platforms" />;
+      case 'cta':
+        return <CTASection key="cta" settings={ctaSettings} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1">
-        {sections.map((section) => {
-          const Component = sectionComponents[section.id];
-          if (!Component) return null;
-          
-          // Pass settings to Hero section
-          if (section.id === 'hero') {
-            return <Component key={section.id} settings={heroSettings} siteSettings={siteSettings} />;
-          }
-          
-          return <Component key={section.id} />;
-        })}
+        {sections.map((section) => renderSection(section.id))}
       </main>
       <Footer />
     </div>
