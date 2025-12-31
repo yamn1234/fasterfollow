@@ -2,13 +2,13 @@ import { useState } from "react";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import OverviewTab from "@/components/dashboard/OverviewTab";
+import NewOrderTab from "@/components/dashboard/NewOrderTab";
 import OrdersTab from "@/components/dashboard/OrdersTab";
 import TransactionsTab from "@/components/dashboard/TransactionsTab";
 import BalanceTab from "@/components/dashboard/BalanceTab";
-import SettingsTab from "@/components/dashboard/SettingsTab";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
-export type TabType = "overview" | "orders" | "transactions" | "balance" | "settings";
+export type TabType = "overview" | "new-order" | "orders" | "transactions" | "balance";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
@@ -17,14 +17,14 @@ const Dashboard = () => {
     switch (activeTab) {
       case "overview":
         return <OverviewTab />;
+      case "new-order":
+        return <NewOrderTab />;
       case "orders":
         return <OrdersTab />;
       case "transactions":
         return <TransactionsTab />;
       case "balance":
         return <BalanceTab />;
-      case "settings":
-        return <SettingsTab />;
       default:
         return <OverviewTab />;
     }
@@ -32,11 +32,11 @@ const Dashboard = () => {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-secondary/30">
+      <div className="min-h-screen flex w-full bg-background">
         <DashboardSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <div className="flex-1 flex flex-col min-w-0">
           <DashboardHeader />
-          <main className="flex-1 p-6 overflow-auto">
+          <main className="flex-1 p-3 md:p-6 overflow-auto">
             {renderContent()}
           </main>
         </div>
