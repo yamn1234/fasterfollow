@@ -94,17 +94,40 @@ const AdminOrders = () => {
 
   const fetchOrders = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch orders first
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select(`
-          *,
-          services:service_id (name),
-          profiles:user_id (full_name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setOrders(data || []);
+      if (ordersError) throw ordersError;
+
+      // Fetch services and profiles separately to avoid RLS issues
+      const ordersWithDetails = await Promise.all(
+        (ordersData || []).map(async (order) => {
+          // Get service name
+          const { data: serviceData } = await supabase
+            .from('services')
+            .select('name')
+            .eq('id', order.service_id)
+            .maybeSingle();
+
+          // Get profile name
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('user_id', order.user_id)
+            .maybeSingle();
+
+          return {
+            ...order,
+            services: serviceData,
+            profiles: profileData,
+          };
+        })
+      );
+
+      setOrders(ordersWithDetails);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast({
