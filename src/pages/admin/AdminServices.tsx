@@ -916,14 +916,32 @@ const AdminServices = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-center gap-2 pt-8">
-                  <Switch
-                    id="is_active"
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                  />
-                  <Label htmlFor="is_active">نشط</Label>
+                <div className="space-y-2">
+                  <Label>ربط بمزود API</Label>
+                  <Select
+                    value={formData.provider_id || 'none'}
+                    onValueChange={(v) => setFormData({ ...formData, provider_id: v === 'none' ? '' : v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر المزود" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">بدون مزود</SelectItem>
+                      {providers.map((provider) => (
+                        <SelectItem key={provider.id} value={provider.id}>{provider.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="is_active"
+                  checked={formData.is_active}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                />
+                <Label htmlFor="is_active">نشط</Label>
               </div>
             </TabsContent>
 
