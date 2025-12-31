@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
 import AdminLayout from "@/layouts/AdminLayout";
+import ThemeInitializer from "@/components/ThemeInitializer";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
@@ -35,48 +36,50 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/admin/login" element={<AdminAuth />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            {/* Admin Routes */}
-            <Route
-              path="/admin"
-              element={
-                <AdminProtectedRoute>
-                  <AdminLayout />
-                </AdminProtectedRoute>
-              }
-            >
-              <Route index element={<AdminOverview />} />
-              <Route path="profile" element={<AdminProfile />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="users/*" element={<AdminUsers />} />
-              <Route path="orders" element={<AdminOrders />} />
-              <Route path="orders/*" element={<AdminOrders />} />
-              <Route path="tickets" element={<AdminTickets />} />
-              <Route path="services" element={<AdminServices />} />
-              <Route path="services/*" element={<AdminServices />} />
-              <Route path="providers" element={<AdminProviders />} />
-              <Route path="providers/*" element={<AdminProviders />} />
-              <Route path="payments" element={<AdminPayments />} />
-              <Route path="payments/*" element={<AdminPayments />} />
-              <Route path="content/*" element={<AdminContent />} />
-              <Route path="blog/*" element={<AdminBlog />} />
-              <Route path="marketing/*" element={<AdminMarketing />} />
-              <Route path="reports/*" element={<AdminReports />} />
-              <Route path="settings/*" element={<AdminSettings />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <ThemeInitializer>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/admin/login" element={<AdminAuth />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Admin Routes */}
+              <Route
+                path="/admin"
+                element={
+                  <AdminProtectedRoute>
+                    <AdminLayout />
+                  </AdminProtectedRoute>
+                }
+              >
+                <Route index element={<AdminOverview />} />
+                <Route path="profile" element={<AdminProfile />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="users/*" element={<AdminUsers />} />
+                <Route path="orders" element={<AdminOrders />} />
+                <Route path="orders/*" element={<AdminOrders />} />
+                <Route path="tickets" element={<AdminTickets />} />
+                <Route path="services" element={<AdminServices />} />
+                <Route path="services/*" element={<AdminServices />} />
+                <Route path="providers" element={<AdminProviders />} />
+                <Route path="providers/*" element={<AdminProviders />} />
+                <Route path="payments" element={<AdminPayments />} />
+                <Route path="payments/*" element={<AdminPayments />} />
+                <Route path="content/*" element={<AdminContent />} />
+                <Route path="blog/*" element={<AdminBlog />} />
+                <Route path="marketing/*" element={<AdminMarketing />} />
+                <Route path="reports/*" element={<AdminReports />} />
+                <Route path="settings/*" element={<AdminSettings />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ThemeInitializer>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
