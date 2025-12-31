@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Search, Filter, ShoppingCart, Zap, Star, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -274,9 +274,11 @@ const Services = () => {
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <CardTitle className="text-lg leading-tight">
-                        {service.name_ar || service.name}
-                      </CardTitle>
+                      <Link to={`/services/${service.slug}`}>
+                        <CardTitle className="text-lg leading-tight hover:text-primary transition-colors cursor-pointer">
+                          {service.name_ar || service.name}
+                        </CardTitle>
+                      </Link>
                       {service.category && (
                         <Badge variant="secondary" className="mt-2">
                           {service.category.name_ar || service.category.name}
@@ -307,13 +309,21 @@ const Services = () => {
                       الحد الأقصى: {service.max_quantity || 100000}
                     </span>
                   </div>
-                  <Button
-                    className="w-full"
-                    onClick={() => openOrderDialog(service)}
-                  >
-                    <ShoppingCart className="w-4 h-4 ml-2" />
-                    اطلب الآن
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      className="flex-1"
+                      onClick={() => openOrderDialog(service)}
+                    >
+                      <ShoppingCart className="w-4 h-4 ml-2" />
+                      اطلب الآن
+                    </Button>
+                    <Button
+                      variant="outline"
+                      asChild
+                    >
+                      <Link to={`/services/${service.slug}`}>التفاصيل</Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}

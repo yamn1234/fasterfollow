@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Filter, Eye, Loader2, ShoppingBag, ExternalLink } from "lucide-react";
+import { Search, Filter, Eye, Loader2, ShoppingBag, ExternalLink, Star } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { ar } from "date-fns/locale";
 import {
@@ -28,7 +28,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 interface Order {
   id: string;
@@ -59,11 +62,51 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 
 const OrdersTab = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewedOrders, setReviewedOrders] = useState<Set<string>>(new Set());
+
+  const submitReview = async () => {
+    if (!selectedOrder || !user) return;
+    setSubmittingReview(true);
+    try {
+      const { data: service } = await supabase
+        .from('orders')
+        .select('service_id')
+        .eq('id', selectedOrder.id)
+        .single();
+      
+      if (!service) throw new Error('Order not found');
+
+      const { error } = await supabase.from('reviews').insert({
+        user_id: user.id,
+        service_id: service.service_id,
+        order_id: selectedOrder.id,
+        rating: reviewRating,
+        comment: reviewComment || null,
+      });
+
+      if (error) throw error;
+
+      toast({ title: 'شكراً لك!', description: 'تم إرسال تقييمك وسيتم مراجعته' });
+      setReviewedOrders(prev => new Set(prev).add(selectedOrder.id));
+      setShowReviewDialog(false);
+      setReviewComment("");
+      setReviewRating(5);
+    } catch (error: any) {
+      toast({ title: 'خطأ', description: error.message, variant: 'destructive' });
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -415,7 +458,7 @@ const OrdersTab = () => {
                   {format(new Date(selectedOrder.created_at), "yyyy/MM/dd - HH:mm", { locale: ar })}
                 </p>
               </div>
-              {selectedOrder.completed_at && (
+               {selectedOrder.completed_at && (
                 <div>
                   <p className="text-sm text-muted-foreground">تاريخ الإكمال</p>
                   <p className="font-medium">
@@ -423,8 +466,44 @@ const OrdersTab = () => {
                   </p>
                 </div>
               )}
+              {selectedOrder.status === 'completed' && !reviewedOrders.has(selectedOrder.id) && (
+                <Button className="w-full mt-4" onClick={() => setShowReviewDialog(true)}>
+                  <Star className="w-4 h-4 ml-2" />
+                  قيّم هذه الخدمة
+                </Button>
+              )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Review Dialog */}
+      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>تقييم الخدمة</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex justify-center gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button key={star} onClick={() => setReviewRating(star)}>
+                  <Star className={`w-8 h-8 ${star <= reviewRating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} />
+                </button>
+              ))}
+            </div>
+            <Textarea
+              placeholder="اكتب تعليقك (اختياري)..."
+              value={reviewComment}
+              onChange={(e) => setReviewComment(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowReviewDialog(false)}>إلغاء</Button>
+            <Button onClick={submitReview} disabled={submittingReview}>
+              {submittingReview ? <Loader2 className="w-4 h-4 animate-spin" /> : 'إرسال التقييم'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -23,6 +23,7 @@ import {
   Globe,
   Palette,
   Database,
+  Star,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -160,6 +161,7 @@ const AdminSidebar = ({ isOpen, onToggle }: AdminSidebarProps) => {
       ],
     },
     { icon: Ticket, label: 'التذاكر', path: '/admin/tickets' },
+    { icon: Star, label: 'التقييمات', path: '/admin/reviews' },
     {
       icon: Package,
       label: 'الخدمات',

@@ -643,6 +643,63 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          admin_note: string | null
+          comment: string | null
+          created_at: string
+          id: string
+          is_approved: boolean | null
+          is_rejected: boolean | null
+          order_id: string
+          rating: number
+          service_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          is_approved?: boolean | null
+          is_rejected?: boolean | null
+          order_id: string
+          rating: number
+          service_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          is_approved?: boolean | null
+          is_rejected?: boolean | null
+          order_id?: string
+          rating?: number
+          service_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           created_at: string
@@ -731,9 +788,11 @@ export type Database = {
       services: {
         Row: {
           archived_at: string | null
+          average_rating: number | null
           canonical_url: string | null
           category_id: string | null
           created_at: string
+          delivery_time: string | null
           description: string | null
           description_ar: string | null
           external_service_id: string | null
@@ -750,6 +809,7 @@ export type Database = {
           og_title: string | null
           price: number
           provider_id: string | null
+          reviews_count: number | null
           schema_markup: Json | null
           seo_description: string | null
           seo_keywords: string | null
@@ -763,9 +823,11 @@ export type Database = {
         }
         Insert: {
           archived_at?: string | null
+          average_rating?: number | null
           canonical_url?: string | null
           category_id?: string | null
           created_at?: string
+          delivery_time?: string | null
           description?: string | null
           description_ar?: string | null
           external_service_id?: string | null
@@ -782,6 +844,7 @@ export type Database = {
           og_title?: string | null
           price?: number
           provider_id?: string | null
+          reviews_count?: number | null
           schema_markup?: Json | null
           seo_description?: string | null
           seo_keywords?: string | null
@@ -795,9 +858,11 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
+          average_rating?: number | null
           canonical_url?: string | null
           category_id?: string | null
           created_at?: string
+          delivery_time?: string | null
           description?: string | null
           description_ar?: string | null
           external_service_id?: string | null
@@ -814,6 +879,7 @@ export type Database = {
           og_title?: string | null
           price?: number
           provider_id?: string | null
+          reviews_count?: number | null
           schema_markup?: Json | null
           seo_description?: string | null
           seo_keywords?: string | null
