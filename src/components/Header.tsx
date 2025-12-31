@@ -9,6 +9,7 @@ const Header = () => {
   const { user, profile } = useAuth();
 
   const navItems = [
+    { label: "الخدمات", href: "/services", isLink: true },
     { label: "الأكثر مبيعاً", href: "#top" },
     { label: "انستجرام", href: "#instagram" },
     { label: "تيك توك", href: "#tiktok" },
@@ -30,15 +31,25 @@ const Header = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-1">
-          {navItems.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary"
-            >
-              {item.label}
-            </a>
-          ))}
+          {navItems.map((item) =>
+            item.isLink ? (
+              <Link
+                key={item.label}
+                to={item.href}
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary"
+              >
+                {item.label}
+              </Link>
+            ) : (
+              <a
+                key={item.label}
+                href={item.href}
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary"
+              >
+                {item.label}
+              </a>
+            )
+          )}
         </nav>
 
         {/* Actions */}
@@ -112,16 +123,27 @@ const Header = () => {
                 تسجيل الدخول
               </Link>
             )}
-            {navItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className="px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item.label}
-              </a>
-            ))}
+            {navItems.map((item) =>
+              item.isLink ? (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  className="px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className="px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.label}
+                </a>
+              )
+            )}
           </nav>
         </div>
       )}

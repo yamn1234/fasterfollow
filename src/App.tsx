@@ -25,6 +25,7 @@ import AdminReports from "./pages/admin/AdminReports";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminProfile from "./pages/admin/AdminProfile";
 import AdminTickets from "./pages/admin/AdminTickets";
+import Services from "./pages/Services";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
           <ThemeInitializer>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/services" element={<Services />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin/login" element={<AdminAuth />} />
               <Route
