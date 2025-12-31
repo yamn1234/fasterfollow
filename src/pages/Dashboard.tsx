@@ -16,7 +16,7 @@ const Dashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "overview":
-        return <OverviewTab />;
+        return <OverviewTab onNavigate={(tab) => setActiveTab(tab as TabType)} />;
       case "new-order":
         return <NewOrderTab />;
       case "orders":
