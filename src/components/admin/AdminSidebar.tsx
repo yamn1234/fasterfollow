@@ -159,6 +159,7 @@ const AdminSidebar = ({ isOpen, onToggle }: AdminSidebarProps) => {
         { label: 'المكتملة', path: '/admin/orders/completed' },
       ],
     },
+    { icon: Ticket, label: 'التذاكر', path: '/admin/tickets' },
     {
       icon: Package,
       label: 'الخدمات',
