@@ -26,6 +26,8 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminProfile from "./pages/admin/AdminProfile";
 import AdminTickets from "./pages/admin/AdminTickets";
 import Services from "./pages/Services";
+import ServiceDetail from "./pages/ServiceDetail";
+import AdminReviews from "./pages/admin/AdminReviews";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +43,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/services" element={<Services />} />
+              <Route path="/services/:slug" element={<ServiceDetail />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin/login" element={<AdminAuth />} />
               <Route
@@ -67,6 +70,7 @@ const App = () => (
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="orders/*" element={<AdminOrders />} />
                 <Route path="tickets" element={<AdminTickets />} />
+                <Route path="reviews" element={<AdminReviews />} />
                 <Route path="services" element={<AdminServices />} />
                 <Route path="services/*" element={<AdminServices />} />
                 <Route path="providers" element={<AdminProviders />} />
