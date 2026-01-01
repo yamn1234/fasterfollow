@@ -817,7 +817,9 @@ export type Database = {
           description: string | null
           description_ar: string | null
           external_service_id: string | null
+          icon: string | null
           id: string
+          image_url: string | null
           is_active: boolean | null
           is_archived: boolean | null
           is_indexable: boolean | null
@@ -852,7 +854,9 @@ export type Database = {
           description?: string | null
           description_ar?: string | null
           external_service_id?: string | null
+          icon?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           is_archived?: boolean | null
           is_indexable?: boolean | null
@@ -887,7 +891,9 @@ export type Database = {
           description?: string | null
           description_ar?: string | null
           external_service_id?: string | null
+          icon?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           is_archived?: boolean | null
           is_indexable?: boolean | null

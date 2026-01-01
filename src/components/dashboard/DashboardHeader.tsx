@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrency } from "@/hooks/useCurrency";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,31 +45,10 @@ interface Notification {
   created_at: string;
 }
 
-const currencies = [
-  { code: "USD", symbol: "$", name: "دولار أمريكي", rate: 1 },
-  { code: "SAR", symbol: "ر.س", name: "ريال سعودي", rate: 3.75 },
-  { code: "AED", symbol: "د.إ", name: "درهم إماراتي", rate: 3.67 },
-  { code: "EGP", symbol: "ج.م", name: "جنيه مصري", rate: 50.85 },
-  { code: "KWD", symbol: "د.ك", name: "دينار كويتي", rate: 0.31 },
-];
-
 const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
-  
-  const [selectedCurrency, setSelectedCurrency] = useState(() => {
-    const saved = localStorage.getItem("preferred_currency");
-    if (saved) {
-      const found = currencies.find(c => c.code === saved);
-      if (found) return found;
-    }
-    return currencies[0];
-  });
-
-  const handleCurrencyChange = (currency: typeof currencies[0]) => {
-    setSelectedCurrency(currency);
-    localStorage.setItem("preferred_currency", currency.code);
-  };
+  const { selectedCurrency, setSelectedCurrency, currencies, format } = useCurrency();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -154,7 +134,7 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
   const initials = profile?.full_name?.charAt(0) || "م";
   
   // Convert balance to selected currency
-  const convertedBalance = ((profile?.balance || 0) * selectedCurrency.rate).toFixed(2);
+  const convertedBalance = format(profile?.balance || 0);
 
   return (
     <header className="h-14 md:h-16 border-b border-border/50 bg-card/50 backdrop-blur-sm px-3 md:px-6 flex items-center justify-between gap-2 md:gap-4 sticky top-0 z-10">
@@ -204,7 +184,7 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
                 className={`cursor-pointer flex justify-between ${
                   selectedCurrency.code === currency.code ? "bg-primary/10 text-primary" : ""
                 }`}
-                onClick={() => handleCurrencyChange(currency)}
+                onClick={() => setSelectedCurrency(currency)}
               >
                 <span>{currency.name}</span>
                 <span className="text-muted-foreground">{currency.symbol}</span>
@@ -217,7 +197,7 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
         <div className="flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 bg-secondary/50 rounded-lg md:rounded-xl">
           <span className="text-xs md:text-sm text-muted-foreground hidden sm:inline">رصيدك:</span>
           <span className="text-sm md:text-base font-bold text-primary">
-            {selectedCurrency.symbol}{convertedBalance}
+            {convertedBalance}
           </span>
         </div>
 
