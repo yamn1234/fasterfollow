@@ -48,6 +48,7 @@ interface ServiceDetail {
   delivery_time: string | null;
   icon: string | null;
   image_url: string | null;
+  requires_comments: boolean | null;
   category: {
     name: string;
     name_ar: string | null;
@@ -75,6 +76,7 @@ const ServiceDetail = () => {
   const [loading, setLoading] = useState(true);
   const [orderLink, setOrderLink] = useState('');
   const [orderQuantity, setOrderQuantity] = useState(100);
+  const [orderComments, setOrderComments] = useState('');
   const [isOrdering, setIsOrdering] = useState(false);
   const [showOrderDialog, setShowOrderDialog] = useState(false);
 
@@ -94,7 +96,7 @@ const ServiceDetail = () => {
         .select(`
           id, name, name_ar, description, description_ar, price,
           min_quantity, max_quantity, average_rating, reviews_count, delivery_time,
-          icon, image_url,
+          icon, image_url, requires_comments,
           service_categories(name, name_ar)
         `)
         .eq('slug', slug)
@@ -110,6 +112,7 @@ const ServiceDetail = () => {
 
       setService({
         ...serviceData,
+        requires_comments: serviceData.requires_comments,
         category: serviceData.service_categories,
       });
       setOrderQuantity(serviceData.min_quantity || 100);
@@ -153,6 +156,15 @@ const ServiceDetail = () => {
       return;
     }
 
+    if (service.requires_comments && !orderComments.trim()) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى إدخال التعليقات المطلوبة',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const totalPrice = (service.price / 1000) * orderQuantity;
 
     if (profile.balance < totalPrice) {
@@ -176,6 +188,7 @@ const ServiceDetail = () => {
           quantity: orderQuantity,
           price: totalPrice,
           status: 'pending',
+          comments: service.requires_comments ? orderComments.trim() : null,
         })
         .select()
         .single();
@@ -213,6 +226,7 @@ const ServiceDetail = () => {
 
       setShowOrderDialog(false);
       setOrderLink('');
+      setOrderComments('');
     } catch (error: any) {
       console.error('Order error:', error);
       toast({
@@ -498,6 +512,22 @@ const ServiceDetail = () => {
                   </p>
                 </div>
 
+                {service.requires_comments && (
+                  <div className="space-y-2">
+                    <Label>التعليقات المطلوبة *</Label>
+                    <Textarea
+                      placeholder="أدخل التعليقات (كل تعليق في سطر جديد)"
+                      value={orderComments}
+                      onChange={(e) => setOrderComments(e.target.value)}
+                      rows={4}
+                      dir="rtl"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      أدخل التعليقات المطلوبة، كل تعليق في سطر منفصل
+                    </p>
+                  </div>
+                )}
+
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>السعر لكل 1000:</span>
@@ -556,6 +586,14 @@ const ServiceDetail = () => {
                   {orderLink}
                 </span>
               </div>
+              {service.requires_comments && orderComments && (
+                <div className="text-sm">
+                  <span className="block mb-1">التعليقات:</span>
+                  <span className="text-muted-foreground text-xs line-clamp-2">
+                    {orderComments}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
                 <span>الإجمالي:</span>
                 <span className="text-primary">${calculatePrice()}</span>
