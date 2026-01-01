@@ -3,12 +3,22 @@ import { ShoppingCart, Zap, Shield, Headphones } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-rocket.png";
 
+interface HeroStats {
+  customers: string;
+  customers_label: string;
+  services: string;
+  services_label: string;
+  support: string;
+  support_label: string;
+}
+
 interface HeroSettings {
   title: string;
   subtitle: string;
   button_text: string;
   button_link: string;
   show_stats: boolean;
+  stats?: HeroStats;
 }
 
 interface SiteSettings {
@@ -66,18 +76,18 @@ const HeroSection = ({ settings, siteSettings }: HeroSectionProps) => {
 
             {/* Stats */}
             {showStats && (
-              <div className="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-border/50 animate-slide-up" style={{ animationDelay: "0.3s" }}>
+              <div className="grid grid-cols-3 gap-4 md:gap-6 mt-12 pt-8 border-t border-border/50 animate-slide-up" style={{ animationDelay: "0.3s" }}>
                 <div className="text-center lg:text-right">
-                  <div className="text-2xl md:text-3xl font-bold text-gradient">+10K</div>
-                  <div className="text-sm text-muted-foreground">عميل سعيد</div>
+                  <div className="text-xl md:text-3xl font-bold text-gradient">{settings?.stats?.customers || '+10K'}</div>
+                  <div className="text-xs md:text-sm text-muted-foreground">{settings?.stats?.customers_label || 'عميل سعيد'}</div>
                 </div>
                 <div className="text-center lg:text-right">
-                  <div className="text-2xl md:text-3xl font-bold text-gradient">+50</div>
-                  <div className="text-sm text-muted-foreground">خدمة متاحة</div>
+                  <div className="text-xl md:text-3xl font-bold text-gradient">{settings?.stats?.services || '+50'}</div>
+                  <div className="text-xs md:text-sm text-muted-foreground">{settings?.stats?.services_label || 'خدمة متاحة'}</div>
                 </div>
                 <div className="text-center lg:text-right">
-                  <div className="text-2xl md:text-3xl font-bold text-gradient">24/7</div>
-                  <div className="text-sm text-muted-foreground">دعم فني</div>
+                  <div className="text-xl md:text-3xl font-bold text-gradient">{settings?.stats?.support || '24/7'}</div>
+                  <div className="text-xs md:text-sm text-muted-foreground">{settings?.stats?.support_label || 'دعم فني'}</div>
                 </div>
               </div>
             )}

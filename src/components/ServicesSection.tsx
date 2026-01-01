@@ -24,7 +24,19 @@ interface Service {
   } | null;
 }
 
-const ServicesSection = () => {
+interface ServicesSectionProps {
+  settings?: {
+    title: string;
+    title_highlight: string;
+    subtitle: string;
+  };
+}
+
+const ServicesSection = ({ settings }: ServicesSectionProps) => {
+  const title = settings?.title || 'الخدمات';
+  const titleHighlight = settings?.title_highlight || 'الأكثر طلباً';
+  const subtitle = settings?.subtitle || 'اكتشف خدماتنا المميزة والأكثر شعبية بين عملائنا';
+
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -107,10 +119,10 @@ const ServicesSection = () => {
       <div className="container">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            الخدمات <span className="text-gradient">الأكثر طلباً</span>
+            {title} <span className="text-gradient">{titleHighlight}</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            اكتشف خدماتنا المميزة والأكثر شعبية بين عملائنا
+            {subtitle}
           </p>
         </div>
 

@@ -86,7 +86,19 @@ const getCategoryVisual = (category: Category): { type: 'emoji' | 'image'; value
   return { type: 'emoji', value: '📱', color };
 };
 
-const PlatformsSection = () => {
+interface PlatformsSectionProps {
+  settings?: {
+    title: string;
+    title_highlight: string;
+    subtitle: string;
+  };
+}
+
+const PlatformsSection = ({ settings }: PlatformsSectionProps) => {
+  const title = settings?.title || 'اختر';
+  const titleHighlight = settings?.title_highlight || 'منصتك المفضلة';
+  const subtitle = settings?.subtitle || 'نوفر خدمات لجميع منصات التواصل الاجتماعي الشهيرة بأسعار تنافسية وجودة عالية';
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -132,10 +144,10 @@ const PlatformsSection = () => {
       <div className="container">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            اختر <span className="text-gradient">منصتك المفضلة</span>
+            {title} <span className="text-gradient">{titleHighlight}</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            نوفر خدمات لجميع منصات التواصل الاجتماعي الشهيرة بأسعار تنافسية وجودة عالية
+            {subtitle}
           </p>
         </div>
 
