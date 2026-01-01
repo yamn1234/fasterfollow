@@ -43,7 +43,7 @@ const Auth = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       emailSchema.parse(email);
     } catch (err) {
@@ -52,12 +52,18 @@ const Auth = () => {
         return;
       }
     }
-    
+
     setIsLoading(true);
-    
+
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      
+      // Send OTP code to email (code-based recovery)
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false,
+        },
+      });
+
       if (error) {
         toast.error(error.message);
       } else {
@@ -65,7 +71,7 @@ const Auth = () => {
         setIsForgotPassword(false);
         setIsVerifyCode(true);
       }
-    } catch (error) {
+    } catch {
       toast.error("حدث خطأ غير متوقع");
     } finally {
       setIsLoading(false);
@@ -74,29 +80,31 @@ const Auth = () => {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!otpCode || otpCode.length < 6) {
       setErrors({ otp: "يرجى إدخال كود التحقق المكون من 6 أرقام" });
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       const { error } = await supabase.auth.verifyOtp({
         email,
         token: otpCode,
-        type: 'recovery',
+        type: 'email',
       });
-      
+
       if (error) {
         toast.error("كود التحقق غير صحيح أو منتهي الصلاحية");
       } else {
         toast.success("تم التحقق بنجاح");
         setIsVerifyCode(false);
+        setPassword("");
+        setConfirmPassword("");
         setIsResetPassword(true);
       }
-    } catch (error) {
+    } catch {
       toast.error("حدث خطأ غير متوقع");
     } finally {
       setIsLoading(false);
