@@ -16,6 +16,8 @@ import {
   Trash2,
   Plus,
   RotateCcw,
+  PanelTop,
+  PanelBottom,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +36,16 @@ import {
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import ImageIconPicker from '@/components/admin/ImageIconPicker';
+import {
+  HeaderSettings,
+  FooterSettings,
+  NavItem,
+  SocialLink,
+  FooterLinkGroup,
+  defaultHeaderSettings,
+  defaultFooterSettings,
+} from '@/hooks/useHeaderFooterSettings';
 
 interface HomepageSection {
   id: string;
@@ -122,6 +134,9 @@ const AdminSettings = () => {
     button_link: '/auth',
   });
 
+  const [headerSettings, setHeaderSettings] = useState<HeaderSettings>(defaultHeaderSettings);
+  const [footerSettings, setFooterSettings] = useState<FooterSettings>(defaultFooterSettings);
+
   useEffect(() => {
     loadSettings();
   }, []);
@@ -156,6 +171,12 @@ const AdminSettings = () => {
         }
         if (settingsMap.cta_settings) {
           setCtaSettings(prev => ({ ...prev, ...settingsMap.cta_settings }));
+        }
+        if (settingsMap.header_settings) {
+          setHeaderSettings(prev => ({ ...prev, ...settingsMap.header_settings }));
+        }
+        if (settingsMap.footer_settings) {
+          setFooterSettings(prev => ({ ...prev, ...settingsMap.footer_settings }));
         }
         
         setSettings(prev => ({
@@ -194,6 +215,8 @@ const AdminSettings = () => {
         { key: 'hero_settings', value: heroSettings, group_name: 'homepage' },
         { key: 'features_settings', value: featuresSettings, group_name: 'homepage' },
         { key: 'cta_settings', value: ctaSettings, group_name: 'homepage' },
+        { key: 'header_settings', value: headerSettings, group_name: 'layout' },
+        { key: 'footer_settings', value: footerSettings, group_name: 'layout' },
       ];
 
       for (const setting of settingsToSave) {
@@ -304,6 +327,10 @@ const AdminSettings = () => {
           <TabsTrigger value="homepage">
             <Layout className="w-4 h-4 ml-2" />
             الصفحة الرئيسية
+          </TabsTrigger>
+          <TabsTrigger value="header-footer">
+            <PanelTop className="w-4 h-4 ml-2" />
+            الهيدر والفوتر
           </TabsTrigger>
           <TabsTrigger value="appearance">
             <Palette className="w-4 h-4 ml-2" />
@@ -707,6 +734,348 @@ const AdminSettings = () => {
                     placeholder="/auth"
                   />
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Header & Footer Tab */}
+        <TabsContent value="header-footer" className="space-y-4">
+          {/* Header Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PanelTop className="w-5 h-5" />
+                إعدادات الهيدر
+              </CardTitle>
+              <CardDescription>تخصيص الشعار وقائمة التنقل</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>شعار الموقع</Label>
+                  <ImageIconPicker
+                    value={headerSettings.logo_url}
+                    onChange={(value) => setHeaderSettings({ ...headerSettings, logo_url: value })}
+                    label="اختر شعار الموقع"
+                    folder="branding"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>اسم الموقع (يظهر بجانب الشعار)</Label>
+                  <Input
+                    value={headerSettings.logo_text}
+                    onChange={(e) => setHeaderSettings({ ...headerSettings, logo_text: e.target.value })}
+                    placeholder="متجر المتابعين"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">إظهار الرصيد</p>
+                  <p className="text-sm text-muted-foreground">عرض رصيد المستخدم في الهيدر</p>
+                </div>
+                <Switch
+                  checked={headerSettings.show_balance}
+                  onCheckedChange={(checked) => setHeaderSettings({ ...headerSettings, show_balance: checked })}
+                />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>روابط القائمة</Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setHeaderSettings({
+                        ...headerSettings,
+                        nav_items: [...headerSettings.nav_items, { label: 'رابط جديد', href: '#', isLink: false }]
+                      });
+                    }}
+                  >
+                    <Plus className="w-4 h-4 ml-1" />
+                    إضافة رابط
+                  </Button>
+                </div>
+                {headerSettings.nav_items.map((item, index) => (
+                  <div key={index} className="flex gap-2 items-center p-3 border rounded-lg">
+                    <Input
+                      value={item.label}
+                      onChange={(e) => {
+                        const newItems = [...headerSettings.nav_items];
+                        newItems[index] = { ...newItems[index], label: e.target.value };
+                        setHeaderSettings({ ...headerSettings, nav_items: newItems });
+                      }}
+                      placeholder="اسم الرابط"
+                      className="flex-1"
+                    />
+                    <Input
+                      value={item.href}
+                      onChange={(e) => {
+                        const newItems = [...headerSettings.nav_items];
+                        newItems[index] = { ...newItems[index], href: e.target.value };
+                        setHeaderSettings({ ...headerSettings, nav_items: newItems });
+                      }}
+                      placeholder="/services أو #section"
+                      dir="ltr"
+                      className="flex-1"
+                    />
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs whitespace-nowrap">صفحة داخلية</Label>
+                      <Switch
+                        checked={item.isLink}
+                        onCheckedChange={(checked) => {
+                          const newItems = [...headerSettings.nav_items];
+                          newItems[index] = { ...newItems[index], isLink: checked };
+                          setHeaderSettings({ ...headerSettings, nav_items: newItems });
+                        }}
+                      />
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() => {
+                        const newItems = headerSettings.nav_items.filter((_, i) => i !== index);
+                        setHeaderSettings({ ...headerSettings, nav_items: newItems });
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Footer Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PanelBottom className="w-5 h-5" />
+                إعدادات الفوتر
+              </CardTitle>
+              <CardDescription>تخصيص روابط الفوتر ووسائل التواصل</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>شعار الفوتر</Label>
+                  <ImageIconPicker
+                    value={footerSettings.logo_url}
+                    onChange={(value) => setFooterSettings({ ...footerSettings, logo_url: value })}
+                    label="اختر شعار الفوتر"
+                    folder="branding"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>اسم الموقع في الفوتر</Label>
+                  <Input
+                    value={footerSettings.logo_text}
+                    onChange={(e) => setFooterSettings({ ...footerSettings, logo_text: e.target.value })}
+                    placeholder="متجر المتابعين"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>وصف الموقع</Label>
+                <Textarea
+                  value={footerSettings.description}
+                  onChange={(e) => setFooterSettings({ ...footerSettings, description: e.target.value })}
+                  rows={2}
+                  placeholder="أفضل وأسرع موقع لزيادة المتابعين..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>نص حقوق النشر</Label>
+                <Input
+                  value={footerSettings.copyright_text}
+                  onChange={(e) => setFooterSettings({ ...footerSettings, copyright_text: e.target.value })}
+                  placeholder="متجر المتابعين. جميع الحقوق محفوظة."
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">إظهار شعارات الدفع</p>
+                  <p className="text-sm text-muted-foreground">عرض Visa و Mastercard</p>
+                </div>
+                <Switch
+                  checked={footerSettings.show_payment_logos}
+                  onCheckedChange={(checked) => setFooterSettings({ ...footerSettings, show_payment_logos: checked })}
+                />
+              </div>
+
+              {/* Social Links */}
+              <div className="space-y-3">
+                <Label>روابط التواصل الاجتماعي</Label>
+                {footerSettings.social_links.map((link, index) => (
+                  <div key={index} className="flex gap-2 items-center p-3 border rounded-lg">
+                    <Select
+                      value={link.type}
+                      onValueChange={(value: any) => {
+                        const newLinks = [...footerSettings.social_links];
+                        newLinks[index] = { ...newLinks[index], type: value };
+                        setFooterSettings({ ...footerSettings, social_links: newLinks });
+                      }}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="whatsapp">واتساب</SelectItem>
+                        <SelectItem value="telegram">تليجرام</SelectItem>
+                        <SelectItem value="email">بريد إلكتروني</SelectItem>
+                        <SelectItem value="phone">هاتف</SelectItem>
+                        <SelectItem value="twitter">تويتر</SelectItem>
+                        <SelectItem value="instagram">انستجرام</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      value={link.url}
+                      onChange={(e) => {
+                        const newLinks = [...footerSettings.social_links];
+                        newLinks[index] = { ...newLinks[index], url: e.target.value };
+                        setFooterSettings({ ...footerSettings, social_links: newLinks });
+                      }}
+                      placeholder="الرابط"
+                      dir="ltr"
+                      className="flex-1"
+                    />
+                    <Switch
+                      checked={link.enabled}
+                      onCheckedChange={(checked) => {
+                        const newLinks = [...footerSettings.social_links];
+                        newLinks[index] = { ...newLinks[index], enabled: checked };
+                        setFooterSettings({ ...footerSettings, social_links: newLinks });
+                      }}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() => {
+                        const newLinks = footerSettings.social_links.filter((_, i) => i !== index);
+                        setFooterSettings({ ...footerSettings, social_links: newLinks });
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setFooterSettings({
+                      ...footerSettings,
+                      social_links: [...footerSettings.social_links, { type: 'whatsapp', url: '#', enabled: true }]
+                    });
+                  }}
+                >
+                  <Plus className="w-4 h-4 ml-1" />
+                  إضافة رابط تواصل
+                </Button>
+              </div>
+
+              {/* Footer Link Groups */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>أقسام الروابط في الفوتر</Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFooterSettings({
+                        ...footerSettings,
+                        link_groups: [...footerSettings.link_groups, { title: 'قسم جديد', links: [] }]
+                      });
+                    }}
+                  >
+                    <Plus className="w-4 h-4 ml-1" />
+                    إضافة قسم
+                  </Button>
+                </div>
+                {footerSettings.link_groups.map((group, groupIndex) => (
+                  <div key={groupIndex} className="p-4 border rounded-lg space-y-3">
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        value={group.title}
+                        onChange={(e) => {
+                          const newGroups = [...footerSettings.link_groups];
+                          newGroups[groupIndex] = { ...newGroups[groupIndex], title: e.target.value };
+                          setFooterSettings({ ...footerSettings, link_groups: newGroups });
+                        }}
+                        placeholder="عنوان القسم"
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive"
+                        onClick={() => {
+                          const newGroups = footerSettings.link_groups.filter((_, i) => i !== groupIndex);
+                          setFooterSettings({ ...footerSettings, link_groups: newGroups });
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    {group.links.map((link, linkIndex) => (
+                      <div key={linkIndex} className="flex gap-2 items-center pr-4">
+                        <Input
+                          value={link.label}
+                          onChange={(e) => {
+                            const newGroups = [...footerSettings.link_groups];
+                            newGroups[groupIndex].links[linkIndex] = { ...link, label: e.target.value };
+                            setFooterSettings({ ...footerSettings, link_groups: newGroups });
+                          }}
+                          placeholder="اسم الرابط"
+                          className="flex-1"
+                        />
+                        <Input
+                          value={link.href}
+                          onChange={(e) => {
+                            const newGroups = [...footerSettings.link_groups];
+                            newGroups[groupIndex].links[linkIndex] = { ...link, href: e.target.value };
+                            setFooterSettings({ ...footerSettings, link_groups: newGroups });
+                          }}
+                          placeholder="/page أو #section"
+                          dir="ltr"
+                          className="flex-1"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive"
+                          onClick={() => {
+                            const newGroups = [...footerSettings.link_groups];
+                            newGroups[groupIndex].links = group.links.filter((_, i) => i !== linkIndex);
+                            setFooterSettings({ ...footerSettings, link_groups: newGroups });
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const newGroups = [...footerSettings.link_groups];
+                        newGroups[groupIndex].links = [...group.links, { label: 'رابط جديد', href: '#' }];
+                        setFooterSettings({ ...footerSettings, link_groups: newGroups });
+                      }}
+                    >
+                      <Plus className="w-4 h-4 ml-1" />
+                      إضافة رابط
+                    </Button>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
