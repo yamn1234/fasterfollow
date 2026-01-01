@@ -6,9 +6,10 @@ import OrdersTab from "@/components/dashboard/OrdersTab";
 import TransactionsTab from "@/components/dashboard/TransactionsTab";
 import BalanceTab from "@/components/dashboard/BalanceTab";
 import SupportTab from "@/components/dashboard/SupportTab";
+import RedeemCouponTab from "@/components/dashboard/RedeemCouponTab";
 import DashboardNavigation from "@/components/dashboard/DashboardNavigation";
 
-export type TabType = "overview" | "new-order" | "orders" | "transactions" | "balance" | "support";
+export type TabType = "overview" | "new-order" | "orders" | "transactions" | "balance" | "coupon" | "support";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
@@ -25,6 +26,8 @@ const Dashboard = () => {
         return <TransactionsTab />;
       case "balance":
         return <BalanceTab />;
+      case "coupon":
+        return <RedeemCouponTab />;
       case "support":
         return <SupportTab />;
       default:

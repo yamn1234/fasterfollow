@@ -292,10 +292,45 @@ export type Database = {
           },
         ]
       }
+      coupon_usage: {
+        Row: {
+          amount: number
+          coupon_id: string
+          id: string
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          coupon_id: string
+          id?: string
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          coupon_id?: string
+          id?: string
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_usage_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupons: {
         Row: {
+          balance_amount: number | null
           code: string
+          coupon_type: string
           created_at: string
+          description: string | null
           discount_type: string
           discount_value: number
           expires_at: string | null
@@ -307,8 +342,11 @@ export type Database = {
           uses_count: number | null
         }
         Insert: {
+          balance_amount?: number | null
           code: string
+          coupon_type?: string
           created_at?: string
+          description?: string | null
           discount_type?: string
           discount_value: number
           expires_at?: string | null
@@ -320,8 +358,11 @@ export type Database = {
           uses_count?: number | null
         }
         Update: {
+          balance_amount?: number | null
           code?: string
+          coupon_type?: string
           created_at?: string
+          description?: string | null
           discount_type?: string
           discount_value?: number
           expires_at?: string | null
