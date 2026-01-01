@@ -41,7 +41,7 @@ const HeroSection = ({ settings, siteSettings }: HeroSectionProps) => {
   const showStats = settings?.show_stats ?? true;
 
   return (
-    <section className="relative overflow-hidden gradient-hero py-16 lg:py-24">
+    <section className="relative overflow-hidden gradient-hero py-12 sm:py-16 lg:py-24">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 right-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
@@ -52,31 +52,31 @@ const HeroSection = ({ settings, siteSettings }: HeroSectionProps) => {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
           <div className="text-center lg:text-right order-2 lg:order-1">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6 animate-slide-up">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6 animate-slide-up">
               مرحباً بك في{" "}
               <span className="text-gradient">{title}</span>
             </h1>
             
-            <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed animate-slide-up" style={{ animationDelay: "0.1s" }}>
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed animate-slide-up" style={{ animationDelay: "0.1s" }}>
               {description}{" "}
               <strong className="text-foreground">تيك توك، إنستجرام، فيسبوك، تويتر، يوتيوب</strong>
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-slide-up" style={{ animationDelay: "0.2s" }}>
-              <Button variant="hero" size="xl" asChild>
+              <Button variant="hero" size="xl" className="w-full sm:w-auto" asChild>
                 <Link to={buttonLink}>
                   <ShoppingCart className="h-5 w-5" />
                   {buttonText}
                 </Link>
               </Button>
-              <Button variant="outline" size="xl" asChild>
+              <Button variant="outline" size="xl" className="w-full sm:w-auto" asChild>
                 <Link to="/auth">جرب مجاناً</Link>
               </Button>
             </div>
 
             {/* Stats */}
             {showStats && (
-              <div className="grid grid-cols-3 gap-4 md:gap-6 mt-12 pt-8 border-t border-border/50 animate-slide-up" style={{ animationDelay: "0.3s" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mt-12 pt-8 border-t border-border/50 animate-slide-up" style={{ animationDelay: "0.3s" }}>
                 <div className="text-center lg:text-right">
                   <div className="text-xl md:text-3xl font-bold text-gradient">{settings?.stats?.customers || '+10K'}</div>
                   <div className="text-xs md:text-sm text-muted-foreground">{settings?.stats?.customers_label || 'عميل سعيد'}</div>
@@ -98,7 +98,7 @@ const HeroSection = ({ settings, siteSettings }: HeroSectionProps) => {
             <img
               src={heroImage}
               alt={`${title} - زيادة متابعين السوشيال ميديا`}
-              className="w-full max-w-md lg:max-w-lg animate-float drop-shadow-2xl"
+              className="w-full max-w-xs sm:max-w-md lg:max-w-lg animate-float drop-shadow-2xl"
             />
           </div>
         </div>

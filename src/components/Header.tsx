@@ -16,7 +16,7 @@ const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-card/80 backdrop-blur-lg">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2 min-w-0">
           {headerSettings.logo_url ? (
             <img
               src={headerSettings.logo_url}
@@ -28,7 +28,7 @@ const Header = () => {
               <ShoppingCart className="h-5 w-5 text-primary-foreground" />
             </div>
           )}
-          <span className="text-xl font-bold text-gradient bg-primary-foreground">
+          <span className="text-lg sm:text-xl font-bold text-gradient bg-primary-foreground truncate max-w-[10rem] sm:max-w-none">
             {headerSettings.logo_text}
           </span>
         </Link>
@@ -85,9 +85,9 @@ const Header = () => {
             </>
           ) : (
             <Link to="/auth">
-              <Button variant="hero" size="default">
+              <Button variant="hero" size="default" aria-label="تسجيل الدخول">
                 <LogIn className="h-4 w-4" />
-                تسجيل الدخول
+                <span className="hidden sm:inline">تسجيل الدخول</span>
               </Button>
             </Link>
           )}

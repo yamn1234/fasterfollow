@@ -24,7 +24,7 @@ const CTASection = ({ settings }: CTASectionProps) => {
   const buttonLink = settings?.button_link || '/auth';
 
   return (
-    <section className="py-16 lg:py-24 relative overflow-hidden">
+    <section className="py-12 sm:py-16 lg:py-24 relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 gradient-primary opacity-95" />
       <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.05)_25%,rgba(255,255,255,0.05)_50%,transparent_50%,transparent_75%,rgba(255,255,255,0.05)_75%)] bg-[length:60px_60px] opacity-30" />
@@ -51,7 +51,7 @@ const CTASection = ({ settings }: CTASectionProps) => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="xl"
-              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-lg hover:shadow-xl"
+              className="w-full sm:w-auto bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-lg hover:shadow-xl"
               asChild
             >
               <Link to={buttonLink}>
@@ -63,7 +63,7 @@ const CTASection = ({ settings }: CTASectionProps) => {
             <Button
               size="xl"
               variant="outline"
-              className="border-primary-foreground/30 text-primary-foreground bg-primary-foreground/10 hover:bg-primary-foreground/20"
+              className="w-full sm:w-auto border-primary-foreground/30 text-primary-foreground bg-primary-foreground/10 hover:bg-primary-foreground/20"
               asChild
             >
               <Link to="/dashboard">
@@ -72,17 +72,15 @@ const CTASection = ({ settings }: CTASectionProps) => {
             </Button>
           </div>
 
-          <div className="flex items-center justify-center gap-8 mt-12 pt-8 border-t border-primary-foreground/20">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12 pt-8 border-t border-primary-foreground/20">
             <div className="text-center">
               <div className="text-3xl font-bold text-primary-foreground">+10,000</div>
               <div className="text-sm text-primary-foreground/70">عميل نشط</div>
             </div>
-            <div className="w-px h-12 bg-primary-foreground/20" />
             <div className="text-center">
               <div className="text-3xl font-bold text-primary-foreground">+1M</div>
               <div className="text-sm text-primary-foreground/70">طلب مكتمل</div>
             </div>
-            <div className="w-px h-12 bg-primary-foreground/20" />
             <div className="text-center">
               <div className="text-3xl font-bold text-primary-foreground">99%</div>
               <div className="text-sm text-primary-foreground/70">رضا العملاء</div>

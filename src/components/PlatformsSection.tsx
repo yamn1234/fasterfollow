@@ -157,7 +157,7 @@ const PlatformsSection = ({ settings }: PlatformsSectionProps) => {
             return (
             <Link key={category.id} to={`/services?category=${category.slug}`}>
               <Card variant="platform" className="cursor-pointer group h-full">
-                <CardContent className="p-6 text-center">
+                <CardContent className="p-4 sm:p-6 text-center">
                   {visual.type === 'image' ? (
                     <img
                       src={visual.value}

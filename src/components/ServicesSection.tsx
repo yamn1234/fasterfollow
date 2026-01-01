@@ -140,7 +140,7 @@ const ServicesSection = ({ settings }: ServicesSectionProps) => {
                 </div>
               )}
 
-              <CardContent className="p-6">
+              <CardContent className="p-5 sm:p-6">
                 <div className="flex items-start gap-4 mb-4">
                   {visual.type === 'image' ? (
                     <img 

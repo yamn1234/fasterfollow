@@ -41,7 +41,7 @@ const FeaturesSection = ({ settings }: FeaturesSectionProps) => {
   const features = settings?.features || defaultFeatures;
 
   return (
-    <section className="py-16 lg:py-24 bg-secondary/30">
+    <section className="py-12 sm:py-16 lg:py-24 bg-secondary/30">
       <div className="container">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -57,7 +57,7 @@ const FeaturesSection = ({ settings }: FeaturesSectionProps) => {
             const IconComponent = iconMap[feature.icon] || Zap;
             return (
               <Card key={index} variant="feature" className="group">
-                <CardContent className="p-8 text-center">
+                <CardContent className="p-6 sm:p-8 text-center">
                   <div className="mx-auto w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <IconComponent className="h-8 w-8 text-primary-foreground" />
                   </div>
