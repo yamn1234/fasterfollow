@@ -38,11 +38,12 @@ const NewOrderTab = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedService, setSelectedService] = useState<string>("");
   const [link, setLink] = useState("");
-  const [quantity, setQuantity] = useState<number>(100);
+  const [quantity, setQuantity] = useState<string>("");
   const [comments, setComments] = useState("");
 
   const selectedServiceData = services.find(s => s.id === selectedService);
-  const totalPriceUSD = selectedServiceData ? (selectedServiceData.price * quantity / 1000) : 0;
+  const quantityNum = quantity === "" ? 0 : parseInt(quantity) || 0;
+  const totalPriceUSD = selectedServiceData ? (selectedServiceData.price * quantityNum / 1000) : 0;
   const userBalanceUSD = profile?.balance || 0;
   const canAfford = userBalanceUSD >= totalPriceUSD;
 
@@ -57,7 +58,7 @@ const NewOrderTab = () => {
 
   useEffect(() => {
     if (selectedServiceData) {
-      setQuantity(selectedServiceData.min_quantity || 100);
+      setQuantity(String(selectedServiceData.min_quantity || 100));
     }
   }, [selectedService]);
 
@@ -95,7 +96,7 @@ const NewOrderTab = () => {
     const minQty = selectedServiceData.min_quantity || 1;
     const maxQty = selectedServiceData.max_quantity || 1000000;
     
-    if (quantity < minQty || quantity > maxQty) {
+    if (quantityNum < minQty || quantityNum > maxQty) {
       toast({
         title: "خطأ في الكمية",
         description: `الكمية يجب أن تكون بين ${minQty} و ${maxQty}`,
@@ -112,7 +113,7 @@ const NewOrderTab = () => {
         user_id: user.id,
         service_id: selectedService,
         link: link.trim(),
-        quantity,
+        quantity: quantityNum,
         price: totalPriceUSD,
         status: "pending",
         comments: selectedServiceData.requires_comments ? comments.trim() : null
@@ -162,7 +163,7 @@ const NewOrderTab = () => {
 
       // Reset form
       setLink("");
-      setQuantity(100);
+      setQuantity("");
       setSelectedService("");
       setComments("");
     } catch (error: any) {
@@ -276,9 +277,10 @@ const NewOrderTab = () => {
                 <Input
                   type="number"
                   value={quantity}
-                  onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
+                  onChange={(e) => setQuantity(e.target.value)}
                   min={selectedServiceData?.min_quantity || 1}
                   max={selectedServiceData?.max_quantity || 1000000}
+                  placeholder="أدخل الكمية"
                 />
                 {selectedServiceData && (
                   <p className="text-xs text-muted-foreground">
@@ -330,7 +332,7 @@ const NewOrderTab = () => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">الكمية</span>
-                  <span className="font-medium">{quantity.toLocaleString()}</span>
+                  <span className="font-medium">{quantityNum.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">سعر الألف</span>
