@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useServices } from "@/hooks/useServices";
+import { useCurrency } from "@/hooks/useCurrency";
 import { 
   Select, 
   SelectContent, 
@@ -27,6 +28,7 @@ const NewOrderTab = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const { categories, services, loading } = useServices();
+  const { selectedCurrency, format, convert } = useCurrency();
   
   const [filteredServices, setFilteredServices] = useState(services);
   const [submitting, setSubmitting] = useState(false);
@@ -37,9 +39,9 @@ const NewOrderTab = () => {
   const [quantity, setQuantity] = useState<number>(100);
 
   const selectedServiceData = services.find(s => s.id === selectedService);
-  const totalPrice = selectedServiceData ? (selectedServiceData.price * quantity / 1000) : 0;
-  const userBalance = profile?.balance || 0;
-  const canAfford = userBalance >= totalPrice;
+  const totalPriceUSD = selectedServiceData ? (selectedServiceData.price * quantity / 1000) : 0;
+  const userBalanceUSD = profile?.balance || 0;
+  const canAfford = userBalanceUSD >= totalPriceUSD;
 
   useEffect(() => {
     if (selectedCategory) {
@@ -98,7 +100,7 @@ const NewOrderTab = () => {
         service_id: selectedService,
         link: link.trim(),
         quantity,
-        price: totalPrice,
+        price: totalPriceUSD,
         status: "pending"
       }).select().single();
 
@@ -107,7 +109,7 @@ const NewOrderTab = () => {
       // Update user balance
       await supabase
         .from("profiles")
-        .update({ balance: userBalance - totalPrice })
+        .update({ balance: userBalanceUSD - totalPriceUSD })
         .eq("user_id", user.id);
 
       // Send order to provider via edge function
@@ -222,18 +224,20 @@ const NewOrderTab = () => {
                         <div className="flex justify-between items-center w-full gap-4">
                           <span>{service.name_ar || service.name}</span>
                           <span className="text-primary font-medium">
-                            ${service.price.toFixed(2)}/1000
+                            {format(service.price)}/1000
                           </span>
                         </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {selectedServiceData?.description_ar && (
-                  <p className="text-sm text-muted-foreground flex items-start gap-2 mt-2">
-                    <Info className="h-4 w-4 shrink-0 mt-0.5" />
-                    {selectedServiceData.description_ar}
-                  </p>
+                {selectedServiceData && (selectedServiceData.description_ar || selectedServiceData.description) && (
+                  <div className="p-3 rounded-lg bg-secondary/50 border mt-2">
+                    <p className="text-sm text-muted-foreground flex items-start gap-2">
+                      <Info className="h-4 w-4 shrink-0 mt-0.5 text-primary" />
+                      <span>{selectedServiceData.description_ar || selectedServiceData.description}</span>
+                    </p>
+                  </div>
                 )}
               </div>
 
@@ -296,14 +300,14 @@ const NewOrderTab = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">سعر الألف</span>
                   <span className="font-medium">
-                    ${selectedServiceData?.price.toFixed(2) || "0.00"}
+                    {format(selectedServiceData?.price || 0)}
                   </span>
                 </div>
                 <div className="border-t pt-3">
                   <div className="flex justify-between">
                     <span className="font-medium">الإجمالي</span>
                     <span className="text-xl font-bold text-primary">
-                      ${totalPrice.toFixed(2)}
+                      {format(totalPriceUSD)}
                     </span>
                   </div>
                 </div>
@@ -313,12 +317,12 @@ const NewOrderTab = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">رصيدك الحالي</span>
                   <span className={`font-bold ${canAfford ? "text-green-500" : "text-destructive"}`}>
-                    ${userBalance.toFixed(2)}
+                    {format(userBalanceUSD)}
                   </span>
                 </div>
-                {!canAfford && totalPrice > 0 && (
+                {!canAfford && totalPriceUSD > 0 && (
                   <p className="text-xs text-destructive mt-2">
-                    رصيدك غير كافٍ. تحتاج ${(totalPrice - userBalance).toFixed(2)} إضافي
+                    رصيدك غير كافٍ. تحتاج {format(totalPriceUSD - userBalanceUSD)} إضافي
                   </p>
                 )}
               </div>

@@ -72,6 +72,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import ImageIconPicker from '@/components/admin/ImageIconPicker';
 
 interface Provider {
   id: string;
@@ -96,6 +97,8 @@ interface Service {
   seo_keywords: string | null;
   is_indexable: boolean;
   created_at: string;
+  icon: string | null;
+  image_url: string | null;
 }
 
 interface Category {
@@ -158,6 +161,8 @@ const AdminServices = () => {
     provider_id: '',
     external_service_id: '',
     is_active: true,
+    icon: '',
+    image_url: '',
     // SEO
     seo_title: '',
     seo_description: '',
@@ -419,6 +424,8 @@ const AdminServices = () => {
         provider_id: formData.provider_id || null,
         external_service_id: formData.external_service_id || null,
         is_active: formData.is_active,
+        icon: formData.icon || null,
+        image_url: formData.image_url || null,
         seo_title: formData.seo_title || null,
         seo_description: formData.seo_description || null,
         seo_keywords: formData.seo_keywords || null,
@@ -531,6 +538,8 @@ const AdminServices = () => {
       provider_id: '',
       external_service_id: '',
       is_active: true,
+      icon: '',
+      image_url: '',
       seo_title: '',
       seo_description: '',
       seo_keywords: '',
@@ -557,6 +566,8 @@ const AdminServices = () => {
       provider_id: service.provider_id || '',
       external_service_id: (service as any).external_service_id || '',
       is_active: service.is_active,
+      icon: service.icon || '',
+      image_url: service.image_url || '',
       seo_title: service.seo_title || '',
       seo_description: service.seo_description || '',
       seo_keywords: service.seo_keywords || '',
@@ -954,6 +965,22 @@ const AdminServices = () => {
                   </p>
                 </div>
               )}
+
+              {/* Image Icon Picker */}
+              <div className="grid grid-cols-2 gap-4">
+                <ImageIconPicker
+                  label="أيقونة الخدمة"
+                  value={formData.icon}
+                  onChange={(val) => setFormData({ ...formData, icon: val })}
+                  folder="services/icons"
+                />
+                <ImageIconPicker
+                  label="صورة الخدمة"
+                  value={formData.image_url}
+                  onChange={(val) => setFormData({ ...formData, image_url: val })}
+                  folder="services/images"
+                />
+              </div>
 
               <div className="flex items-center gap-2">
                 <Switch
