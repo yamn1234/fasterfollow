@@ -29,6 +29,7 @@ import { ar, enUS } from "date-fns/locale";
 
 interface DashboardHeaderProps {
   onGoHome?: () => void;
+  onNavigate?: (tab: string) => void;
 }
 
 interface Notification {
@@ -41,7 +42,7 @@ interface Notification {
   created_at: string;
 }
 
-const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
+const DashboardHeader = ({ onGoHome, onNavigate }: DashboardHeaderProps) => {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const { selectedCurrency, setSelectedCurrency, currencies, format } = useCurrency();
@@ -323,8 +324,18 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">{t('profile')}</DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">{t('settings')}</DropdownMenuItem>
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={() => onNavigate?.("profile")}
+            >
+              {t('profile')}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={() => onNavigate?.("settings")}
+            >
+              {t('settings')}
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               className="text-destructive cursor-pointer"

@@ -7,6 +7,8 @@ import {
   MessageSquare,
   Home,
   Ticket,
+  User,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -30,6 +32,8 @@ const menuItems = [
   { id: "balance" as TabType, title: "شحن الرصيد", icon: Wallet },
   { id: "coupon" as TabType, title: "كوبون", icon: Ticket },
   { id: "support" as TabType, title: "الدعم الفني", icon: MessageSquare },
+  { id: "profile" as TabType, title: "الملف الشخصي", icon: User },
+  { id: "settings" as TabType, title: "الإعدادات", icon: Settings },
 ];
 
 const DashboardNavigation = ({ activeTab, setActiveTab }: DashboardNavigationProps) => {
