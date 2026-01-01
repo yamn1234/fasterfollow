@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, Search, Home, ChevronDown, Check, Trash2, LogOut } from "lucide-react";
+import { Bell, Search, ChevronDown, Check, Trash2, Moon, Sun, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,6 +7,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useTheme } from "next-themes";
+import { useCustomerLanguage } from "@/contexts/CustomerLanguageContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +25,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { formatDistanceToNow } from "date-fns";
-import { ar } from "date-fns/locale";
+import { ar, enUS } from "date-fns/locale";
 
 interface DashboardHeaderProps {
   onGoHome?: () => void;
@@ -43,6 +45,8 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const { selectedCurrency, setSelectedCurrency, currencies, format } = useCurrency();
+  const { theme, setTheme } = useTheme();
+  const { language, toggleLanguage, t } = useCustomerLanguage();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -145,13 +149,37 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
         <div className="relative hidden lg:block">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="بحث..."
+            placeholder={t('search')}
             className="w-48 lg:w-64 pr-10 bg-secondary/50 border-0 h-10"
           />
         </div>
       </div>
 
-      <div className="flex items-center gap-2 md:gap-3">
+      <div className="flex items-center gap-1.5 md:gap-2">
+        {/* Theme Toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9"
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        >
+          {theme === 'dark' ? (
+            <Sun className="h-4 w-4" />
+          ) : (
+            <Moon className="h-4 w-4" />
+          )}
+        </Button>
+
+        {/* Language Toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9"
+          onClick={toggleLanguage}
+        >
+          <Languages className="h-4 w-4" />
+        </Button>
+
         {/* Currency Selector */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -161,7 +189,7 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-popover z-50">
-            <DropdownMenuLabel>اختر العملة</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('selectCurrency')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {currencies.map((currency) => (
               <DropdownMenuItem
@@ -180,7 +208,7 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
 
         {/* Balance - Compact on mobile */}
         <div className="flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 bg-secondary/50 rounded-lg md:rounded-xl">
-          <span className="text-xs md:text-sm text-muted-foreground hidden sm:inline">رصيدك:</span>
+          <span className="text-xs md:text-sm text-muted-foreground hidden sm:inline">{t('yourBalance')}:</span>
           <span className="text-sm md:text-base font-bold text-primary">
             {convertedBalance}
           </span>
@@ -200,7 +228,7 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
           </SheetTrigger>
           <SheetContent side="left" className="w-[300px] sm:w-[380px]">
             <SheetHeader className="flex flex-row items-center justify-between">
-              <SheetTitle>الإشعارات</SheetTitle>
+              <SheetTitle>{t('notifications')}</SheetTitle>
               {unreadCount > 0 && (
                 <Button 
                   variant="ghost" 
@@ -209,7 +237,7 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
                   onClick={markAllAsRead}
                 >
                   <Check className="h-3 w-3 ml-1" />
-                  تحديد الكل كمقروء
+                  {t('markAllRead')}
                 </Button>
               )}
             </SheetHeader>
@@ -217,7 +245,7 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
               {notifications.length === 0 ? (
                 <div className="text-center py-12">
                   <Bell className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-                  <p className="text-muted-foreground text-sm">لا توجد إشعارات</p>
+                  <p className="text-muted-foreground text-sm">{t('noNotifications')}</p>
                 </div>
               ) : (
                 notifications.map((notification) => (
@@ -247,7 +275,7 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
                         <p className="text-xs text-muted-foreground mt-2">
                           {formatDistanceToNow(new Date(notification.created_at), { 
                             addSuffix: true, 
-                            locale: ar 
+                            locale: language === 'ar' ? ar : enUS 
                           })}
                         </p>
                       </div>
@@ -288,21 +316,21 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col">
-                <span>{profile?.full_name || "المستخدم"}</span>
+                <span>{profile?.full_name || (language === 'ar' ? "المستخدم" : "User")}</span>
                 <span className="text-xs text-muted-foreground font-normal">
-                  رصيدك: ${profile?.balance?.toFixed(2) || "0.00"}
+                  {t('yourBalance')}: ${profile?.balance?.toFixed(2) || "0.00"}
                 </span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">الملف الشخصي</DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">الإعدادات</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">{t('profile')}</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">{t('settings')}</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               className="text-destructive cursor-pointer"
               onClick={handleSignOut}
             >
-              تسجيل الخروج
+              {t('logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
