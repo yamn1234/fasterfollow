@@ -6,6 +6,7 @@ import {
   Zap,
   MessageSquare,
   Home,
+  Ticket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -27,6 +28,7 @@ const menuItems = [
   { id: "orders" as TabType, title: "طلباتي", icon: ShoppingBag },
   { id: "transactions" as TabType, title: "سجل العمليات", icon: Receipt },
   { id: "balance" as TabType, title: "شحن الرصيد", icon: Wallet },
+  { id: "coupon" as TabType, title: "كوبون", icon: Ticket },
   { id: "support" as TabType, title: "الدعم الفني", icon: MessageSquare },
 ];
 
