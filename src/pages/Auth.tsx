@@ -18,20 +18,22 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isVerifyCode, setIsVerifyCode] = useState(false);
   const [isResetPassword, setIsResetPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [otpCode, setOtpCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string; confirmPassword?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string; confirmPassword?: string; otp?: string }>({});
   
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
-  // Check if this is a password recovery redirect
+  // Check if this is a password recovery redirect (for backwards compatibility)
   useEffect(() => {
     const type = searchParams.get('type');
     if (type === 'recovery') {
@@ -54,15 +56,45 @@ const Auth = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?type=recovery`,
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
       
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success("تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني");
+        toast.success("تم إرسال كود التحقق إلى بريدك الإلكتروني");
         setIsForgotPassword(false);
+        setIsVerifyCode(true);
+      }
+    } catch (error) {
+      toast.error("حدث خطأ غير متوقع");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!otpCode || otpCode.length < 6) {
+      setErrors({ otp: "يرجى إدخال كود التحقق المكون من 6 أرقام" });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token: otpCode,
+        type: 'recovery',
+      });
+      
+      if (error) {
+        toast.error("كود التحقق غير صحيح أو منتهي الصلاحية");
+      } else {
+        toast.success("تم التحقق بنجاح");
+        setIsVerifyCode(false);
+        setIsResetPassword(true);
       }
     } catch (error) {
       toast.error("حدث خطأ غير متوقع");
@@ -311,6 +343,100 @@ const Auth = () => {
     );
   }
 
+  // Verify OTP Code Form
+  if (isVerifyCode) {
+    return (
+      <div className="min-h-screen gradient-hero flex items-center justify-center p-4">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 right-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+        </div>
+
+        <Card className="w-full max-w-md relative z-10 shadow-lg border-0">
+          <CardHeader className="text-center space-y-4">
+            <Link to="/" className="flex items-center justify-center gap-2 mx-auto">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
+                <ShoppingCart className="h-6 w-6 text-primary-foreground" />
+              </div>
+            </Link>
+            <div>
+              <CardTitle className="text-2xl font-bold">أدخل كود التحقق</CardTitle>
+              <CardDescription className="mt-2">
+                تم إرسال كود التحقق إلى {email}
+              </CardDescription>
+            </div>
+          </CardHeader>
+
+          <form onSubmit={handleVerifyOtp}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="otp">كود التحقق</Label>
+                <Input
+                  id="otp"
+                  type="text"
+                  placeholder="أدخل الكود المكون من 6 أرقام"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="text-center text-lg tracking-widest"
+                  disabled={isLoading}
+                  dir="ltr"
+                  maxLength={6}
+                />
+                {errors.otp && (
+                  <p className="text-sm text-destructive">{errors.otp}</p>
+                )}
+              </div>
+            </CardContent>
+
+            <CardFooter className="flex flex-col gap-4">
+              <Button
+                type="submit"
+                variant="hero"
+                size="lg"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    جاري التحقق...
+                  </>
+                ) : (
+                  "تحقق من الكود"
+                )}
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsVerifyCode(false);
+                  setIsForgotPassword(true);
+                  setOtpCode("");
+                  setErrors({});
+                }}
+                className="text-sm text-primary font-medium hover:underline"
+              >
+                إعادة إرسال الكود
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsVerifyCode(false);
+                  setOtpCode("");
+                  setErrors({});
+                }}
+                className="text-sm text-muted-foreground hover:underline"
+              >
+                العودة لتسجيل الدخول
+              </button>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
+    );
+  }
+
   // Forgot Password Form
   if (isForgotPassword) {
     return (
@@ -330,7 +456,7 @@ const Auth = () => {
             <div>
               <CardTitle className="text-2xl font-bold">استعادة كلمة المرور</CardTitle>
               <CardDescription className="mt-2">
-                أدخل بريدك الإلكتروني لإرسال رابط استعادة كلمة المرور
+                أدخل بريدك الإلكتروني لإرسال كود التحقق
               </CardDescription>
             </div>
           </CardHeader>
@@ -372,7 +498,7 @@ const Auth = () => {
                     جاري الإرسال...
                   </>
                 ) : (
-                  "إرسال رابط الاستعادة"
+                  "إرسال كود التحقق"
                 )}
               </Button>
 
