@@ -161,6 +161,7 @@ const AdminServices = () => {
     provider_id: '',
     external_service_id: '',
     is_active: true,
+    requires_comments: false,
     icon: '',
     image_url: '',
     // SEO
@@ -424,6 +425,7 @@ const AdminServices = () => {
         provider_id: formData.provider_id || null,
         external_service_id: formData.external_service_id || null,
         is_active: formData.is_active,
+        requires_comments: formData.requires_comments,
         icon: formData.icon || null,
         image_url: formData.image_url || null,
         seo_title: formData.seo_title || null,
@@ -538,6 +540,7 @@ const AdminServices = () => {
       provider_id: '',
       external_service_id: '',
       is_active: true,
+      requires_comments: false,
       icon: '',
       image_url: '',
       seo_title: '',
@@ -566,6 +569,7 @@ const AdminServices = () => {
       provider_id: service.provider_id || '',
       external_service_id: (service as any).external_service_id || '',
       is_active: service.is_active,
+      requires_comments: (service as any).requires_comments || false,
       icon: service.icon || '',
       image_url: service.image_url || '',
       seo_title: service.seo_title || '',
@@ -989,6 +993,15 @@ const AdminServices = () => {
                   onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                 />
                 <Label htmlFor="is_active">نشط</Label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="requires_comments"
+                  checked={formData.requires_comments}
+                  onCheckedChange={(checked) => setFormData({ ...formData, requires_comments: checked })}
+                />
+                <Label htmlFor="requires_comments">يتطلب تعليقات (مثل خدمات التعليقات)</Label>
               </div>
             </TabsContent>
 
