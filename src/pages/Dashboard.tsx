@@ -1,5 +1,4 @@
 import { useState } from "react";
-import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import OverviewTab from "@/components/dashboard/OverviewTab";
 import NewOrderTab from "@/components/dashboard/NewOrderTab";
@@ -7,7 +6,7 @@ import OrdersTab from "@/components/dashboard/OrdersTab";
 import TransactionsTab from "@/components/dashboard/TransactionsTab";
 import BalanceTab from "@/components/dashboard/BalanceTab";
 import SupportTab from "@/components/dashboard/SupportTab";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import DashboardNavigation from "@/components/dashboard/DashboardNavigation";
 
 export type TabType = "overview" | "new-order" | "orders" | "transactions" | "balance" | "support";
 
@@ -34,17 +33,13 @@ const Dashboard = () => {
   };
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-background">
-        <DashboardSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-        <div className="flex-1 flex flex-col min-w-0">
-          <DashboardHeader onGoHome={() => setActiveTab("overview")} />
-          <main className="flex-1 p-3 md:p-6 overflow-auto">
-            {renderContent()}
-          </main>
-        </div>
-      </div>
-    </SidebarProvider>
+    <div className="min-h-screen flex flex-col w-full bg-background">
+      <DashboardHeader onGoHome={() => setActiveTab("overview")} />
+      <DashboardNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+      <main className="flex-1 p-3 md:p-6 overflow-auto">
+        {renderContent()}
+      </main>
+    </div>
   );
 };
 

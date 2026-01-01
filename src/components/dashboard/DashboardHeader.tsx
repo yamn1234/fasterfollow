@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { Bell, Search, Home, ChevronDown, Check, Trash2 } from "lucide-react";
+import { Bell, Search, Home, ChevronDown, Check, Trash2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -23,11 +22,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
 
@@ -137,27 +131,18 @@ const DashboardHeader = ({ onGoHome }: DashboardHeaderProps) => {
   const convertedBalance = format(profile?.balance || 0);
 
   return (
-    <header className="h-14 md:h-16 border-b border-border/50 bg-card/50 backdrop-blur-sm px-3 md:px-6 flex items-center justify-between gap-2 md:gap-4 sticky top-0 z-10">
+    <header className="h-14 md:h-16 border-b border-border/50 bg-card/50 backdrop-blur-sm px-3 md:px-6 flex items-center justify-between gap-2 md:gap-4 sticky top-0 z-50">
       <div className="flex items-center gap-2 md:gap-4">
-        <SidebarTrigger className="h-9 w-9" />
-        
-        {/* Home Button */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-9 w-9"
-              onClick={onGoHome}
-            >
-              <Home className="h-4 w-4 md:h-5 md:w-5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>الصفحة الرئيسية</TooltipContent>
-        </Tooltip>
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shrink-0 shadow-lg">
+            <span className="text-base font-bold text-primary-foreground">F</span>
+          </div>
+          <span className="text-lg font-bold text-gradient hidden sm:block">FasterFollow</span>
+        </Link>
         
         {/* Search - Hidden on mobile */}
-        <div className="relative hidden md:block">
+        <div className="relative hidden lg:block">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="بحث..."
