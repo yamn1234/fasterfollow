@@ -14,7 +14,9 @@ import {
   CheckSquare,
   Square,
   X,
+  ArrowUpDown,
 } from 'lucide-react';
+import ServiceSortDialog from '@/components/admin/ServiceSortDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -138,6 +140,9 @@ const AdminServices = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  
+  // Sort dialog state
+  const [sortDialogOpen, setSortDialogOpen] = useState(false);
 
   // Import dialog state
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -622,6 +627,10 @@ const AdminServices = () => {
           <Button variant="outline" onClick={() => setCategoryDialogOpen(true)}>
             <FolderPlus className="w-4 h-4 ml-2" />
             فئة جديدة
+          </Button>
+          <Button variant="outline" onClick={() => setSortDialogOpen(true)}>
+            <ArrowUpDown className="w-4 h-4 ml-2" />
+            ترتيب الخدمات
           </Button>
           <Button 
             variant="outline" 
@@ -1347,6 +1356,14 @@ const AdminServices = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Sort Dialog */}
+      <ServiceSortDialog
+        open={sortDialogOpen}
+        onOpenChange={setSortDialogOpen}
+        categories={categories}
+        onSortComplete={fetchServices}
+      />
     </div>
   );
 };
