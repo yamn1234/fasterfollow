@@ -46,6 +46,8 @@ interface ServiceDetail {
   average_rating: number | null;
   reviews_count: number | null;
   delivery_time: string | null;
+  icon: string | null;
+  image_url: string | null;
   category: {
     name: string;
     name_ar: string | null;
@@ -92,6 +94,7 @@ const ServiceDetail = () => {
         .select(`
           id, name, name_ar, description, description_ar, price,
           min_quantity, max_quantity, average_rating, reviews_count, delivery_time,
+          icon, image_url,
           service_categories(name, name_ar)
         `)
         .eq('slug', slug)
@@ -283,35 +286,48 @@ const ServiceDetail = () => {
             {/* Service Header */}
             <Card>
               <CardContent className="p-6">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="flex-1">
-                    {service.category && (
-                      <Badge variant="secondary" className="mb-3">
-                        {service.category.name_ar || service.category.name}
-                      </Badge>
-                    )}
-                    <h1 className="text-2xl md:text-3xl font-bold mb-4">
-                      {service.name_ar || service.name}
-                    </h1>
-                    <div className="flex flex-wrap items-center gap-4 text-sm">
-                      <div className="flex items-center gap-1">
-                        <div className="flex">{renderStars(Math.round(service.average_rating || 0))}</div>
-                        <span className="font-medium mr-1">{service.average_rating || 0}</span>
-                        <span className="text-muted-foreground">
-                          ({service.reviews_count || 0} تقييم)
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <Clock className="w-4 h-4" />
-                        <span>{service.delivery_time || 'فوري - 24 ساعة'}</span>
+                <div className="flex flex-wrap items-start gap-6">
+                  {/* Service Image */}
+                  {service.image_url && (
+                    <div className="w-full sm:w-48 h-48 rounded-xl overflow-hidden bg-secondary shrink-0">
+                      <img 
+                        src={service.image_url} 
+                        alt={service.name_ar || service.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="flex-1 flex flex-wrap items-start justify-between gap-4">
+                    <div className="flex-1">
+                      {service.category && (
+                        <Badge variant="secondary" className="mb-3">
+                          {service.category.name_ar || service.category.name}
+                        </Badge>
+                      )}
+                      <h1 className="text-2xl md:text-3xl font-bold mb-4">
+                        {service.name_ar || service.name}
+                      </h1>
+                      <div className="flex flex-wrap items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1">
+                          <div className="flex">{renderStars(Math.round(service.average_rating || 0))}</div>
+                          <span className="font-medium mr-1">{service.average_rating || 0}</span>
+                          <span className="text-muted-foreground">
+                            ({service.reviews_count || 0} تقييم)
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Clock className="w-4 h-4" />
+                          <span>{service.delivery_time || 'فوري - 24 ساعة'}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="text-left">
-                    <p className="text-3xl font-bold text-primary">
-                      ${service.price.toFixed(2)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">لكل 1000</p>
+                    <div className="text-left">
+                      <p className="text-3xl font-bold text-primary">
+                        ${service.price.toFixed(2)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">لكل 1000</p>
+                    </div>
                   </div>
                 </div>
               </CardContent>
