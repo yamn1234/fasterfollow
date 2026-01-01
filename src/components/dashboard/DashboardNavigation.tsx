@@ -41,13 +41,11 @@ const DashboardNavigation = ({ activeTab, setActiveTab }: DashboardNavigationPro
               <Button
                 variant="ghost"
                 size="sm"
-                asChild
+                onClick={() => setActiveTab("overview")}
                 className="shrink-0 rounded-xl hover:bg-secondary"
               >
-                <Link to="/">
-                  <Home className="h-4 w-4" />
-                  <span className="hidden sm:inline mr-2">الرئيسية</span>
-                </Link>
+                <Home className="h-4 w-4" />
+                <span className="hidden sm:inline mr-2">الرئيسية</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="sm:hidden">
