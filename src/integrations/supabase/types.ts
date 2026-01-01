@@ -410,6 +410,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          comments: string | null
           completed_at: string | null
           created_at: string
           error_message: string | null
@@ -429,6 +430,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          comments?: string | null
           completed_at?: string | null
           created_at?: string
           error_message?: string | null
@@ -448,6 +450,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          comments?: string | null
           completed_at?: string | null
           created_at?: string
           error_message?: string | null
@@ -873,6 +876,7 @@ export type Database = {
           og_title: string | null
           price: number
           provider_id: string | null
+          requires_comments: boolean | null
           reviews_count: number | null
           schema_markup: Json | null
           seo_description: string | null
@@ -910,6 +914,7 @@ export type Database = {
           og_title?: string | null
           price?: number
           provider_id?: string | null
+          requires_comments?: boolean | null
           reviews_count?: number | null
           schema_markup?: Json | null
           seo_description?: string | null
@@ -947,6 +952,7 @@ export type Database = {
           og_title?: string | null
           price?: number
           provider_id?: string | null
+          requires_comments?: boolean | null
           reviews_count?: number | null
           schema_markup?: Json | null
           seo_description?: string | null

@@ -20,6 +20,7 @@ export interface Service {
   max_quantity: number | null;
   category_id: string | null;
   slug: string;
+  requires_comments: boolean | null;
   category?: ServiceCategory;
 }
 
@@ -44,7 +45,7 @@ export const useServices = () => {
           .from('services')
           .select(`
             id, name, name_ar, description, description_ar, 
-            price, min_quantity, max_quantity, category_id, slug,
+            price, min_quantity, max_quantity, category_id, slug, requires_comments,
             service_categories(id, name, name_ar, icon, slug)
           `)
           .eq('is_active', true)

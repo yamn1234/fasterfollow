@@ -15,13 +15,15 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   ShoppingCart, 
   Loader2, 
   Link as LinkIcon, 
   Package,
   Sparkles,
-  Info
+  Info,
+  MessageSquare
 } from "lucide-react";
 
 const NewOrderTab = () => {
@@ -37,6 +39,7 @@ const NewOrderTab = () => {
   const [selectedService, setSelectedService] = useState<string>("");
   const [link, setLink] = useState("");
   const [quantity, setQuantity] = useState<number>(100);
+  const [comments, setComments] = useState("");
 
   const selectedServiceData = services.find(s => s.id === selectedService);
   const totalPriceUSD = selectedServiceData ? (selectedServiceData.price * quantity / 1000) : 0;
@@ -79,6 +82,16 @@ const NewOrderTab = () => {
       return;
     }
 
+    // Check if comments are required
+    if (selectedServiceData.requires_comments && !comments.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال التعليقات المطلوبة",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const minQty = selectedServiceData.min_quantity || 1;
     const maxQty = selectedServiceData.max_quantity || 1000000;
     
@@ -101,7 +114,8 @@ const NewOrderTab = () => {
         link: link.trim(),
         quantity,
         price: totalPriceUSD,
-        status: "pending"
+        status: "pending",
+        comments: selectedServiceData.requires_comments ? comments.trim() : null
       }).select().single();
 
       if (error) throw error;
@@ -150,6 +164,7 @@ const NewOrderTab = () => {
       setLink("");
       setQuantity(100);
       setSelectedService("");
+      setComments("");
     } catch (error: any) {
       console.error("Error creating order:", error);
       toast({
@@ -272,6 +287,26 @@ const NewOrderTab = () => {
                   </p>
                 )}
               </div>
+
+              {/* Comments Input (for services that require it) */}
+              {selectedServiceData?.requires_comments && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    التعليقات (1 لكل سطر)
+                  </Label>
+                  <Textarea
+                    placeholder="أدخل التعليقات هنا، كل تعليق في سطر منفصل..."
+                    value={comments}
+                    onChange={(e) => setComments(e.target.value)}
+                    rows={6}
+                    className="resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    أدخل تعليقاً واحداً في كل سطر. عدد التعليقات يجب أن يتناسب مع الكمية المطلوبة.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
