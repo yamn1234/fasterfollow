@@ -156,13 +156,16 @@ const ServiceDetail = () => {
       return;
     }
 
-    if (service.requires_comments && !orderComments.trim()) {
-      toast({
-        title: 'خطأ',
-        description: 'يرجى إدخال التعليقات المطلوبة',
-        variant: 'destructive',
-      });
-      return;
+    if (service.requires_comments) {
+      const commentsLines = orderComments.split('\n').filter(line => line.trim()).length;
+      if (commentsLines !== orderQuantity) {
+        toast({
+          title: 'خطأ',
+          description: `عدد التعليقات (${commentsLines}) يجب أن يساوي الكمية المطلوبة (${orderQuantity})`,
+          variant: 'destructive',
+        });
+        return;
+      }
     }
 
     const totalPrice = (service.price / 1000) * orderQuantity;
@@ -514,16 +517,22 @@ const ServiceDetail = () => {
 
                 {service.requires_comments && (
                   <div className="space-y-2">
-                    <Label>التعليقات المطلوبة *</Label>
+                    <Label>
+                      التعليقات المطلوبة * 
+                      <span className="text-muted-foreground font-normal mr-2">
+                        ({orderComments.split('\n').filter(line => line.trim()).length}/{orderQuantity})
+                      </span>
+                    </Label>
                     <Textarea
                       placeholder="أدخل التعليقات (كل تعليق في سطر جديد)"
                       value={orderComments}
                       onChange={(e) => setOrderComments(e.target.value)}
                       rows={4}
                       dir="rtl"
+                      className={orderComments.split('\n').filter(line => line.trim()).length !== orderQuantity && orderComments.trim() ? 'border-destructive' : ''}
                     />
                     <p className="text-xs text-muted-foreground">
-                      أدخل التعليقات المطلوبة، كل تعليق في سطر منفصل
+                      أدخل {orderQuantity} تعليق، كل تعليق في سطر منفصل
                     </p>
                   </div>
                 )}
