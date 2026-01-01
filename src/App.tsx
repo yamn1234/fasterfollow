@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CustomerLanguageProvider } from "@/contexts/CustomerLanguageContext";
+import { ThemeProvider } from "next-themes";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
 import AdminLayout from "@/layouts/AdminLayout";
@@ -39,12 +41,14 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <ThemeInitializer>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <CustomerLanguageProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <ThemeInitializer>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/services" element={<Services />} />
@@ -95,10 +99,12 @@ const App = () => (
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </ThemeInitializer>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+              </ThemeInitializer>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </CustomerLanguageProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

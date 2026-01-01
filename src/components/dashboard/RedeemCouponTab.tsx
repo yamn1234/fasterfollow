@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCustomerLanguage } from '@/contexts/CustomerLanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import { Gift, Ticket, CheckCircle2, Loader2 } from 'lucide-react';
 
 const RedeemCouponTab = () => {
   const { user, profile, refreshProfile } = useAuth();
+  const { t } = useCustomerLanguage();
   const [couponCode, setCouponCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [redeemed, setRedeemed] = useState(false);
@@ -18,12 +20,12 @@ const RedeemCouponTab = () => {
     e.preventDefault();
     
     if (!couponCode.trim()) {
-      toast.error('يرجى إدخال كود الكوبون');
+      toast.error(t('enterCouponCode'));
       return;
     }
 
     if (!user || !profile) {
-      toast.error('يجب تسجيل الدخول أولاً');
+      toast.error(t('login'));
       return;
     }
 
@@ -42,25 +44,25 @@ const RedeemCouponTab = () => {
       if (couponError) throw couponError;
 
       if (!coupon) {
-        toast.error('الكوبون غير صالح أو منتهي الصلاحية');
+        toast.error(t('invalidCoupon'));
         return;
       }
 
       // Check expiration
       if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
-        toast.error('انتهت صلاحية هذا الكوبون');
+        toast.error(t('couponExpired'));
         return;
       }
 
       // Check start date
       if (coupon.starts_at && new Date(coupon.starts_at) > new Date()) {
-        toast.error('هذا الكوبون غير متاح بعد');
+        toast.error(t('invalidCoupon'));
         return;
       }
 
       // Check max uses
       if (coupon.max_uses && coupon.uses_count >= coupon.max_uses) {
-        toast.error('تم استنفاذ عدد استخدامات هذا الكوبون');
+        toast.error(t('invalidCoupon'));
         return;
       }
 
@@ -75,7 +77,7 @@ const RedeemCouponTab = () => {
       if (usageError) throw usageError;
 
       if (existingUsage) {
-        toast.error('لقد استخدمت هذا الكوبون من قبل');
+        toast.error(t('couponUsed'));
         return;
       }
 
@@ -130,7 +132,7 @@ const RedeemCouponTab = () => {
       setRedeemedAmount(balanceAmount);
       setCouponCode('');
       refreshProfile();
-      toast.success(`تم شحن رصيدك بمبلغ $${balanceAmount}`);
+      toast.success(t('couponSuccess'));
 
       // Reset success state after 5 seconds
       setTimeout(() => {
@@ -140,7 +142,7 @@ const RedeemCouponTab = () => {
 
     } catch (error) {
       console.error('Error redeeming coupon:', error);
-      toast.error('حدث خطأ أثناء استخدام الكوبون');
+      toast.error(t('invalidCoupon'));
     } finally {
       setLoading(false);
     }
@@ -149,8 +151,8 @@ const RedeemCouponTab = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">استخدام كوبون</h2>
-        <p className="text-muted-foreground">أدخل كود الكوبون لشحن رصيدك</p>
+        <h2 className="text-2xl font-bold">{t('useCoupon')}</h2>
+        <p className="text-muted-foreground">{t('enterCouponCode')}</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -159,10 +161,10 @@ const RedeemCouponTab = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Ticket className="w-5 h-5" />
-              كوبون الشحن
+              {t('couponCode')}
             </CardTitle>
             <CardDescription>
-              أدخل كود الكوبون الخاص بك لإضافة رصيد إلى حسابك
+              {t('enterCouponCode')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -171,12 +173,12 @@ const RedeemCouponTab = () => {
                 <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 className="w-8 h-8 text-green-500" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">تم الشحن بنجاح!</h3>
+                <h3 className="text-xl font-bold mb-2">{t('chargeSuccess')}</h3>
                 <p className="text-muted-foreground mb-4">
-                  تمت إضافة <span className="text-green-500 font-bold">${redeemedAmount}</span> إلى رصيدك
+                  {t('addedToBalance')} <span className="text-green-500 font-bold">${redeemedAmount}</span> {t('toYourBalance')}
                 </p>
                 <Button variant="outline" onClick={() => setRedeemed(false)}>
-                  استخدام كوبون آخر
+                  {t('useAnotherCoupon')}
                 </Button>
               </div>
             ) : (
@@ -185,7 +187,7 @@ const RedeemCouponTab = () => {
                   <Input
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    placeholder="أدخل كود الكوبون"
+                    placeholder={t('enterCouponCode')}
                     className="text-center text-lg font-mono tracking-wider"
                     disabled={loading}
                   />
@@ -194,12 +196,12 @@ const RedeemCouponTab = () => {
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                      جاري التحقق...
+                      {t('verifying')}
                     </>
                   ) : (
                     <>
                       <Gift className="w-4 h-4 ml-2" />
-                      استخدام الكوبون
+                      {t('redeemCoupon')}
                     </>
                   )}
                 </Button>
@@ -213,32 +215,32 @@ const RedeemCouponTab = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Gift className="w-5 h-5" />
-              معلومات مهمة
+              {t('couponInfo')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3 text-sm text-muted-foreground">
               <div className="flex items-start gap-2">
                 <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
-                <p>الكوبونات صالحة للاستخدام مرة واحدة فقط لكل حساب</p>
+                <p>{t('couponInfoText1')}</p>
               </div>
               <div className="flex items-start gap-2">
                 <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
-                <p>تحقق من تاريخ صلاحية الكوبون قبل الاستخدام</p>
+                <p>{t('couponInfoText2')}</p>
               </div>
               <div className="flex items-start gap-2">
                 <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
-                <p>الرصيد المضاف سيظهر فوراً في حسابك</p>
+                <p>{t('couponInfoText3')}</p>
               </div>
               <div className="flex items-start gap-2">
                 <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
-                <p>في حال وجود مشكلة، تواصل مع الدعم الفني</p>
+                <p>{t('couponInfoText4')}</p>
               </div>
             </div>
 
             {/* Current Balance */}
             <div className="mt-6 p-4 rounded-xl bg-secondary/50">
-              <p className="text-sm text-muted-foreground mb-1">رصيدك الحالي</p>
+              <p className="text-sm text-muted-foreground mb-1">{t('currentBalance')}</p>
               <p className="text-3xl font-bold text-primary">
                 ${(profile?.balance || 0).toFixed(2)}
               </p>
