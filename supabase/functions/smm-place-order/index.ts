@@ -68,19 +68,29 @@ serve(async (req) => {
 
     console.log(`Placing order ${orderId} via provider ${provider.name}`);
 
+    // Build API request body
+    const apiBody: Record<string, unknown> = {
+      key: provider.api_key,
+      action: 'add',
+      service: service.external_service_id,
+      link: order.link,
+      quantity: order.quantity,
+    };
+
+    // Add comments if the service requires them
+    if (service.requires_comments && order.comments) {
+      apiBody.comments = order.comments;
+    }
+
+    console.log('API Request Body:', { ...apiBody, key: '[REDACTED]' });
+
     // Call SMM Panel API to place order
     const apiResponse = await fetch(provider.api_url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        key: provider.api_key,
-        action: 'add',
-        service: service.external_service_id,
-        link: order.link,
-        quantity: order.quantity,
-      }),
+      body: JSON.stringify(apiBody),
     });
 
     const apiData = await apiResponse.json();

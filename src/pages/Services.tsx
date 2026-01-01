@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import { useServices, Service } from '@/hooks/useServices';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -43,6 +44,7 @@ const Services = () => {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [orderLink, setOrderLink] = useState('');
   const [orderQuantity, setOrderQuantity] = useState<number>(0);
+  const [orderComments, setOrderComments] = useState('');
   const [isOrdering, setIsOrdering] = useState(false);
 
   const filteredServices = useMemo(() => {
@@ -84,6 +86,7 @@ const Services = () => {
     setSelectedService(service);
     setOrderQuantity(service.min_quantity || 100);
     setOrderLink('');
+    setOrderComments('');
   };
 
   const handleOrder = async () => {
@@ -105,6 +108,16 @@ const Services = () => {
       toast({
         title: 'خطأ',
         description: `الكمية يجب أن تكون بين ${minQty} و ${maxQty}`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Check if comments are required
+    if (selectedService.requires_comments && !orderComments.trim()) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى إدخال التعليقات المطلوبة',
         variant: 'destructive',
       });
       return;
@@ -134,6 +147,7 @@ const Services = () => {
           quantity: orderQuantity,
           price: totalPrice,
           status: 'pending',
+          comments: selectedService.requires_comments ? orderComments.trim() : null,
         })
         .select()
         .single();
@@ -177,6 +191,7 @@ const Services = () => {
       setSelectedService(null);
       setOrderLink('');
       setOrderQuantity(0);
+      setOrderComments('');
     } catch (error: any) {
       console.error('Order error:', error);
       toast({
@@ -368,6 +383,23 @@ const Services = () => {
                 {selectedService?.max_quantity || 100000}
               </p>
             </div>
+
+            {/* Comments Input for services that require it */}
+            {selectedService?.requires_comments && (
+              <div className="space-y-2">
+                <Label>التعليقات (1 لكل سطر)</Label>
+                <Textarea
+                  placeholder="أدخل التعليقات هنا، كل تعليق في سطر منفصل..."
+                  value={orderComments}
+                  onChange={(e) => setOrderComments(e.target.value)}
+                  rows={5}
+                  className="resize-none"
+                />
+                <p className="text-xs text-muted-foreground">
+                  أدخل تعليقاً واحداً في كل سطر
+                </p>
+              </div>
+            )}
 
             <div className="bg-muted/50 rounded-lg p-4 space-y-2">
               <div className="flex justify-between text-sm">
