@@ -110,6 +110,26 @@ const AdminSettings = () => {
     button_text: 'ابدأ الآن',
     button_link: '/auth',
     show_stats: true,
+    stats: {
+      customers: '+10K',
+      customers_label: 'عميل سعيد',
+      services: '+50',
+      services_label: 'خدمة متاحة',
+      support: '24/7',
+      support_label: 'دعم فني',
+    },
+  });
+
+  const [servicesSettings, setServicesSettings] = useState({
+    title: 'الخدمات',
+    title_highlight: 'الأكثر طلباً',
+    subtitle: 'اكتشف خدماتنا المميزة والأكثر شعبية بين عملائنا',
+  });
+
+  const [platformsSettings, setPlatformsSettings] = useState({
+    title: 'اختر',
+    title_highlight: 'منصتك المفضلة',
+    subtitle: 'نوفر خدمات لجميع منصات التواصل الاجتماعي الشهيرة بأسعار تنافسية وجودة عالية',
   });
 
   const [featuresSettings, setFeaturesSettings] = useState({
@@ -132,6 +152,14 @@ const AdminSettings = () => {
     description: 'سجل الآن واحصل على رصيد مجاني لتجربة جميع خدماتنا. لا يوجد حد أدنى للشحن!',
     button_text: 'سجل الآن مجاناً',
     button_link: '/auth',
+    stats: {
+      customers: '+10,000',
+      customers_label: 'عميل نشط',
+      orders: '+1M',
+      orders_label: 'طلب مكتمل',
+      satisfaction: '99%',
+      satisfaction_label: 'رضا العملاء',
+    },
   });
 
   const [headerSettings, setHeaderSettings] = useState<HeaderSettings>(defaultHeaderSettings);
@@ -165,6 +193,12 @@ const AdminSettings = () => {
         }
         if (settingsMap.hero_settings) {
           setHeroSettings(prev => ({ ...prev, ...settingsMap.hero_settings }));
+        }
+        if (settingsMap.services_settings) {
+          setServicesSettings(prev => ({ ...prev, ...settingsMap.services_settings }));
+        }
+        if (settingsMap.platforms_settings) {
+          setPlatformsSettings(prev => ({ ...prev, ...settingsMap.platforms_settings }));
         }
         if (settingsMap.features_settings) {
           setFeaturesSettings(prev => ({ ...prev, ...settingsMap.features_settings }));
@@ -213,6 +247,8 @@ const AdminSettings = () => {
         { key: 'homepage_sections', value: homepageSections, group_name: 'homepage' },
         { key: 'theme_settings', value: themeSettings, group_name: 'appearance' },
         { key: 'hero_settings', value: heroSettings, group_name: 'homepage' },
+        { key: 'services_settings', value: servicesSettings, group_name: 'homepage' },
+        { key: 'platforms_settings', value: platformsSettings, group_name: 'homepage' },
         { key: 'features_settings', value: featuresSettings, group_name: 'homepage' },
         { key: 'cta_settings', value: ctaSettings, group_name: 'homepage' },
         { key: 'header_settings', value: headerSettings, group_name: 'layout' },
@@ -319,34 +355,34 @@ const AdminSettings = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="general">
-            <Settings className="w-4 h-4 ml-2" />
-            عام
+        <TabsList className="flex flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="general" className="text-xs md:text-sm">
+            <Settings className="w-4 h-4 md:ml-2" />
+            <span className="hidden md:inline">عام</span>
           </TabsTrigger>
-          <TabsTrigger value="homepage">
-            <Layout className="w-4 h-4 ml-2" />
-            الصفحة الرئيسية
+          <TabsTrigger value="homepage" className="text-xs md:text-sm">
+            <Layout className="w-4 h-4 md:ml-2" />
+            <span className="hidden md:inline">الصفحة الرئيسية</span>
           </TabsTrigger>
-          <TabsTrigger value="header-footer">
-            <PanelTop className="w-4 h-4 ml-2" />
-            الهيدر والفوتر
+          <TabsTrigger value="header-footer" className="text-xs md:text-sm">
+            <PanelTop className="w-4 h-4 md:ml-2" />
+            <span className="hidden md:inline">الهيدر والفوتر</span>
           </TabsTrigger>
-          <TabsTrigger value="appearance">
-            <Palette className="w-4 h-4 ml-2" />
-            الألوان والمظهر
+          <TabsTrigger value="appearance" className="text-xs md:text-sm">
+            <Palette className="w-4 h-4 md:ml-2" />
+            <span className="hidden md:inline">الألوان</span>
           </TabsTrigger>
-          <TabsTrigger value="localization">
-            <Globe className="w-4 h-4 ml-2" />
-            اللغة والمنطقة
+          <TabsTrigger value="localization" className="text-xs md:text-sm">
+            <Globe className="w-4 h-4 md:ml-2" />
+            <span className="hidden md:inline">اللغة</span>
           </TabsTrigger>
-          <TabsTrigger value="security">
-            <Shield className="w-4 h-4 ml-2" />
-            الأمان
+          <TabsTrigger value="security" className="text-xs md:text-sm">
+            <Shield className="w-4 h-4 md:ml-2" />
+            <span className="hidden md:inline">الأمان</span>
           </TabsTrigger>
-          <TabsTrigger value="payments">
-            <Database className="w-4 h-4 ml-2" />
-            المدفوعات
+          <TabsTrigger value="payments" className="text-xs md:text-sm">
+            <Database className="w-4 h-4 md:ml-2" />
+            <span className="hidden md:inline">المدفوعات</span>
           </TabsTrigger>
         </TabsList>
 
@@ -521,7 +557,7 @@ const AdminSettings = () => {
                   placeholder="أفضل منصة لخدمات التواصل الاجتماعي"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>نص الزر</Label>
                   <Input
@@ -558,6 +594,83 @@ const AdminSettings = () => {
                   }
                 />
               </div>
+
+              {heroSettings.show_stats && (
+                <div className="space-y-4 pt-4 border-t">
+                  <Label className="text-base font-medium">تخصيص الإحصائيات</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2 p-3 border rounded-lg">
+                      <Label className="text-sm">العملاء</Label>
+                      <Input
+                        value={heroSettings.stats?.customers || '+10K'}
+                        onChange={(e) =>
+                          setHeroSettings({ 
+                            ...heroSettings, 
+                            stats: { ...heroSettings.stats, customers: e.target.value } 
+                          })
+                        }
+                        placeholder="+10K"
+                      />
+                      <Input
+                        value={heroSettings.stats?.customers_label || 'عميل سعيد'}
+                        onChange={(e) =>
+                          setHeroSettings({ 
+                            ...heroSettings, 
+                            stats: { ...heroSettings.stats, customers_label: e.target.value } 
+                          })
+                        }
+                        placeholder="عميل سعيد"
+                      />
+                    </div>
+                    <div className="space-y-2 p-3 border rounded-lg">
+                      <Label className="text-sm">الخدمات</Label>
+                      <Input
+                        value={heroSettings.stats?.services || '+50'}
+                        onChange={(e) =>
+                          setHeroSettings({ 
+                            ...heroSettings, 
+                            stats: { ...heroSettings.stats, services: e.target.value } 
+                          })
+                        }
+                        placeholder="+50"
+                      />
+                      <Input
+                        value={heroSettings.stats?.services_label || 'خدمة متاحة'}
+                        onChange={(e) =>
+                          setHeroSettings({ 
+                            ...heroSettings, 
+                            stats: { ...heroSettings.stats, services_label: e.target.value } 
+                          })
+                        }
+                        placeholder="خدمة متاحة"
+                      />
+                    </div>
+                    <div className="space-y-2 p-3 border rounded-lg">
+                      <Label className="text-sm">الدعم</Label>
+                      <Input
+                        value={heroSettings.stats?.support || '24/7'}
+                        onChange={(e) =>
+                          setHeroSettings({ 
+                            ...heroSettings, 
+                            stats: { ...heroSettings.stats, support: e.target.value } 
+                          })
+                        }
+                        placeholder="24/7"
+                      />
+                      <Input
+                        value={heroSettings.stats?.support_label || 'دعم فني'}
+                        onChange={(e) =>
+                          setHeroSettings({ 
+                            ...heroSettings, 
+                            stats: { ...heroSettings.stats, support_label: e.target.value } 
+                          })
+                        }
+                        placeholder="دعم فني"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -567,7 +680,7 @@ const AdminSettings = () => {
               <CardDescription>تخصيص اسم الموقع والوصف</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>اسم الموقع (English)</Label>
                   <Input
@@ -603,6 +716,92 @@ const AdminSettings = () => {
             </CardContent>
           </Card>
 
+          {/* Services Section Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle>إعدادات قسم الخدمات</CardTitle>
+              <CardDescription>تخصيص عناوين قسم الخدمات الأكثر طلباً</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>العنوان (الجزء الأول)</Label>
+                  <Input
+                    value={servicesSettings.title}
+                    onChange={(e) =>
+                      setServicesSettings({ ...servicesSettings, title: e.target.value })
+                    }
+                    placeholder="الخدمات"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>العنوان (الجزء الملون)</Label>
+                  <Input
+                    value={servicesSettings.title_highlight}
+                    onChange={(e) =>
+                      setServicesSettings({ ...servicesSettings, title_highlight: e.target.value })
+                    }
+                    placeholder="الأكثر طلباً"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>الوصف</Label>
+                <Textarea
+                  value={servicesSettings.subtitle}
+                  onChange={(e) =>
+                    setServicesSettings({ ...servicesSettings, subtitle: e.target.value })
+                  }
+                  rows={2}
+                  placeholder="اكتشف خدماتنا المميزة والأكثر شعبية بين عملائنا"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Platforms Section Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle>إعدادات قسم المنصات</CardTitle>
+              <CardDescription>تخصيص عناوين قسم المنصات</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>العنوان (الجزء الأول)</Label>
+                  <Input
+                    value={platformsSettings.title}
+                    onChange={(e) =>
+                      setPlatformsSettings({ ...platformsSettings, title: e.target.value })
+                    }
+                    placeholder="اختر"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>العنوان (الجزء الملون)</Label>
+                  <Input
+                    value={platformsSettings.title_highlight}
+                    onChange={(e) =>
+                      setPlatformsSettings({ ...platformsSettings, title_highlight: e.target.value })
+                    }
+                    placeholder="منصتك المفضلة"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>الوصف</Label>
+                <Textarea
+                  value={platformsSettings.subtitle}
+                  onChange={(e) =>
+                    setPlatformsSettings({ ...platformsSettings, subtitle: e.target.value })
+                  }
+                  rows={2}
+                  placeholder="نوفر خدمات لجميع منصات التواصل الاجتماعي..."
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Features Settings */}
           <Card>
             <CardHeader>
@@ -610,7 +809,7 @@ const AdminSettings = () => {
               <CardDescription>تخصيص عناوين ونصوص قسم المميزات</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>عنوان القسم</Label>
                   <Input
@@ -636,7 +835,7 @@ const AdminSettings = () => {
               <div className="space-y-3">
                 <Label>المميزات (6 مميزات)</Label>
                 {featuresSettings.features.map((feature, index) => (
-                  <div key={index} className="grid grid-cols-3 gap-2 p-3 border rounded-lg">
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-2 p-3 border rounded-lg">
                     <Input
                       value={feature.title}
                       onChange={(e) => {
@@ -654,7 +853,7 @@ const AdminSettings = () => {
                         setFeaturesSettings({ ...featuresSettings, features: newFeatures });
                       }}
                       placeholder="وصف الميزة"
-                      className="col-span-2"
+                      className="md:col-span-2"
                     />
                   </div>
                 ))}
@@ -679,7 +878,7 @@ const AdminSettings = () => {
                   placeholder="احصل على رصيد مجاني للتجربة"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>العنوان الرئيسي</Label>
                   <Input
@@ -712,7 +911,7 @@ const AdminSettings = () => {
                   placeholder="سجل الآن واحصل على رصيد مجاني..."
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>نص الزر</Label>
                   <Input

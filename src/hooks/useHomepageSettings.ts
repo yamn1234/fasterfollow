@@ -9,18 +9,40 @@ export interface HomepageSection {
   order: number;
 }
 
+export interface HeroStats {
+  customers: string;
+  customers_label: string;
+  services: string;
+  services_label: string;
+  support: string;
+  support_label: string;
+}
+
 export interface HeroSettings {
   title: string;
   subtitle: string;
   button_text: string;
   button_link: string;
   show_stats: boolean;
+  stats?: HeroStats;
 }
 
 export interface SiteSettings {
   site_name: string;
   site_name_ar: string;
   site_description: string;
+}
+
+export interface ServicesSettings {
+  title: string;
+  title_highlight: string;
+  subtitle: string;
+}
+
+export interface PlatformsSettings {
+  title: string;
+  title_highlight: string;
+  subtitle: string;
 }
 
 export interface FeaturesSettings {
@@ -33,6 +55,15 @@ export interface FeaturesSettings {
   }>;
 }
 
+export interface CTAStats {
+  customers: string;
+  customers_label: string;
+  orders: string;
+  orders_label: string;
+  satisfaction: string;
+  satisfaction_label: string;
+}
+
 export interface CTASettings {
   badge_text: string;
   title: string;
@@ -40,6 +71,7 @@ export interface CTASettings {
   description: string;
   button_text: string;
   button_link: string;
+  stats?: CTAStats;
 }
 
 const defaultSections: HomepageSection[] = [
@@ -56,12 +88,32 @@ const defaultHeroSettings: HeroSettings = {
   button_text: 'ابدأ الآن',
   button_link: '/auth',
   show_stats: true,
+  stats: {
+    customers: '+10K',
+    customers_label: 'عميل سعيد',
+    services: '+50',
+    services_label: 'خدمة متاحة',
+    support: '24/7',
+    support_label: 'دعم فني',
+  },
 };
 
 const defaultSiteSettings: SiteSettings = {
   site_name: 'SMM Panel',
   site_name_ar: 'متجر المتابعين',
   site_description: 'نقدم لك أسهل وأبسط وأسرع خدمة لزيادة المتابعين والتفاعل على منصات التواصل الاجتماعي.',
+};
+
+const defaultServicesSettings: ServicesSettings = {
+  title: 'الخدمات',
+  title_highlight: 'الأكثر طلباً',
+  subtitle: 'اكتشف خدماتنا المميزة والأكثر شعبية بين عملائنا',
+};
+
+const defaultPlatformsSettings: PlatformsSettings = {
+  title: 'اختر',
+  title_highlight: 'منصتك المفضلة',
+  subtitle: 'نوفر خدمات لجميع منصات التواصل الاجتماعي الشهيرة بأسعار تنافسية وجودة عالية',
 };
 
 const defaultFeaturesSettings: FeaturesSettings = {
@@ -84,12 +136,22 @@ const defaultCTASettings: CTASettings = {
   description: 'سجل الآن واحصل على رصيد مجاني لتجربة جميع خدماتنا. لا يوجد حد أدنى للشحن!',
   button_text: 'سجل الآن مجاناً',
   button_link: '/auth',
+  stats: {
+    customers: '+10,000',
+    customers_label: 'عميل نشط',
+    orders: '+1M',
+    orders_label: 'طلب مكتمل',
+    satisfaction: '99%',
+    satisfaction_label: 'رضا العملاء',
+  },
 };
 
 export const useHomepageSettings = () => {
   const [sections, setSections] = useState<HomepageSection[]>(defaultSections);
   const [heroSettings, setHeroSettings] = useState<HeroSettings>(defaultHeroSettings);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
+  const [servicesSettings, setServicesSettings] = useState<ServicesSettings>(defaultServicesSettings);
+  const [platformsSettings, setPlatformsSettings] = useState<PlatformsSettings>(defaultPlatformsSettings);
   const [featuresSettings, setFeaturesSettings] = useState<FeaturesSettings>(defaultFeaturesSettings);
   const [ctaSettings, setCtaSettings] = useState<CTASettings>(defaultCTASettings);
   const [loading, setLoading] = useState(true);
@@ -103,7 +165,10 @@ export const useHomepageSettings = () => {
       const { data } = await supabase
         .from('site_settings')
         .select('key, value')
-        .in('key', ['homepage_sections', 'hero_settings', 'site_name', 'site_name_ar', 'site_description', 'features_settings', 'cta_settings']);
+        .in('key', [
+          'homepage_sections', 'hero_settings', 'site_name', 'site_name_ar', 'site_description',
+          'services_settings', 'platforms_settings', 'features_settings', 'cta_settings'
+        ]);
 
       if (data) {
         data.forEach(item => {
@@ -121,6 +186,10 @@ export const useHomepageSettings = () => {
               setSections(value as unknown as HomepageSection[]);
             } else if (item.key === 'hero_settings' && value && typeof value === 'object' && !Array.isArray(value)) {
               setHeroSettings(prev => ({ ...prev, ...(value as unknown as Partial<HeroSettings>) }));
+            } else if (item.key === 'services_settings' && value && typeof value === 'object' && !Array.isArray(value)) {
+              setServicesSettings(prev => ({ ...prev, ...(value as unknown as Partial<ServicesSettings>) }));
+            } else if (item.key === 'platforms_settings' && value && typeof value === 'object' && !Array.isArray(value)) {
+              setPlatformsSettings(prev => ({ ...prev, ...(value as unknown as Partial<PlatformsSettings>) }));
             } else if (item.key === 'features_settings' && value && typeof value === 'object' && !Array.isArray(value)) {
               setFeaturesSettings(prev => ({ ...prev, ...(value as unknown as Partial<FeaturesSettings>) }));
             } else if (item.key === 'cta_settings' && value && typeof value === 'object' && !Array.isArray(value)) {
@@ -162,6 +231,8 @@ export const useHomepageSettings = () => {
     sections: sortedSections,
     heroSettings,
     siteSettings,
+    servicesSettings,
+    platformsSettings,
     featuresSettings,
     ctaSettings,
     loading,

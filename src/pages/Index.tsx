@@ -9,7 +9,16 @@ import { useHomepageSettings } from "@/hooks/useHomepageSettings";
 import { Loader2 } from "lucide-react";
 
 const Index = () => {
-  const { sections, heroSettings, siteSettings, featuresSettings, ctaSettings, loading } = useHomepageSettings();
+  const { 
+    sections, 
+    heroSettings, 
+    siteSettings, 
+    servicesSettings,
+    platformsSettings,
+    featuresSettings, 
+    ctaSettings, 
+    loading 
+  } = useHomepageSettings();
 
   if (loading) {
     return (
@@ -30,9 +39,9 @@ const Index = () => {
       case 'features':
         return <FeaturesSection key="features" settings={featuresSettings} />;
       case 'services':
-        return <ServicesSection key="services" />;
+        return <ServicesSection key="services" settings={servicesSettings} />;
       case 'platforms':
-        return <PlatformsSection key="platforms" />;
+        return <PlatformsSection key="platforms" settings={platformsSettings} />;
       case 'cta':
         return <CTASection key="cta" settings={ctaSettings} />;
       default:
