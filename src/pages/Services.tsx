@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Search, Filter, ShoppingCart, Zap, Star, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,14 +38,30 @@ const Services = () => {
   const { categories, services, loading } = useServices();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>(
-    searchParams.get('category') || 'all'
-  );
+  const categoryParam = searchParams.get('category') || 'all';
+  
+  // Find category ID from slug if needed
+  const initialCategory = useMemo(() => {
+    if (categoryParam === 'all') return 'all';
+    // Check if it's already a UUID
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryParam);
+    if (isUUID) return categoryParam;
+    // Otherwise find by slug
+    const cat = categories.find(c => c.slug === categoryParam);
+    return cat?.id || 'all';
+  }, [categoryParam, categories]);
+  
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [orderLink, setOrderLink] = useState('');
   const [orderQuantity, setOrderQuantity] = useState<number>(0);
   const [orderComments, setOrderComments] = useState('');
   const [isOrdering, setIsOrdering] = useState(false);
+
+  // Update selected category when categories load or URL changes
+  useEffect(() => {
+    setSelectedCategory(initialCategory);
+  }, [initialCategory]);
 
   const filteredServices = useMemo(() => {
     let result = services;
