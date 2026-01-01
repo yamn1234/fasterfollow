@@ -203,7 +203,7 @@ const ServicesSection = ({ settings }: ServicesSectionProps) => {
 
               <CardFooter className="px-6 pb-6">
                 <Button variant="hero" className="w-full group-hover:shadow-lg" asChild>
-                  <Link to={`/service/${service.slug}`}>
+                  <Link to={`/services/${service.slug}`}>
                     <ShoppingCart className="h-4 w-4" />
                     اطلب الآن
                   </Link>
