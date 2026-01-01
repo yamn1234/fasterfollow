@@ -16,6 +16,7 @@ const passwordSchema = z.string().min(6, "كلمة المرور يجب أن تك
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -25,6 +26,38 @@ const Auth = () => {
   
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      emailSchema.parse(email);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        setErrors({ email: err.errors[0].message });
+        return;
+      }
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?type=recovery`,
+      });
+      
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني");
+        setIsForgotPassword(false);
+      }
+    } catch (error) {
+      toast.error("حدث خطأ غير متوقع");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string; fullName?: string } = {};
@@ -109,6 +142,88 @@ const Auth = () => {
     }
   };
 
+  // Forgot Password Form
+  if (isForgotPassword) {
+    return (
+      <div className="min-h-screen gradient-hero flex items-center justify-center p-4">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 right-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+        </div>
+
+        <Card className="w-full max-w-md relative z-10 shadow-lg border-0">
+          <CardHeader className="text-center space-y-4">
+            <Link to="/" className="flex items-center justify-center gap-2 mx-auto">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
+                <ShoppingCart className="h-6 w-6 text-primary-foreground" />
+              </div>
+            </Link>
+            <div>
+              <CardTitle className="text-2xl font-bold">استعادة كلمة المرور</CardTitle>
+              <CardDescription className="mt-2">
+                أدخل بريدك الإلكتروني لإرسال رابط استعادة كلمة المرور
+              </CardDescription>
+            </div>
+          </CardHeader>
+
+          <form onSubmit={handleForgotPassword}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">البريد الإلكتروني</Label>
+                <div className="relative">
+                  <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="example@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pr-10"
+                    disabled={isLoading}
+                    dir="ltr"
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email}</p>
+                )}
+              </div>
+            </CardContent>
+
+            <CardFooter className="flex flex-col gap-4">
+              <Button
+                type="submit"
+                variant="hero"
+                size="lg"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    جاري الإرسال...
+                  </>
+                ) : (
+                  "إرسال رابط الاستعادة"
+                )}
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsForgotPassword(false);
+                  setErrors({});
+                }}
+                className="text-sm text-primary font-medium hover:underline"
+              >
+                العودة لتسجيل الدخول
+              </button>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen gradient-hero flex items-center justify-center p-4">
       {/* Background decorations */}
@@ -180,7 +295,21 @@ const Auth = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">كلمة المرور</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">كلمة المرور</Label>
+                {isLogin && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsForgotPassword(true);
+                      setErrors({});
+                    }}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    نسيت كلمة المرور؟
+                  </button>
+                )}
+              </div>
               <div className="relative">
                 <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
