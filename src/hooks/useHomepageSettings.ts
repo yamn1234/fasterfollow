@@ -24,6 +24,7 @@ export interface HeroSettings {
   button_text: string;
   button_link: string;
   show_stats: boolean;
+  image_url?: string;
   stats?: HeroStats;
 }
 

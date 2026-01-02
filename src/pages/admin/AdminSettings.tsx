@@ -110,6 +110,7 @@ const AdminSettings = () => {
     button_text: 'ابدأ الآن',
     button_link: '/auth',
     show_stats: true,
+    image_url: '',
     stats: {
       customers: '+10K',
       customers_label: 'عميل سعيد',
@@ -535,6 +536,19 @@ const AdminSettings = () => {
               <CardDescription>تخصيص النصوص والأزرار في القسم الرئيسي</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>صورة القسم الرئيسي</Label>
+                <ImageIconPicker
+                  value={heroSettings.image_url || ''}
+                  onChange={(value) => setHeroSettings({ ...heroSettings, image_url: value })}
+                  label="اختر صورة الهيرو"
+                  folder="hero"
+                  showEmojiPicker={false}
+                />
+                <p className="text-sm text-muted-foreground">
+                  اترك فارغاً لاستخدام الصورة الافتراضية
+                </p>
+              </div>
               <div className="space-y-2">
                 <Label>العنوان الرئيسي</Label>
                 <Textarea

@@ -18,19 +18,21 @@ interface ImageIconPickerProps {
   onChange: (value: string) => void;
   label?: string;
   folder?: string;
+  showEmojiPicker?: boolean;
 }
 
 const ImageIconPicker = ({ 
   value, 
   onChange, 
   label = 'الصورة/الأيقونة',
-  folder = 'general'
+  folder = 'general',
+  showEmojiPicker = true
 }: ImageIconPickerProps) => {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [urlInput, setUrlInput] = useState(value?.startsWith('http') ? value : '');
   const [activeTab, setActiveTab] = useState<string>(
-    value?.startsWith('http') ? 'url' : (value?.length <= 4 ? 'emoji' : 'url')
+    value?.startsWith('http') ? 'url' : (showEmojiPicker && value?.length <= 4 ? 'emoji' : 'url')
   );
 
   const isEmoji = value && !value.startsWith('http') && value.length <= 4;
@@ -154,11 +156,13 @@ const ImageIconPicker = ({
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="emoji" className="gap-1">
-            <Smile className="h-4 w-4" />
-            إيموجي
-          </TabsTrigger>
+        <TabsList className={`grid w-full ${showEmojiPicker ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          {showEmojiPicker && (
+            <TabsTrigger value="emoji" className="gap-1">
+              <Smile className="h-4 w-4" />
+              إيموجي
+            </TabsTrigger>
+          )}
           <TabsTrigger value="url" className="gap-1">
             <LinkIcon className="h-4 w-4" />
             رابط

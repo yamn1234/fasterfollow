@@ -18,6 +18,7 @@ interface HeroSettings {
   button_text: string;
   button_link: string;
   show_stats: boolean;
+  image_url?: string;
   stats?: HeroStats;
 }
 
@@ -39,6 +40,7 @@ const HeroSection = ({ settings, siteSettings }: HeroSectionProps) => {
   const buttonText = settings?.button_text || 'تصفح الخدمات';
   const buttonLink = settings?.button_link || '/services';
   const showStats = settings?.show_stats ?? true;
+  const customImage = settings?.image_url;
 
   return (
     <section className="relative overflow-hidden gradient-hero py-12 sm:py-16 lg:py-24">
@@ -96,7 +98,7 @@ const HeroSection = ({ settings, siteSettings }: HeroSectionProps) => {
           {/* Image */}
           <div className="order-1 lg:order-2 flex justify-center">
             <img
-              src={heroImage}
+              src={customImage || heroImage}
               alt={`${title} - زيادة متابعين السوشيال ميديا`}
               width={512}
               height={512}
