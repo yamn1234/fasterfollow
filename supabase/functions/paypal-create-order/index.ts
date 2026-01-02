@@ -84,13 +84,12 @@ serve(async (req) => {
           },
         ],
         application_context: {
-          brand_name: "SMM Panel",
-          locale: "ar-SA",
-          landing_page: "BILLING",
+          brand_name: "FasterFollow",
+          landing_page: "NO_PREFERENCE",
           user_action: "PAY_NOW",
           shipping_preference: "NO_SHIPPING",
-          return_url: returnUrl || "https://example.com/success",
-          cancel_url: cancelUrl || "https://example.com/cancel",
+          return_url: returnUrl,
+          cancel_url: cancelUrl,
         },
       }),
     });
