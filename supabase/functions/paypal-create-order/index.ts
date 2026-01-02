@@ -83,25 +83,14 @@ serve(async (req) => {
             description: "Account Balance Top-up",
           },
         ],
-        payment_source: {
-          paypal: {
-            experience_context: {
-              payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
-              brand_name: "SMM Panel",
-              locale: "ar-SA",
-              landing_page: "GUEST_CHECKOUT",
-              user_action: "PAY_NOW",
-              return_url: returnUrl || "https://example.com/success",
-              cancel_url: cancelUrl || "https://example.com/cancel",
-            },
-          },
-        },
         application_context: {
           brand_name: "SMM Panel",
           locale: "ar-SA",
           landing_page: "BILLING",
           user_action: "PAY_NOW",
           shipping_preference: "NO_SHIPPING",
+          return_url: returnUrl || "https://example.com/success",
+          cancel_url: cancelUrl || "https://example.com/cancel",
         },
       }),
     });
