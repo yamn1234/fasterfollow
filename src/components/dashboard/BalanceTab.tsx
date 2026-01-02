@@ -144,7 +144,11 @@ const BalanceTab = () => {
 
     // إذا كانت طريقة دفع يدوية مع رابط توجيه
     if (selectedGateway.gateway_type === 'manual' && selectedGateway.redirect_url) {
-      window.open(selectedGateway.redirect_url, '_blank');
+      // فتح الرابط مباشرة في نافذة جديدة
+      const redirectUrl = selectedGateway.redirect_url.startsWith('http') 
+        ? selectedGateway.redirect_url 
+        : `https://${selectedGateway.redirect_url}`;
+      window.open(redirectUrl, '_blank', 'noopener,noreferrer');
       toast.success('تم فتح صفحة الدفع في نافذة جديدة');
       return;
     }
