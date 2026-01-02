@@ -15,6 +15,7 @@ import {
   Trash2,
   ExternalLink,
   Link as LinkIcon,
+  ArrowUpDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,6 +51,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import GatewaySortDialog from '@/components/admin/GatewaySortDialog';
 
 interface Transaction {
   id: string;
@@ -76,6 +78,7 @@ interface PaymentGateway {
   instructions: string | null;
   instructions_ar: string | null;
   gateway_type: string | null;
+  sort_order: number | null;
 }
 
 interface Coupon {
@@ -112,6 +115,7 @@ const AdminPayments = () => {
     max_amount: '10000',
     is_active: true,
   });
+  const [sortDialogOpen, setSortDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -471,7 +475,14 @@ const AdminPayments = () => {
         </TabsContent>
 
         <TabsContent value="gateways" className="space-y-4">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setSortDialogOpen(true)}
+            >
+              <ArrowUpDown className="w-4 h-4 ml-2" />
+              ترتيب طرق الدفع
+            </Button>
             <Button
               className="gradient-primary text-primary-foreground"
               onClick={() => {
@@ -629,6 +640,14 @@ const AdminPayments = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Gateway Sort Dialog */}
+      <GatewaySortDialog
+        open={sortDialogOpen}
+        onOpenChange={setSortDialogOpen}
+        gateways={gateways}
+        onSorted={fetchData}
+      />
 
       {/* Gateway Dialog */}
       <Dialog open={gatewayDialogOpen} onOpenChange={setGatewayDialogOpen}>
