@@ -21,7 +21,10 @@ const Header = () => {
             <img
               src={headerSettings.logo_url}
               alt={headerSettings.logo_text}
+              width="40"
+              height="40"
               className="h-10 w-10 rounded-xl object-cover"
+              fetchPriority="high"
             />
           ) : (
             <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary">

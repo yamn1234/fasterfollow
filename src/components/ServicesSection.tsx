@@ -146,6 +146,9 @@ const ServicesSection = ({ settings }: ServicesSectionProps) => {
                     <img 
                       src={visual.value} 
                       alt={service.name_ar || service.name}
+                      width="56"
+                      height="56"
+                      loading="lazy"
                       className="w-14 h-14 rounded-xl object-cover shrink-0"
                     />
                   ) : (

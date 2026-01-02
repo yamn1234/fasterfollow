@@ -34,6 +34,9 @@ const Footer = () => {
                 <img
                   src={footerSettings.logo_url}
                   alt={footerSettings.logo_text}
+                  width="40"
+                  height="40"
+                  loading="lazy"
                   className="h-10 w-10 rounded-xl object-cover"
                 />
               ) : (
@@ -90,12 +93,18 @@ const Footer = () => {
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
                 alt="Visa"
-                className="h-6 opacity-60 hover:opacity-100 transition-opacity"
+                width="74"
+                height="24"
+                loading="lazy"
+                className="h-6 w-auto opacity-60 hover:opacity-100 transition-opacity"
               />
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
                 alt="Mastercard"
-                className="h-6 opacity-60 hover:opacity-100 transition-opacity"
+                width="38"
+                height="24"
+                loading="lazy"
+                className="h-6 w-auto opacity-60 hover:opacity-100 transition-opacity"
               />
             </div>
           )}
