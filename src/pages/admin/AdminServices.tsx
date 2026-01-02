@@ -152,6 +152,8 @@ const AdminServices = () => {
   const [importSearchQuery, setImportSearchQuery] = useState('');
   const [importCategoryFilter, setImportCategoryFilter] = useState('all');
   const [selectedImportIds, setSelectedImportIds] = useState<Set<string>>(new Set());
+  const [singleServiceId, setSingleServiceId] = useState('');
+  const [loadingSingleService, setLoadingSingleService] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -286,6 +288,63 @@ const AdminServices = () => {
       });
     } finally {
       setLoadingProviderServices(false);
+    }
+  };
+
+  const fetchSingleService = async () => {
+    if (!importFormData.provider_id) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى اختيار مزود',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!singleServiceId.trim()) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى إدخال رقم الخدمة',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLoadingSingleService(true);
+    try {
+      const response = await supabase.functions.invoke('smm-import-services', {
+        body: {
+          providerId: importFormData.provider_id,
+          action: 'fetch_single',
+          serviceId: singleServiceId.trim(),
+        },
+      });
+
+      if (response.error) throw response.error;
+
+      const result = response.data;
+      if (result.success && result.service) {
+        setProviderServices([result.service]);
+        setImportStep('select');
+        setSelectedImportIds(new Set([result.service.id]));
+        setImportSearchQuery('');
+        setImportCategoryFilter('all');
+        toast({
+          title: 'تم العثور على الخدمة',
+          description: result.service.name,
+        });
+      } else {
+        throw new Error(result.error || 'لم يتم العثور على الخدمة');
+      }
+    } catch (error: any) {
+      console.error('Fetch single service error:', error);
+      toast({
+        title: 'خطأ',
+        description: error.message || 'لم يتم العثور على الخدمة',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingSingleService(false);
     }
   };
 
@@ -1128,6 +1187,7 @@ const AdminServices = () => {
         if (!open) {
           setImportStep('config');
           setProviderServices([]);
+          setSingleServiceId('');
         }
       }}>
         <DialogContent className="max-w-4xl max-h-[90vh]">
@@ -1190,7 +1250,43 @@ const AdminServices = () => {
                   مثال: 1.5 = زيادة 50% على سعر المزود
                 </p>
               </div>
-              <DialogFooter>
+
+              {/* Single Service Search */}
+              <div className="p-4 border rounded-lg bg-muted/30 space-y-3">
+                <Label className="text-sm font-medium">جلب خدمة واحدة برقمها</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    value={singleServiceId}
+                    onChange={(e) => setSingleServiceId(e.target.value)}
+                    placeholder="أدخل رقم الخدمة (مثال: 1234)"
+                    dir="ltr"
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={fetchSingleService} 
+                    disabled={loadingSingleService || !importFormData.provider_id || !singleServiceId.trim()}
+                    variant="secondary"
+                  >
+                    {loadingSingleService ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Search className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  استخدم هذا الخيار لجلب خدمة محددة بدلاً من جميع الخدمات
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 py-2">
+                <div className="flex-1 border-t" />
+                <span className="text-xs text-muted-foreground">أو</span>
+                <div className="flex-1 border-t" />
+              </div>
+
+              <DialogFooter className="flex-col sm:flex-row gap-2">
                 <Button variant="outline" onClick={() => setImportDialogOpen(false)}>
                   إلغاء
                 </Button>
@@ -1201,7 +1297,7 @@ const AdminServices = () => {
                       جاري الجلب...
                     </>
                   ) : (
-                    'جلب الخدمات'
+                    'جلب جميع الخدمات'
                   )}
                 </Button>
               </DialogFooter>
