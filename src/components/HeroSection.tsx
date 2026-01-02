@@ -98,7 +98,10 @@ const HeroSection = ({ settings, siteSettings }: HeroSectionProps) => {
             <img
               src={heroImage}
               alt={`${title} - زيادة متابعين السوشيال ميديا`}
+              width={512}
+              height={512}
               className="w-full max-w-xs sm:max-w-md lg:max-w-lg animate-float drop-shadow-2xl"
+              fetchPriority="high"
             />
           </div>
         </div>

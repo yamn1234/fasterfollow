@@ -31,14 +31,17 @@ const isValidHSL = (color: string): boolean => {
 export const useThemeSettings = () => {
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>(defaultTheme);
   const [loading, setLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     loadThemeSettings();
   }, []);
 
   useEffect(() => {
-    applyTheme(themeSettings);
-  }, [themeSettings]);
+    if (isInitialized) {
+      applyTheme(themeSettings);
+    }
+  }, [themeSettings, isInitialized]);
 
   const loadThemeSettings = async () => {
     try {
@@ -52,10 +55,15 @@ export const useThemeSettings = () => {
         const parsed = typeof data.value === 'string' 
           ? JSON.parse(data.value) 
           : data.value;
-        setThemeSettings({ ...defaultTheme, ...parsed });
+        const newSettings = { ...defaultTheme, ...parsed };
+        setThemeSettings(newSettings);
+        // Apply theme immediately before React re-render to prevent CLS
+        applyTheme(newSettings);
       }
+      setIsInitialized(true);
     } catch (error) {
       console.error('Error loading theme settings:', error);
+      setIsInitialized(true);
     } finally {
       setLoading(false);
     }
