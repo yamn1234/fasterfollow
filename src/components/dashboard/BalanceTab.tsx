@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PaymentGateway {
   id: string;
@@ -42,10 +43,12 @@ const bonusRates = [
 ];
 
 const BalanceTab = () => {
+  const { user, refreshProfile } = useAuth();
   const [amount, setAmount] = useState<string>("10");
   const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [gateways, setGateways] = useState<PaymentGateway[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   useEffect(() => {
     fetchGateways();
@@ -80,7 +83,43 @@ const BalanceTab = () => {
 
   const selectedGateway = gateways.find(g => g.id === paymentMethod);
 
-  const handleSubmit = () => {
+  const handlePayPalPayment = async () => {
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
+    setProcessingPayment(true);
+    
+    try {
+      const returnUrl = `${window.location.origin}/dashboard?tab=balance&paypal=success`;
+      const cancelUrl = `${window.location.origin}/dashboard?tab=balance&paypal=cancel`;
+
+      const { data, error } = await supabase.functions.invoke('paypal-create-order', {
+        body: {
+          amount: numericAmount,
+          userId: user.id,
+          returnUrl,
+          cancelUrl,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.approvalUrl) {
+        window.location.href = data.approvalUrl;
+      } else {
+        throw new Error("لم يتم الحصول على رابط الدفع");
+      }
+    } catch (error) {
+      console.error("PayPal error:", error);
+      toast.error("حدث خطأ في إنشاء طلب الدفع");
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  const handleSubmit = async () => {
     if (!selectedGateway) {
       toast.error("يرجى اختيار طريقة الدفع");
       return;
@@ -96,6 +135,12 @@ const BalanceTab = () => {
       return;
     }
 
+    // PayPal payment
+    if (selectedGateway.slug === 'paypal') {
+      await handlePayPalPayment();
+      return;
+    }
+
     // إذا كانت طريقة دفع يدوية مع رابط توجيه
     if (selectedGateway.gateway_type === 'manual' && selectedGateway.redirect_url) {
       window.open(selectedGateway.redirect_url, '_blank');
@@ -105,6 +150,49 @@ const BalanceTab = () => {
 
     toast.success(`تم إرسال طلب شحن بقيمة $${numericAmount.toFixed(2)}`);
   };
+
+  // Handle PayPal return
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paypalStatus = urlParams.get('paypal');
+    const token = urlParams.get('token');
+
+    if (paypalStatus === 'success' && token && user) {
+      // Capture the payment
+      const capturePayment = async () => {
+        setProcessingPayment(true);
+        try {
+          const { data, error } = await supabase.functions.invoke('paypal-capture-order', {
+            body: {
+              orderId: token,
+              userId: user.id,
+            },
+          });
+
+          if (error) throw error;
+
+          if (data?.success) {
+            toast.success(`تم شحن رصيدك بنجاح! المبلغ: $${data.capturedAmount}`);
+            refreshProfile();
+          } else {
+            throw new Error("فشل في إتمام الدفع");
+          }
+        } catch (error) {
+          console.error("Capture error:", error);
+          toast.error("حدث خطأ في إتمام الدفع");
+        } finally {
+          setProcessingPayment(false);
+          // Clean URL
+          window.history.replaceState({}, '', '/dashboard?tab=balance');
+        }
+      };
+
+      capturePayment();
+    } else if (paypalStatus === 'cancel') {
+      toast.error("تم إلغاء عملية الدفع");
+      window.history.replaceState({}, '', '/dashboard?tab=balance');
+    }
+  }, [user, refreshProfile]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -271,7 +359,7 @@ const BalanceTab = () => {
               )}
               {bonusAmount > 0 && (
                 <div className="flex justify-between text-green-600">
-                  <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1">
                     <Sparkles className="h-4 w-4" />
                     مكافأة {bonusRate}%
                   </span>
@@ -290,9 +378,19 @@ const BalanceTab = () => {
                 size="lg"
                 className="w-full mt-4"
                 onClick={handleSubmit}
-                disabled={numericAmount < 1 || !selectedGateway || loading}
+                disabled={numericAmount < 1 || !selectedGateway || loading || processingPayment}
               >
-                {selectedGateway?.gateway_type === 'manual' && selectedGateway?.redirect_url ? (
+                {processingPayment ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    جاري المعالجة...
+                  </>
+                ) : selectedGateway?.slug === 'paypal' ? (
+                  <>
+                    <CreditCard className="h-5 w-5" />
+                    الدفع عبر PayPal
+                  </>
+                ) : selectedGateway?.gateway_type === 'manual' && selectedGateway?.redirect_url ? (
                   <>
                     <ExternalLink className="h-5 w-5" />
                     الذهاب للدفع
