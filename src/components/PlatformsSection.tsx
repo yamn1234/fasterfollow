@@ -162,6 +162,9 @@ const PlatformsSection = ({ settings }: PlatformsSectionProps) => {
                     <img
                       src={visual.value}
                       alt={category.name_ar || category.name}
+                      width="64"
+                      height="64"
+                      loading="lazy"
                       className="mx-auto w-16 h-16 rounded-2xl object-cover mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg"
                     />
                   ) : (
