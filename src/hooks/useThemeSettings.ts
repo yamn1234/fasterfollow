@@ -17,6 +17,8 @@ const defaultTheme: ThemeSettings = {
   custom_secondary: '',
 };
 
+const THEME_STORAGE_KEY = 'site_theme_settings';
+
 // Validate that a color is in HSL format (H S% L%)
 const isValidHSL = (color: string): boolean => {
   if (!color || typeof color !== 'string') return false;
@@ -28,10 +30,94 @@ const isValidHSL = (color: string): boolean => {
   return !isNaN(h) && s.endsWith('%') && l.endsWith('%');
 };
 
+// Get cached theme from localStorage
+const getCachedTheme = (): ThemeSettings | null => {
+  try {
+    const cached = localStorage.getItem(THEME_STORAGE_KEY);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+  } catch {
+    // Ignore errors
+  }
+  return null;
+};
+
+// Save theme to localStorage
+const cacheTheme = (settings: ThemeSettings) => {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(settings));
+  } catch {
+    // Ignore errors
+  }
+};
+
+// Apply theme to document - exported for immediate use
+export const applyTheme = (settings: ThemeSettings) => {
+  const root = document.documentElement;
+  
+  // Apply theme mode
+  if (settings.theme_mode === 'dark') {
+    root.classList.add('dark');
+  } else {
+    root.classList.remove('dark');
+  }
+  
+  // Get colors with validation - use defaults if invalid
+  const primaryColor = settings.custom_primary && isValidHSL(settings.custom_primary) 
+    ? settings.custom_primary 
+    : (isValidHSL(settings.primary_color) ? settings.primary_color : defaultTheme.primary_color);
+  
+  const secondaryColor = settings.custom_secondary && isValidHSL(settings.custom_secondary)
+    ? settings.custom_secondary
+    : (isValidHSL(settings.secondary_color) ? settings.secondary_color : defaultTheme.secondary_color);
+  
+  // Only apply if we have valid HSL colors
+  if (isValidHSL(primaryColor)) {
+    root.style.setProperty('--primary', primaryColor);
+    root.style.setProperty('--ring', primaryColor);
+    root.style.setProperty('--accent', primaryColor);
+    
+    // Update gradients with proper HSL values
+    root.style.setProperty(
+      '--gradient-primary',
+      `linear-gradient(135deg, hsl(${primaryColor}) 0%, hsl(${secondaryColor}) 100%)`
+    );
+    
+    // Update shadows
+    root.style.setProperty(
+      '--shadow-sm',
+      `0 2px 8px -2px hsl(${primaryColor} / 0.1)`
+    );
+    root.style.setProperty(
+      '--shadow-md',
+      `0 8px 24px -8px hsl(${primaryColor} / 0.15)`
+    );
+    root.style.setProperty(
+      '--shadow-lg',
+      `0 16px 48px -12px hsl(${primaryColor} / 0.2)`
+    );
+    root.style.setProperty(
+      '--shadow-glow',
+      `0 0 40px hsl(${primaryColor} / 0.3)`
+    );
+  }
+  
+  if (isValidHSL(secondaryColor)) {
+    root.style.setProperty('--primary-glow', secondaryColor);
+  }
+};
+
+// Apply cached theme immediately on module load (before React renders)
+const cachedTheme = getCachedTheme();
+if (cachedTheme) {
+  applyTheme(cachedTheme);
+}
+
 export const useThemeSettings = () => {
-  const [themeSettings, setThemeSettings] = useState<ThemeSettings>(defaultTheme);
+  const [themeSettings, setThemeSettings] = useState<ThemeSettings>(cachedTheme || defaultTheme);
   const [loading, setLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(!!cachedTheme);
 
   useEffect(() => {
     loadThemeSettings();
@@ -57,6 +143,8 @@ export const useThemeSettings = () => {
           : data.value;
         const newSettings = { ...defaultTheme, ...parsed };
         setThemeSettings(newSettings);
+        // Cache the theme for next page load
+        cacheTheme(newSettings);
         // Apply theme immediately before React re-render to prevent CLS
         applyTheme(newSettings);
       }
@@ -66,61 +154,6 @@ export const useThemeSettings = () => {
       setIsInitialized(true);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const applyTheme = (settings: ThemeSettings) => {
-    const root = document.documentElement;
-    
-    // Apply theme mode
-    if (settings.theme_mode === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    
-    // Get colors with validation - use defaults if invalid
-    const primaryColor = settings.custom_primary && isValidHSL(settings.custom_primary) 
-      ? settings.custom_primary 
-      : (isValidHSL(settings.primary_color) ? settings.primary_color : defaultTheme.primary_color);
-    
-    const secondaryColor = settings.custom_secondary && isValidHSL(settings.custom_secondary)
-      ? settings.custom_secondary
-      : (isValidHSL(settings.secondary_color) ? settings.secondary_color : defaultTheme.secondary_color);
-    
-    // Only apply if we have valid HSL colors
-    if (isValidHSL(primaryColor)) {
-      root.style.setProperty('--primary', primaryColor);
-      root.style.setProperty('--ring', primaryColor);
-      root.style.setProperty('--accent', primaryColor);
-      
-      // Update gradients with proper HSL values
-      root.style.setProperty(
-        '--gradient-primary',
-        `linear-gradient(135deg, hsl(${primaryColor}) 0%, hsl(${secondaryColor}) 100%)`
-      );
-      
-      // Update shadows
-      root.style.setProperty(
-        '--shadow-sm',
-        `0 2px 8px -2px hsl(${primaryColor} / 0.1)`
-      );
-      root.style.setProperty(
-        '--shadow-md',
-        `0 8px 24px -8px hsl(${primaryColor} / 0.15)`
-      );
-      root.style.setProperty(
-        '--shadow-lg',
-        `0 16px 48px -12px hsl(${primaryColor} / 0.2)`
-      );
-      root.style.setProperty(
-        '--shadow-glow',
-        `0 0 40px hsl(${primaryColor} / 0.3)`
-      );
-    }
-    
-    if (isValidHSL(secondaryColor)) {
-      root.style.setProperty('--primary-glow', secondaryColor);
     }
   };
 
