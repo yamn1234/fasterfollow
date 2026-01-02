@@ -107,14 +107,15 @@ const BalanceTab = () => {
       if (error) throw error;
 
       if (data?.approvalUrl) {
+        // Don't reset processingPayment here - we're navigating away
         window.location.href = data.approvalUrl;
+        return; // Exit without resetting state
       } else {
         throw new Error("لم يتم الحصول على رابط الدفع");
       }
     } catch (error) {
       console.error("PayPal error:", error);
       toast.error("حدث خطأ في إنشاء طلب الدفع");
-    } finally {
       setProcessingPayment(false);
     }
   };
