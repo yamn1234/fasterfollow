@@ -6,7 +6,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PAYPAL_API_URL = "https://api-m.paypal.com"; // Live mode
+// Use sandbox for testing, live for production
+const PAYPAL_MODE = Deno.env.get("PAYPAL_MODE") || "sandbox";
+const PAYPAL_API_URL = PAYPAL_MODE === "live" 
+  ? "https://api-m.paypal.com" 
+  : "https://api-m.sandbox.paypal.com";
 
 async function getPayPalAccessToken(): Promise<string> {
   const clientId = Deno.env.get("PAYPAL_CLIENT_ID");
