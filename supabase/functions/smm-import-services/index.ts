@@ -35,7 +35,7 @@ serve(async (req) => {
       throw new Error('Admin access required');
     }
 
-    const { providerId, categoryId, priceMultiplier = 1.0, action = 'import', selectedServices } = await req.json();
+    const { providerId, categoryId, priceMultiplier = 1.0, action = 'import', selectedServices, serviceId } = await req.json();
 
     if (!providerId) {
       throw new Error('Provider ID is required');
@@ -50,6 +50,61 @@ serve(async (req) => {
 
     if (providerError || !provider) {
       throw new Error('Provider not found');
+    }
+
+    // If action is 'fetch_single', fetch a specific service by ID
+    if (action === 'fetch_single') {
+      if (!serviceId) {
+        throw new Error('Service ID is required for fetch_single action');
+      }
+
+      console.log(`Fetching single service ${serviceId} from provider: ${provider.name}`);
+      
+      const apiResponse = await fetch(provider.api_url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          key: provider.api_key,
+          action: 'services',
+        }),
+      });
+
+      const services = await apiResponse.json();
+      
+      if (!Array.isArray(services)) {
+        throw new Error('Invalid response from provider API');
+      }
+
+      // Find the specific service
+      const foundService = services.find((s: any) => 
+        String(s.service || s.id) === String(serviceId)
+      );
+
+      if (!foundService) {
+        throw new Error(`Service with ID ${serviceId} not found`);
+      }
+
+      const formattedService = {
+        id: String(foundService.service || foundService.id),
+        name: foundService.name || `Service ${foundService.service || foundService.id}`,
+        category: foundService.category || 'Uncategorized',
+        rate: parseFloat(foundService.rate || foundService.price || 0),
+        min: parseInt(foundService.min || 1),
+        max: parseInt(foundService.max || 10000),
+        description: foundService.description || foundService.desc || null,
+      };
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          service: formattedService,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     // If action is 'fetch', just return services list for selection
