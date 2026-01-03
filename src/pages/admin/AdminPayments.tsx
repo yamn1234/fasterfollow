@@ -16,10 +16,12 @@ import {
   ExternalLink,
   Link as LinkIcon,
   ArrowUpDown,
+  Gift,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -92,11 +94,21 @@ interface Coupon {
   expires_at: string | null;
 }
 
+interface BonusSetting {
+  id: string;
+  min_amount: number;
+  bonus_percentage: number;
+  is_active: boolean;
+  sort_order: number;
+}
+
 const AdminPayments = () => {
   const { toast } = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [gateways, setGateways] = useState<PaymentGateway[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [bonusSettings, setBonusSettings] = useState<BonusSetting[]>([]);
+  const [bonusEnabled, setBonusEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -116,6 +128,15 @@ const AdminPayments = () => {
     is_active: true,
   });
   const [sortDialogOpen, setSortDialogOpen] = useState(false);
+  
+  // Bonus form state
+  const [bonusDialogOpen, setBonusDialogOpen] = useState(false);
+  const [selectedBonus, setSelectedBonus] = useState<BonusSetting | null>(null);
+  const [bonusFormData, setBonusFormData] = useState({
+    min_amount: '0',
+    bonus_percentage: '0',
+    is_active: true,
+  });
 
   useEffect(() => {
     fetchData();
@@ -123,15 +144,22 @@ const AdminPayments = () => {
 
   const fetchData = async () => {
     try {
-      const [transRes, gatewaysRes, couponsRes] = await Promise.all([
+      const [transRes, gatewaysRes, couponsRes, bonusRes, bonusEnabledRes] = await Promise.all([
         supabase.from('transactions').select('*').order('created_at', { ascending: false }).limit(100),
         supabase.from('payment_gateways').select('*').order('sort_order'),
         supabase.from('coupons').select('*').order('created_at', { ascending: false }),
+        supabase.from('bonus_settings').select('*').order('sort_order'),
+        supabase.from('site_settings').select('value').eq('key', 'bonus_enabled').single(),
       ]);
 
       setTransactions(transRes.data || []);
       setGateways(gatewaysRes.data || []);
       setCoupons(couponsRes.data || []);
+      setBonusSettings(bonusRes.data || []);
+      
+      if (bonusEnabledRes.data?.value !== undefined) {
+        setBonusEnabled(bonusEnabledRes.data.value === true || bonusEnabledRes.data.value === 'true');
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -276,6 +304,115 @@ const AdminPayments = () => {
     }
   };
 
+  // Bonus functions
+  const handleToggleBonusEnabled = async () => {
+    try {
+      const newValue = !bonusEnabled;
+      const { error } = await supabase
+        .from('site_settings')
+        .update({ value: newValue })
+        .eq('key', 'bonus_enabled');
+      
+      if (error) throw error;
+      
+      setBonusEnabled(newValue);
+      toast({ 
+        title: 'تم بنجاح', 
+        description: newValue ? 'تم تفعيل نظام البونص' : 'تم تعطيل نظام البونص' 
+      });
+    } catch (error) {
+      toast({ title: 'خطأ', description: 'حدث خطأ', variant: 'destructive' });
+    }
+  };
+
+  const handleSaveBonus = async () => {
+    try {
+      const bonusData = {
+        min_amount: parseFloat(bonusFormData.min_amount) || 0,
+        bonus_percentage: parseFloat(bonusFormData.bonus_percentage) || 0,
+        is_active: bonusFormData.is_active,
+      };
+
+      if (selectedBonus) {
+        const { error } = await supabase
+          .from('bonus_settings')
+          .update(bonusData)
+          .eq('id', selectedBonus.id);
+        if (error) throw error;
+        toast({ title: 'تم بنجاح', description: 'تم تحديث البونص' });
+      } else {
+        const maxOrder = Math.max(...bonusSettings.map(b => b.sort_order || 0), 0);
+        const { error } = await supabase
+          .from('bonus_settings')
+          .insert({ ...bonusData, sort_order: maxOrder + 1 });
+        if (error) throw error;
+        toast({ title: 'تم بنجاح', description: 'تم إضافة البونص' });
+      }
+
+      setBonusDialogOpen(false);
+      resetBonusForm();
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message || 'حدث خطأ في حفظ البونص',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteBonus = async (id: string) => {
+    if (!confirm('هل أنت متأكد من حذف هذا البونص؟')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('bonus_settings')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      toast({ title: 'تم بنجاح', description: 'تم حذف البونص' });
+      fetchData();
+    } catch (error: any) {
+      toast({
+        title: 'خطأ',
+        description: error.message || 'حدث خطأ في الحذف',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const resetBonusForm = () => {
+    setBonusFormData({
+      min_amount: '0',
+      bonus_percentage: '0',
+      is_active: true,
+    });
+    setSelectedBonus(null);
+  };
+
+  const openEditBonus = (bonus: BonusSetting) => {
+    setSelectedBonus(bonus);
+    setBonusFormData({
+      min_amount: bonus.min_amount.toString(),
+      bonus_percentage: bonus.bonus_percentage.toString(),
+      is_active: bonus.is_active,
+    });
+    setBonusDialogOpen(true);
+  };
+
+  const toggleBonusActive = async (bonus: BonusSetting) => {
+    try {
+      const { error } = await supabase
+        .from('bonus_settings')
+        .update({ is_active: !bonus.is_active })
+        .eq('id', bonus.id);
+      if (error) throw error;
+      fetchData();
+    } catch (error) {
+      toast({ title: 'خطأ', description: 'حدث خطأ', variant: 'destructive' });
+    }
+  };
+
   const typeConfig: Record<string, { label: string; color: string }> = {
     deposit: { label: 'إيداع', color: 'bg-green-500/10 text-green-500' },
     purchase: { label: 'شراء', color: 'bg-blue-500/10 text-blue-500' },
@@ -375,6 +512,7 @@ const AdminPayments = () => {
         <TabsList>
           <TabsTrigger value="transactions">المعاملات</TabsTrigger>
           <TabsTrigger value="gateways">طرق الدفع</TabsTrigger>
+          <TabsTrigger value="bonus">البونص</TabsTrigger>
           <TabsTrigger value="coupons">الكوبونات</TabsTrigger>
         </TabsList>
 
@@ -579,6 +717,117 @@ const AdminPayments = () => {
           </Card>
         </TabsContent>
 
+        {/* Bonus Tab */}
+        <TabsContent value="bonus" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <Card className="flex-1">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-xl bg-purple-500/10">
+                      <Gift className="w-6 h-6 text-purple-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium">نظام البونص</p>
+                      <p className="text-sm text-muted-foreground">
+                        {bonusEnabled ? 'مفعل - يظهر للعملاء' : 'معطل - مخفي عن العملاء'}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={bonusEnabled}
+                    onCheckedChange={handleToggleBonusEnabled}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex justify-end">
+            <Button
+              className="gradient-primary text-primary-foreground"
+              onClick={() => {
+                resetBonusForm();
+                setBonusDialogOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4 ml-2" />
+              إضافة بونص جديد
+            </Button>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-purple-500" />
+                مستويات البونص
+              </CardTitle>
+              <CardDescription>
+                عند شحن مبلغ يساوي أو يتجاوز الحد الأدنى، يحصل العميل على نسبة البونص المحددة
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>الحد الأدنى ($)</TableHead>
+                    <TableHead>نسبة البونص (%)</TableHead>
+                    <TableHead>الحالة</TableHead>
+                    <TableHead>إجراءات</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {bonusSettings.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-10">
+                        لا توجد مستويات بونص
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    bonusSettings
+                      .sort((a, b) => a.min_amount - b.min_amount)
+                      .map((bonus) => (
+                        <TableRow key={bonus.id}>
+                          <TableCell className="font-bold">${bonus.min_amount}</TableCell>
+                          <TableCell>
+                            <Badge className="bg-purple-500/10 text-purple-500">
+                              +{bonus.bonus_percentage}%
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Switch
+                              checked={bonus.is_active}
+                              onCheckedChange={() => toggleBonusActive(bonus)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openEditBonus(bonus)}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteBonus(bonus.id)}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="coupons" className="space-y-4">
           <Card>
             <CardContent className="p-0">
@@ -640,6 +889,64 @@ const AdminPayments = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Bonus Dialog */}
+      <Dialog open={bonusDialogOpen} onOpenChange={setBonusDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {selectedBonus ? 'تعديل البونص' : 'إضافة بونص جديد'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>الحد الأدنى للمبلغ ($)</Label>
+              <Input
+                type="number"
+                value={bonusFormData.min_amount}
+                onChange={(e) =>
+                  setBonusFormData({ ...bonusFormData, min_amount: e.target.value })
+                }
+                placeholder="10"
+              />
+              <p className="text-xs text-muted-foreground">
+                عندما يشحن العميل هذا المبلغ أو أكثر، يحصل على البونص
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>نسبة البونص (%)</Label>
+              <Input
+                type="number"
+                value={bonusFormData.bonus_percentage}
+                onChange={(e) =>
+                  setBonusFormData({ ...bonusFormData, bonus_percentage: e.target.value })
+                }
+                placeholder="5"
+              />
+              <p className="text-xs text-muted-foreground">
+                مثال: إذا شحن $100 والبونص 10%، يحصل على $10 إضافية
+              </p>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>نشط</Label>
+              <Switch
+                checked={bonusFormData.is_active}
+                onCheckedChange={(checked) =>
+                  setBonusFormData({ ...bonusFormData, is_active: checked })
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBonusDialogOpen(false)}>
+              إلغاء
+            </Button>
+            <Button onClick={handleSaveBonus}>
+              {selectedBonus ? 'تحديث' : 'إضافة'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Gateway Sort Dialog */}
       <GatewaySortDialog

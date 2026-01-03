@@ -34,25 +34,28 @@ interface PaymentGateway {
   gateway_type: string | null;
 }
 
-const presetAmounts = [5, 10, 25, 50, 100];
+interface BonusRate {
+  id: string;
+  min_amount: number;
+  bonus_percentage: number;
+  is_active: boolean;
+}
 
-const bonusRates = [
-  { min: 10, bonus: 5 },
-  { min: 25, bonus: 10 },
-  { min: 50, bonus: 15 },
-  { min: 100, bonus: 20 },
-];
+const presetAmounts = [5, 10, 25, 50, 100];
 
 const BalanceTab = () => {
   const { user, refreshProfile } = useAuth();
   const [amount, setAmount] = useState<string>("10");
   const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [gateways, setGateways] = useState<PaymentGateway[]>([]);
+  const [bonusRates, setBonusRates] = useState<BonusRate[]>([]);
+  const [bonusEnabled, setBonusEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
 
   useEffect(() => {
     fetchGateways();
+    fetchBonusSettings();
   }, []);
 
   const fetchGateways = async () => {
@@ -77,8 +80,37 @@ const BalanceTab = () => {
     }
   };
 
+  const fetchBonusSettings = async () => {
+    try {
+      // Fetch bonus rates
+      const { data: rates, error: ratesError } = await supabase
+        .from('bonus_settings')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+
+      if (ratesError) throw ratesError;
+      setBonusRates(rates || []);
+
+      // Fetch bonus enabled setting
+      const { data: settings } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'bonus_enabled')
+        .single();
+
+      if (settings?.value !== undefined) {
+        setBonusEnabled(settings.value === true || settings.value === 'true');
+      }
+    } catch (error) {
+      console.error('Error fetching bonus settings:', error);
+    }
+  };
+
   const numericAmount = parseFloat(amount) || 0;
-  const bonusRate = bonusRates.find((r) => numericAmount >= r.min)?.bonus || 0;
+  const bonusRate = bonusEnabled 
+    ? bonusRates.find((r) => numericAmount >= r.min_amount)?.bonus_percentage || 0
+    : 0;
   const bonusAmount = (numericAmount * bonusRate) / 100;
   const totalAmount = numericAmount + bonusAmount;
 
@@ -338,31 +370,35 @@ const BalanceTab = () => {
 
         {/* Summary */}
         <div className="space-y-6">
-          {/* Bonus Info */}
-          <Card className="gradient-primary text-primary-foreground">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Gift className="h-8 w-8" />
-                <div>
-                  <p className="font-bold text-lg">مكافآت الشحن</p>
-                  <p className="text-sm opacity-80">اشحن أكثر واحصل على المزيد</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                {bonusRates.map((rate) => (
-                  <div
-                    key={rate.min}
-                    className={`flex justify-between text-sm p-2 rounded ${
-                      numericAmount >= rate.min ? "bg-primary-foreground/20" : "opacity-60"
-                    }`}
-                  >
-                    <span>${rate.min}+</span>
-                    <span className="font-bold">+{rate.bonus}% مكافأة</span>
+          {/* Bonus Info - Only show if enabled and has rates */}
+          {bonusEnabled && bonusRates.length > 0 && (
+            <Card className="gradient-primary text-primary-foreground">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Gift className="h-8 w-8" />
+                  <div>
+                    <p className="font-bold text-lg">مكافآت الشحن</p>
+                    <p className="text-sm opacity-80">اشحن أكثر واحصل على المزيد</p>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+                <div className="space-y-2">
+                  {bonusRates
+                    .sort((a, b) => a.min_amount - b.min_amount)
+                    .map((rate) => (
+                      <div
+                        key={rate.id}
+                        className={`flex justify-between text-sm p-2 rounded ${
+                          numericAmount >= rate.min_amount ? "bg-primary-foreground/20" : "opacity-60"
+                        }`}
+                      >
+                        <span>${rate.min_amount}+</span>
+                        <span className="font-bold">+{rate.bonus_percentage}% مكافأة</span>
+                      </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Order Summary */}
           <Card variant="elevated">

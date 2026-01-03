@@ -292,6 +292,36 @@ export type Database = {
           },
         ]
       }
+      bonus_settings: {
+        Row: {
+          bonus_percentage: number
+          created_at: string
+          id: string
+          is_active: boolean
+          min_amount: number
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          bonus_percentage?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          min_amount?: number
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bonus_percentage?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          min_amount?: number
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coupon_usage: {
         Row: {
           amount: number
