@@ -152,6 +152,38 @@ const BalanceTab = () => {
     }
   };
 
+  const handleOnePayment = async () => {
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
+    setProcessingPayment(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('one-create-payment', {
+        body: {
+          amount: numericAmount,
+          userId: user.id,
+          currency: "USD",
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+        return;
+      } else {
+        throw new Error("لم يتم الحصول على رابط الدفع");
+      }
+    } catch (error) {
+      console.error("ONE payment error:", error);
+      toast.error("حدث خطأ في إنشاء طلب الدفع");
+      setProcessingPayment(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedGateway) {
       toast.error("يرجى اختيار طريقة الدفع");
@@ -177,6 +209,12 @@ const BalanceTab = () => {
     // Cryptomus payment
     if (selectedGateway.slug === 'cryptomus') {
       await handleCryptomusPayment();
+      return;
+    }
+
+    // ONE payment (Visa/Mastercard)
+    if (selectedGateway.slug === 'one') {
+      await handleOnePayment();
       return;
     }
 
@@ -446,6 +484,11 @@ const BalanceTab = () => {
                   <>
                     <Wallet className="h-5 w-5" />
                     الدفع بالعملات الرقمية
+                  </>
+                ) : selectedGateway?.slug === 'one' ? (
+                  <>
+                    <CreditCard className="h-5 w-5" />
+                    الدفع بالفيزا/ماستركارد
                   </>
                 ) : selectedGateway?.gateway_type === 'manual' && selectedGateway?.redirect_url ? (
                   <>

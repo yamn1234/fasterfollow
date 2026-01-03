@@ -23,3 +23,9 @@ verify_jwt = false
 
 [functions.cryptomus-webhook]
 verify_jwt = false
+
+[functions.one-create-payment]
+verify_jwt = false
+
+[functions.one-webhook]
+verify_jwt = false
