@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { crypto } from "https://deno.land/std@0.168.0/crypto/mod.ts";
+import { encode as hexEncode } from "https://deno.land/std@0.168.0/encoding/hex.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,8 +16,7 @@ async function verifyCryptomusSign(body: object, receivedSign: string, apiKey: s
   const encoder = new TextEncoder();
   const data = encoder.encode(signString);
   const hashBuffer = await crypto.subtle.digest("MD5", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const calculatedSign = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const calculatedSign = new TextDecoder().decode(hexEncode(new Uint8Array(hashBuffer)));
   
   return calculatedSign === receivedSign;
 }
