@@ -49,7 +49,8 @@ const PayPalButton = ({ amount, userId, onSuccess, onError, disabled }: PayPalBu
         }
 
         const script = document.createElement("script");
-        script.src = `https://www.paypal.com/sdk/js?client-id=${data.clientId}&currency=USD&enable-funding=card&disable-funding=paylater,credit`;
+        // Add locale=ar_SA for Arabic, disable-funding for unwanted options
+        script.src = `https://www.paypal.com/sdk/js?client-id=${data.clientId}&currency=USD&locale=ar_SA&enable-funding=card&disable-funding=paylater,credit`;
         script.async = true;
         script.onload = () => {
           setSdkReady(true);
