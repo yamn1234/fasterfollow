@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.paypal-capture-order]
 verify_jwt = false
+
+[functions.cryptomus-create-payment]
+verify_jwt = false
+
+[functions.cryptomus-webhook]
+verify_jwt = false

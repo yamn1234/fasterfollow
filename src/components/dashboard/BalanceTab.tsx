@@ -120,6 +120,38 @@ const BalanceTab = () => {
     }
   };
 
+  const handleCryptomusPayment = async () => {
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
+    setProcessingPayment(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('cryptomus-create-payment', {
+        body: {
+          amount: numericAmount,
+          userId: user.id,
+          currency: "USD",
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.paymentUrl) {
+        window.location.href = data.paymentUrl;
+        return;
+      } else {
+        throw new Error("لم يتم الحصول على رابط الدفع");
+      }
+    } catch (error) {
+      console.error("Cryptomus error:", error);
+      toast.error("حدث خطأ في إنشاء طلب الدفع");
+      setProcessingPayment(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedGateway) {
       toast.error("يرجى اختيار طريقة الدفع");
@@ -142,6 +174,12 @@ const BalanceTab = () => {
       return;
     }
 
+    // Cryptomus payment
+    if (selectedGateway.slug === 'cryptomus') {
+      await handleCryptomusPayment();
+      return;
+    }
+
     // إذا كانت طريقة دفع يدوية مع رابط توجيه
     if (selectedGateway.gateway_type === 'manual' && selectedGateway.redirect_url) {
       // فتح الرابط مباشرة في نافذة جديدة
@@ -156,11 +194,20 @@ const BalanceTab = () => {
     toast.success(`تم إرسال طلب شحن بقيمة $${numericAmount.toFixed(2)}`);
   };
 
-  // Handle PayPal return
+  // Handle PayPal and Cryptomus return
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const paypalStatus = urlParams.get('paypal');
+    const paymentStatus = urlParams.get('payment');
     const token = urlParams.get('token');
+
+    // Handle successful Cryptomus payment
+    if (paymentStatus === 'success') {
+      toast.success('تم إتمام الدفع بنجاح! سيتم تحديث رصيدك خلال لحظات.');
+      refreshProfile();
+      window.history.replaceState({}, '', '/dashboard?tab=balance');
+      return;
+    }
 
     if (paypalStatus === 'success' && token && user) {
       // Capture the payment
@@ -394,6 +441,11 @@ const BalanceTab = () => {
                   <>
                     <CreditCard className="h-5 w-5" />
                     الدفع عبر PayPal
+                  </>
+                ) : selectedGateway?.slug === 'cryptomus' ? (
+                  <>
+                    <Wallet className="h-5 w-5" />
+                    الدفع بالعملات الرقمية
                   </>
                 ) : selectedGateway?.gateway_type === 'manual' && selectedGateway?.redirect_url ? (
                   <>
