@@ -95,11 +95,17 @@ serve(async (req) => {
           brand_name: "FasterFollow",
           locale: "ar-SA",
         },
-        // Pre-fill payer info with minimal data to reduce form fields
+        // Pre-fill payer info with default data to minimize form fields
         payer: {
           name: {
             given_name: "Customer",
             surname: "User",
+          },
+          phone: {
+            phone_type: "MOBILE",
+            phone_number: {
+              national_number: "500000000",
+            },
           },
           address: {
             country_code: "SA",
