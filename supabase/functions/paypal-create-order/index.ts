@@ -88,6 +88,13 @@ serve(async (req) => {
             description: "Account Balance Top-up",
           },
         ],
+        // Application context for digital goods - no shipping required
+        application_context: {
+          shipping_preference: "NO_SHIPPING",
+          user_action: "PAY_NOW",
+          brand_name: "FasterFollow",
+          locale: "ar-SA",
+        },
       }),
     });
 
