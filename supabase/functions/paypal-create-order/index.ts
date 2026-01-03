@@ -67,7 +67,8 @@ serve(async (req) => {
 
     const accessToken = await getPayPalAccessToken();
 
-    // Create PayPal order for Smart Payment Buttons (no redirect URLs needed)
+    // Create PayPal order for Smart Payment Buttons
+    // Note: Do NOT include payment_source - the JS SDK handles that
     const orderResponse = await fetch(`${PAYPAL_API_URL}/v2/checkout/orders`, {
       method: "POST",
       headers: {
@@ -87,18 +88,6 @@ serve(async (req) => {
             description: "Account Balance Top-up",
           },
         ],
-        payment_source: {
-          paypal: {
-            experience_context: {
-              payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
-              brand_name: "FasterFollow",
-              locale: "ar-SA",
-              landing_page: "NO_PREFERENCE",
-              shipping_preference: "NO_SHIPPING",
-              user_action: "PAY_NOW",
-            },
-          },
-        },
       }),
     });
 
