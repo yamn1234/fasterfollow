@@ -88,12 +88,26 @@ serve(async (req) => {
             description: "Account Balance Top-up",
           },
         ],
-        // Application context for digital goods - no shipping required
+        // Application context for digital goods - no shipping, no billing address fields
         application_context: {
           shipping_preference: "NO_SHIPPING",
           user_action: "PAY_NOW",
           brand_name: "FasterFollow",
           locale: "ar-SA",
+        },
+        // Pre-fill payer info with minimal data to reduce form fields
+        payer: {
+          name: {
+            given_name: "Customer",
+            surname: "User",
+          },
+          address: {
+            country_code: "SA",
+            address_line_1: "Digital Product",
+            admin_area_2: "Riyadh",
+            admin_area_1: "Riyadh",
+            postal_code: "12345",
+          },
         },
       }),
     });
