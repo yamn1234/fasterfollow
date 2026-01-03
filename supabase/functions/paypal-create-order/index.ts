@@ -47,7 +47,7 @@ serve(async (req) => {
   }
 
   try {
-    const { amount, userId } = await req.json();
+    const { amount, balanceAmount, userId } = await req.json();
 
     if (!amount || amount <= 0) {
       return new Response(
@@ -63,7 +63,10 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Creating PayPal order for user ${userId}, amount: $${amount}`);
+    // balanceAmount is the actual amount to add to user's balance (without fees)
+    const actualBalanceAmount = balanceAmount || amount;
+    
+    console.log(`Creating PayPal order for user ${userId}, charge: $${amount}, balance: $${actualBalanceAmount}`);
 
     const accessToken = await getPayPalAccessToken();
 
@@ -144,11 +147,11 @@ serve(async (req) => {
 
     const currentBalance = profile?.balance || 0;
 
-    // Create pending transaction
+    // Create pending transaction with the actual balance amount (not the charged amount)
     await supabase.from("transactions").insert({
       user_id: userId,
       type: "deposit",
-      amount: amount,
+      amount: actualBalanceAmount,
       balance_before: currentBalance,
       balance_after: currentBalance, // Will be updated on capture
       description: `PayPal deposit - Order: ${orderData.id}`,
