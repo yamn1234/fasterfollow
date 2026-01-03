@@ -596,6 +596,7 @@ export type Database = {
           fee_percentage: number | null
           gateway_type: string | null
           id: string
+          image_url: string | null
           instructions: string | null
           instructions_ar: string | null
           is_active: boolean | null
@@ -614,6 +615,7 @@ export type Database = {
           fee_percentage?: number | null
           gateway_type?: string | null
           id?: string
+          image_url?: string | null
           instructions?: string | null
           instructions_ar?: string | null
           is_active?: boolean | null
@@ -632,6 +634,7 @@ export type Database = {
           fee_percentage?: number | null
           gateway_type?: string | null
           id?: string
+          image_url?: string | null
           instructions?: string | null
           instructions_ar?: string | null
           is_active?: boolean | null

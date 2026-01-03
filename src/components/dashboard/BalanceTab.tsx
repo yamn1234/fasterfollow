@@ -32,7 +32,44 @@ interface PaymentGateway {
   instructions: string | null;
   instructions_ar: string | null;
   gateway_type: string | null;
+  image_url: string | null;
 }
+
+// Helper function to render text with links
+const renderTextWithLinks = (text: string) => {
+  // Split by newlines first, then process each line for URLs
+  const lines = text.split('\n');
+  
+  return lines.map((line, lineIndex) => {
+    // URL regex pattern
+    const urlPattern = /(https?:\/\/[^\s]+)/g;
+    const parts = line.split(urlPattern);
+    
+    const elements = parts.map((part, partIndex) => {
+      if (urlPattern.test(part)) {
+        return (
+          <a
+            key={partIndex}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline hover:text-primary/80"
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={partIndex}>{part}</span>;
+    });
+    
+    return (
+      <span key={lineIndex}>
+        {elements}
+        {lineIndex < lines.length - 1 && <br />}
+      </span>
+    );
+  });
+};
 
 interface BonusRate {
   id: string;
@@ -347,9 +384,17 @@ const BalanceTab = () => {
                       }`}
                     >
                       <RadioGroupItem value={gateway.id} id={gateway.id} />
-                      <span className="text-2xl">
-                        {gateway.gateway_type === 'manual' ? '🔗' : '💳'}
-                      </span>
+                      {gateway.image_url ? (
+                        <img 
+                          src={gateway.image_url} 
+                          alt={gateway.name}
+                          className="w-10 h-10 object-contain rounded"
+                        />
+                      ) : (
+                        <span className="text-2xl">
+                          {gateway.gateway_type === 'manual' ? '🔗' : '💳'}
+                        </span>
+                      )}
                       <div className="flex-1">
                         <p className="font-medium">{gateway.name}</p>
                         <p className="text-sm text-muted-foreground">
@@ -358,9 +403,9 @@ const BalanceTab = () => {
                           {gateway.fee_fixed > 0 && ` + $${gateway.fee_fixed}`}
                         </p>
                         {gateway.instructions_ar && paymentMethod === gateway.id && (
-                          <p className="text-sm text-primary mt-2 bg-primary/10 p-2 rounded">
-                            {gateway.instructions_ar}
-                          </p>
+                          <div className="text-sm text-primary mt-2 bg-primary/10 p-2 rounded whitespace-pre-wrap">
+                            {renderTextWithLinks(gateway.instructions_ar)}
+                          </div>
                         )}
                       </div>
                       {paymentMethod === gateway.id && (

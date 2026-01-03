@@ -18,6 +18,7 @@ import {
   ArrowUpDown,
   Gift,
   Sparkles,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,6 +55,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import GatewaySortDialog from '@/components/admin/GatewaySortDialog';
+import ImageIconPicker from '@/components/admin/ImageIconPicker';
 
 interface Transaction {
   id: string;
@@ -81,6 +83,7 @@ interface PaymentGateway {
   instructions_ar: string | null;
   gateway_type: string | null;
   sort_order: number | null;
+  image_url: string | null;
 }
 
 interface Coupon {
@@ -126,6 +129,7 @@ const AdminPayments = () => {
     min_amount: '1',
     max_amount: '10000',
     is_active: true,
+    image_url: '',
   });
   const [sortDialogOpen, setSortDialogOpen] = useState(false);
   
@@ -206,6 +210,7 @@ const AdminPayments = () => {
         min_amount: parseFloat(gatewayFormData.min_amount) || 1,
         max_amount: parseFloat(gatewayFormData.max_amount) || 10000,
         is_active: gatewayFormData.is_active,
+        image_url: gatewayFormData.image_url.trim() || null,
       };
 
       if (selectedGateway) {
@@ -269,6 +274,7 @@ const AdminPayments = () => {
       min_amount: '1',
       max_amount: '10000',
       is_active: true,
+      image_url: '',
     });
     setSelectedGateway(null);
   };
@@ -287,6 +293,7 @@ const AdminPayments = () => {
       min_amount: gateway.min_amount.toString(),
       max_amount: gateway.max_amount.toString(),
       is_active: gateway.is_active,
+      image_url: gateway.image_url || '',
     });
     setGatewayDialogOpen(true);
   };
@@ -965,6 +972,15 @@ const AdminPayments = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Image Picker */}
+            <ImageIconPicker
+              value={gatewayFormData.image_url}
+              onChange={(value) => setGatewayFormData({ ...gatewayFormData, image_url: value || '' })}
+              label="صورة طريقة الدفع"
+              folder="payment-gateways"
+              showEmojiPicker={false}
+            />
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>الاسم</Label>
