@@ -108,13 +108,19 @@ const BalanceTab = () => {
   };
 
   const numericAmount = parseFloat(amount) || 0;
+  const selectedGateway = gateways.find(g => g.id === paymentMethod);
+  
+  // Calculate payment fees
+  const feePercentage = selectedGateway?.fee_percentage || 0;
+  const feeFixed = selectedGateway?.fee_fixed || 0;
+  const paymentFee = (numericAmount * feePercentage / 100) + feeFixed;
+  
   const bonusRate = bonusEnabled 
     ? bonusRates.find((r) => numericAmount >= r.min_amount)?.bonus_percentage || 0
     : 0;
   const bonusAmount = (numericAmount * bonusRate) / 100;
-  const totalAmount = numericAmount + bonusAmount;
+  const totalAmount = numericAmount + paymentFee + bonusAmount;
 
-  const selectedGateway = gateways.find(g => g.id === paymentMethod);
 
   // PayPal Smart Buttons handlers
   const handlePayPalSuccess = useCallback((capturedAmount: number) => {
@@ -410,12 +416,10 @@ const BalanceTab = () => {
                 <span className="text-muted-foreground">المبلغ</span>
                 <span className="font-medium">${numericAmount.toFixed(2)}</span>
               </div>
-              {selectedGateway && (selectedGateway.fee_percentage > 0 || selectedGateway.fee_fixed > 0) && (
+              {selectedGateway && paymentFee > 0 && (
                 <div className="flex justify-between text-muted-foreground">
                   <span>رسوم الدفع</span>
-                  <span>
-                    ${((numericAmount * selectedGateway.fee_percentage / 100) + selectedGateway.fee_fixed).toFixed(2)}
-                  </span>
+                  <span>+${paymentFee.toFixed(2)}</span>
                 </div>
               )}
               {bonusAmount > 0 && (
