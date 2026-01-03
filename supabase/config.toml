@@ -12,6 +12,9 @@ verify_jwt = false
 [functions.smm-check-order-status]
 verify_jwt = false
 
+[functions.paypal-get-client-id]
+verify_jwt = false
+
 [functions.paypal-create-order]
 verify_jwt = false
 
