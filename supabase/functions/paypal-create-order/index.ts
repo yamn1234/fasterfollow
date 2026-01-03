@@ -47,7 +47,7 @@ serve(async (req) => {
   }
 
   try {
-    const { amount, userId, returnUrl, cancelUrl } = await req.json();
+    const { amount, userId } = await req.json();
 
     if (!amount || amount <= 0) {
       return new Response(
@@ -67,7 +67,7 @@ serve(async (req) => {
 
     const accessToken = await getPayPalAccessToken();
 
-    // Create PayPal order with guest checkout enabled
+    // Create PayPal order for Smart Payment Buttons (no redirect URLs needed)
     const orderResponse = await fetch(`${PAYPAL_API_URL}/v2/checkout/orders`, {
       method: "POST",
       headers: {
@@ -87,13 +87,17 @@ serve(async (req) => {
             description: "Account Balance Top-up",
           },
         ],
-        application_context: {
-          brand_name: "FasterFollow",
-          landing_page: "NO_PREFERENCE",
-          user_action: "PAY_NOW",
-          shipping_preference: "NO_SHIPPING",
-          return_url: returnUrl,
-          cancel_url: cancelUrl,
+        payment_source: {
+          paypal: {
+            experience_context: {
+              payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
+              brand_name: "FasterFollow",
+              locale: "ar-SA",
+              landing_page: "NO_PREFERENCE",
+              shipping_preference: "NO_SHIPPING",
+              user_action: "PAY_NOW",
+            },
+          },
         },
       }),
     });
@@ -136,14 +140,10 @@ serve(async (req) => {
       payment_reference: orderData.id,
     });
 
-    // Find approval URL
-    const approvalUrl = orderData.links?.find((link: any) => link.rel === "payer-action")?.href 
-      || orderData.links?.find((link: any) => link.rel === "approve")?.href;
-
+    // Return order ID for Smart Payment Buttons
     return new Response(
       JSON.stringify({
         orderId: orderData.id,
-        approvalUrl: approvalUrl,
         status: orderData.status,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
