@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
 interface PayPalButtonProps {
-  amount: number;
+  amount: number; // Amount to charge (including fees)
+  balanceAmount: number; // Amount to add to balance (original amount, bonus added by backend)
   userId: string;
   onSuccess: (capturedAmount: number) => void;
   onError: (error: string) => void;
@@ -22,7 +23,7 @@ declare global {
   }
 }
 
-const PayPalButton = ({ amount, userId, onSuccess, onError, disabled }: PayPalButtonProps) => {
+const PayPalButton = ({ amount, balanceAmount, userId, onSuccess, onError, disabled }: PayPalButtonProps) => {
   const paypalRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [sdkReady, setSdkReady] = useState(false);
@@ -100,7 +101,8 @@ const PayPalButton = ({ amount, userId, onSuccess, onError, disabled }: PayPalBu
         try {
           const { data, error } = await supabase.functions.invoke('paypal-create-order', {
             body: {
-              amount,
+              amount, // Amount to charge
+              balanceAmount, // Amount to add to balance
               userId,
             },
           });
@@ -165,7 +167,7 @@ const PayPalButton = ({ amount, userId, onSuccess, onError, disabled }: PayPalBu
         }
       }
     };
-  }, [sdkReady, amount, userId, disabled, onSuccess, onError]);
+  }, [sdkReady, amount, balanceAmount, userId, disabled, onSuccess, onError]);
 
   if (loading) {
     return (

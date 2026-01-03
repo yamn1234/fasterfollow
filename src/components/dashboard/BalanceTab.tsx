@@ -442,7 +442,8 @@ const BalanceTab = () => {
               {selectedGateway?.slug === 'paypal' && user && (
                 <div className="mt-4">
                   <PayPalButton
-                    amount={numericAmount}
+                    amount={numericAmount + paymentFee}
+                    balanceAmount={numericAmount}
                     userId={user.id}
                     onSuccess={handlePayPalSuccess}
                     onError={handlePayPalError}
