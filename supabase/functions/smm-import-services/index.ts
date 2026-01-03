@@ -94,6 +94,7 @@ serve(async (req) => {
         min: parseInt(foundService.min || 1),
         max: parseInt(foundService.max || 10000),
         description: foundService.description || foundService.desc || null,
+        speed: foundService.average_time || foundService.speed || null,
       };
 
       return new Response(
@@ -138,6 +139,7 @@ serve(async (req) => {
         min: parseInt(service.min || 1),
         max: parseInt(service.max || 10000),
         description: service.description || service.desc || null,
+        speed: service.average_time || service.speed || null,
       }));
 
       return new Response(
@@ -191,6 +193,7 @@ serve(async (req) => {
         const minQty = parseInt(service.min || 1);
         const maxQty = parseInt(service.max || 10000);
         const description = service.description || service.desc || null;
+        const speed = service.average_time || service.speed || null;
         const slug = `${provider.name.toLowerCase().replace(/\s+/g, '-')}-${externalId}`;
 
         // Check if service already exists
@@ -211,6 +214,7 @@ serve(async (req) => {
               price,
               min_quantity: minQty,
               max_quantity: maxQty,
+              delivery_time: speed,
               is_active: true,
             })
             .eq('id', existing.id);
@@ -232,6 +236,7 @@ serve(async (req) => {
               price,
               min_quantity: minQty,
               max_quantity: maxQty,
+              delivery_time: speed,
               provider_id: providerId,
               external_service_id: externalId,
               category_id: categoryId || null,
