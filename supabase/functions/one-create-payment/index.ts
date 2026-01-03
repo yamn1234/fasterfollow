@@ -59,6 +59,8 @@ serve(async (req) => {
         title: `Deposit ${amount} ${currency}`,
         origin: "API",
         external_id: orderId,
+        // Force Visa/Mastercard (Card) payments only
+        payment_method_types: ["CARD"],
         custom_urls: {
           status_changes_webhook: webhookUrl,
           success_payment_redirect: successUrl,
