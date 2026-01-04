@@ -165,6 +165,7 @@ const AdminServices = () => {
     price: '',
     min_quantity: '1',
     max_quantity: '10000',
+    delivery_time: '',
     category_id: '',
     provider_id: '',
     external_service_id: '',
@@ -486,6 +487,7 @@ const AdminServices = () => {
         price: parseFloat(formData.price) || 0,
         min_quantity: parseInt(formData.min_quantity) || 1,
         max_quantity: parseInt(formData.max_quantity) || 10000,
+        delivery_time: formData.delivery_time || null,
         category_id: formData.category_id || null,
         provider_id: formData.provider_id || null,
         external_service_id: formData.external_service_id || null,
@@ -601,6 +603,7 @@ const AdminServices = () => {
       price: '',
       min_quantity: '1',
       max_quantity: '10000',
+      delivery_time: '',
       category_id: '',
       provider_id: '',
       external_service_id: '',
@@ -630,6 +633,7 @@ const AdminServices = () => {
       price: service.price.toString(),
       min_quantity: service.min_quantity.toString(),
       max_quantity: service.max_quantity.toString(),
+      delivery_time: service.delivery_time || '',
       category_id: service.category_id || '',
       provider_id: service.provider_id || '',
       external_service_id: (service as any).external_service_id || '',
@@ -991,6 +995,18 @@ const AdminServices = () => {
                     onChange={(e) => setFormData({ ...formData, max_quantity: e.target.value })}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>السرعة التقريبية</Label>
+                <Input
+                  value={formData.delivery_time}
+                  onChange={(e) => setFormData({ ...formData, delivery_time: e.target.value })}
+                  placeholder="مثال: 0-1 ساعة أو 1-24 ساعة"
+                />
+                <p className="text-xs text-muted-foreground">
+                  يتم استيرادها تلقائياً من المزود، ويمكنك تعديلها يدوياً
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
