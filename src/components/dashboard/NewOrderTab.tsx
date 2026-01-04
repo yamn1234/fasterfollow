@@ -23,7 +23,8 @@ import {
   Package,
   Sparkles,
   Info,
-  MessageSquare
+  MessageSquare,
+  Clock
 } from "lucide-react";
 
 const NewOrderTab = () => {
@@ -239,9 +240,17 @@ const NewOrderTab = () => {
                       <SelectItem key={service.id} value={service.id}>
                         <div className="flex justify-between items-center w-full gap-4">
                           <span>{service.name_ar || service.name}</span>
-                          <span className="text-primary font-medium">
-                            {format(service.price)}/1000
-                          </span>
+                          <div className="flex items-center gap-3">
+                            {service.delivery_time && (
+                              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {service.delivery_time}
+                              </span>
+                            )}
+                            <span className="text-primary font-medium">
+                              {format(service.price)}/1000
+                            </span>
+                          </div>
                         </div>
                       </SelectItem>
                     ))}
@@ -340,6 +349,15 @@ const NewOrderTab = () => {
                     {format(selectedServiceData?.price || 0)}
                   </span>
                 </div>
+                {selectedServiceData?.delivery_time && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">وقت التنفيذ</span>
+                    <span className="font-medium flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {selectedServiceData.delivery_time}
+                    </span>
+                  </div>
+                )}
                 <div className="border-t pt-3">
                   <div className="flex justify-between">
                     <span className="font-medium">الإجمالي</span>
