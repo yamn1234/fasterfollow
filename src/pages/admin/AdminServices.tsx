@@ -101,6 +101,7 @@ interface Service {
   created_at: string;
   icon: string | null;
   image_url: string | null;
+  delivery_time: string | null;
 }
 
 interface Category {
@@ -793,6 +794,7 @@ const AdminServices = () => {
                   <TableHead>الفئة</TableHead>
                   <TableHead>السعر</TableHead>
                   <TableHead>الحد الأدنى / الأقصى</TableHead>
+                  <TableHead>السرعة</TableHead>
                   <TableHead>SEO</TableHead>
                   <TableHead>الحالة</TableHead>
                   <TableHead className="text-left">إجراءات</TableHead>
@@ -832,6 +834,11 @@ const AdminServices = () => {
                       <TableCell>${service.price.toFixed(2)}</TableCell>
                       <TableCell>
                         {service.min_quantity.toLocaleString()} / {service.max_quantity.toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground">
+                          {service.delivery_time || '-'}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
