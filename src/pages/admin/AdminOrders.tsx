@@ -384,6 +384,7 @@ const AdminOrders = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>رقم الطلب</TableHead>
+                  <TableHead>رقم الطلب الخارجي</TableHead>
                   <TableHead>الخدمة</TableHead>
                   <TableHead>الكمية</TableHead>
                   <TableHead>السعر</TableHead>
@@ -396,13 +397,13 @@ const AdminOrders = () => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-10">
+                    <TableCell colSpan={9} className="text-center py-10">
                       <Loader2 className="w-6 h-6 animate-spin mx-auto" />
                     </TableCell>
                   </TableRow>
                 ) : filteredOrders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-10">
+                    <TableCell colSpan={9} className="text-center py-10">
                       لا توجد طلبات
                     </TableCell>
                   </TableRow>
@@ -414,6 +415,11 @@ const AdminOrders = () => {
                       <TableRow key={order.id}>
                         <TableCell>
                           <span className="font-mono text-sm">#{order.id.slice(0, 8)}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-mono text-sm text-muted-foreground">
+                            {order.external_order_id || '-'}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <div>
