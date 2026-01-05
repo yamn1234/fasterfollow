@@ -78,8 +78,14 @@ serve(async (req) => {
     };
 
     // Add comments if the service requires them
+    // Comments should be separated by \n as per SMM API specification
     if (service.requires_comments && order.comments) {
-      apiBody.comments = order.comments;
+      // Normalize line endings to \n (API expects \r\n or \n)
+      const normalizedComments = order.comments
+        .replace(/\r\n/g, '\n')  // Convert Windows line endings
+        .replace(/\r/g, '\n')     // Convert old Mac line endings
+        .trim();
+      apiBody.comments = normalizedComments;
     }
 
     console.log('API Request Body:', { ...apiBody, key: '[REDACTED]' });
