@@ -147,7 +147,7 @@ const NewOrderTab = () => {
         } else if (placeResult?.success) {
           toast({
             title: "تم إرسال الطلب بنجاح! 🎉",
-            description: `رقم الطلب الخارجي: ${placeResult.externalOrderId}`,
+            description: "سيتم تنفيذ طلبك قريباً",
           });
         } else {
           toast({
