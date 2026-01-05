@@ -407,12 +407,20 @@ const Services = () => {
                 <Textarea
                   placeholder="أدخل التعليقات هنا، كل تعليق في سطر منفصل..."
                   value={orderComments}
-                  onChange={(e) => setOrderComments(e.target.value)}
+                  onChange={(e) => {
+                    const newComments = e.target.value;
+                    setOrderComments(newComments);
+                    // Auto-calculate quantity from number of comment lines
+                    const lines = newComments.split('\n').filter(line => line.trim()).length;
+                    if (lines > 0) {
+                      setOrderQuantity(lines);
+                    }
+                  }}
                   rows={5}
                   className="resize-none"
                 />
                 <p className="text-xs text-muted-foreground">
-                  أدخل تعليقاً واحداً في كل سطر
+                  عدد التعليقات: {orderComments.split('\n').filter(line => line.trim()).length} | الكمية ستحدد تلقائياً
                 </p>
               </div>
             )}

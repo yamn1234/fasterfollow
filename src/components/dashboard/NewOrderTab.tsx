@@ -309,12 +309,20 @@ const NewOrderTab = () => {
                   <Textarea
                     placeholder="أدخل التعليقات هنا، كل تعليق في سطر منفصل..."
                     value={comments}
-                    onChange={(e) => setComments(e.target.value)}
+                    onChange={(e) => {
+                      const newComments = e.target.value;
+                      setComments(newComments);
+                      // Auto-calculate quantity from number of comment lines
+                      const lines = newComments.split('\n').filter(line => line.trim()).length;
+                      if (lines > 0) {
+                        setQuantity(String(lines));
+                      }
+                    }}
                     rows={6}
                     className="resize-none"
                   />
                   <p className="text-xs text-muted-foreground">
-                    أدخل تعليقاً واحداً في كل سطر. عدد التعليقات يجب أن يتناسب مع الكمية المطلوبة.
+                    عدد التعليقات: {comments.split('\n').filter(line => line.trim()).length} | الكمية ستحدد تلقائياً من عدد الأسطر
                   </p>
                 </div>
               )}

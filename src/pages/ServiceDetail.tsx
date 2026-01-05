@@ -520,19 +520,26 @@ const ServiceDetail = () => {
                     <Label>
                       التعليقات المطلوبة * 
                       <span className="text-muted-foreground font-normal mr-2">
-                        ({orderComments.split('\n').filter(line => line.trim()).length}/{orderQuantity})
+                        (عدد التعليقات: {orderComments.split('\n').filter(line => line.trim()).length})
                       </span>
                     </Label>
                     <Textarea
                       placeholder="أدخل التعليقات (كل تعليق في سطر جديد)"
                       value={orderComments}
-                      onChange={(e) => setOrderComments(e.target.value)}
+                      onChange={(e) => {
+                        const newComments = e.target.value;
+                        setOrderComments(newComments);
+                        // Auto-calculate quantity from number of comment lines
+                        const lines = newComments.split('\n').filter(line => line.trim()).length;
+                        if (lines > 0) {
+                          setOrderQuantity(lines);
+                        }
+                      }}
                       rows={4}
                       dir="rtl"
-                      className={orderComments.split('\n').filter(line => line.trim()).length !== orderQuantity && orderComments.trim() ? 'border-destructive' : ''}
                     />
                     <p className="text-xs text-muted-foreground">
-                      أدخل {orderQuantity} تعليق، كل تعليق في سطر منفصل
+                      الكمية ستحدد تلقائياً من عدد الأسطر
                     </p>
                   </div>
                 )}
