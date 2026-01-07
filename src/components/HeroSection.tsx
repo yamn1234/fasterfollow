@@ -1,7 +1,24 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Zap, Shield, Headphones } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-rocket.png";
+
+// Preload LCP image dynamically for better performance
+const preloadImage = (url: string) => {
+  if (!url) return;
+  
+  // Check if preload link already exists
+  const existingLink = document.querySelector(`link[href="${url}"]`);
+  if (existingLink) return;
+  
+  const link = document.createElement('link');
+  link.rel = 'preload';
+  link.as = 'image';
+  link.href = url;
+  link.fetchPriority = 'high';
+  document.head.appendChild(link);
+};
 
 interface HeroStats {
   customers: string;
@@ -41,6 +58,14 @@ const HeroSection = ({ settings, siteSettings }: HeroSectionProps) => {
   const buttonLink = settings?.button_link || '/services';
   const showStats = settings?.show_stats ?? true;
   const customImage = settings?.image_url;
+  const imageToShow = customImage || heroImage;
+
+  // Preload LCP image as soon as we know the URL
+  useEffect(() => {
+    if (imageToShow) {
+      preloadImage(imageToShow);
+    }
+  }, [imageToShow]);
 
   return (
     <section className="relative overflow-hidden gradient-hero py-12 sm:py-16 lg:py-24">
@@ -98,12 +123,13 @@ const HeroSection = ({ settings, siteSettings }: HeroSectionProps) => {
           {/* Image */}
           <div className="order-1 lg:order-2 flex justify-center">
             <img
-              src={customImage || heroImage}
+              src={imageToShow}
               alt={`${title} - زيادة متابعين السوشيال ميديا`}
               width={512}
               height={512}
               className="w-full max-w-xs sm:max-w-md lg:max-w-lg animate-float drop-shadow-2xl"
               fetchPriority="high"
+              decoding="async"
             />
           </div>
         </div>
