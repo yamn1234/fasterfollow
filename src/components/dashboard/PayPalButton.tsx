@@ -62,6 +62,11 @@ const loadPayPalSDK = (): Promise<boolean> => {
   return window.__paypalLoading;
 };
 
+// Export preload function for early loading
+export const preloadPayPalSDK = () => {
+  loadPayPalSDK();
+};
+
 const PayPalButton = ({ amount, balanceAmount, userId, onSuccess, onError, disabled }: PayPalButtonProps) => {
   const paypalRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
