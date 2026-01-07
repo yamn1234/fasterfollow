@@ -35,8 +35,21 @@ const Index = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <main className="flex-1">
+          {/* Skeleton hero section for faster FCP */}
+          <section className="relative min-h-[70vh] flex items-center bg-gradient-to-br from-background via-muted/30 to-background">
+            <div className="container mx-auto px-4 py-16">
+              <div className="animate-pulse space-y-6 max-w-2xl">
+                <div className="h-12 bg-muted rounded-lg w-3/4"></div>
+                <div className="h-6 bg-muted rounded-lg w-full"></div>
+                <div className="h-6 bg-muted rounded-lg w-2/3"></div>
+                <div className="flex gap-4 mt-8">
+                  <div className="h-12 bg-primary/20 rounded-lg w-32"></div>
+                  <div className="h-12 bg-muted rounded-lg w-32"></div>
+                </div>
+              </div>
+            </div>
+          </section>
         </main>
         <Footer />
       </div>
