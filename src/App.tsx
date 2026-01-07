@@ -1,15 +1,19 @@
-import { Suspense, lazy } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { CustomerLanguageProvider } from "@/contexts/CustomerLanguageContext";
 import { ThemeProvider } from "next-themes";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
-import ThemeInitializer from "@/components/ThemeInitializer";
+
+// Lazy load non-critical UI components to improve TTI
+const Toaster = lazy(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
+const Sonner = lazy(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
+const TooltipProvider = lazy(() => import("@/components/ui/tooltip").then(m => ({ default: m.TooltipProvider })));
+
+// Lazy load auth and context providers - they can hydrate after initial paint
+const AuthProvider = lazy(() => import("@/contexts/AuthContext").then(m => ({ default: m.AuthProvider })));
+const CustomerLanguageProvider = lazy(() => import("@/contexts/CustomerLanguageContext").then(m => ({ default: m.CustomerLanguageProvider })));
+const ThemeInitializer = lazy(() => import("@/components/ThemeInitializer"));
+const ProtectedRoute = lazy(() => import("@/components/ProtectedRoute"));
+const AdminProtectedRoute = lazy(() => import("@/components/admin/AdminProtectedRoute"));
 
 // Critical path - load immediately
 import Index from "./pages/Index";
@@ -42,27 +46,59 @@ const BlogPost = lazy(() => import("./pages/BlogPost"));
 const PageView = lazy(() => import("./pages/Page"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes - reduce refetching
+      gcTime: 1000 * 60 * 10, // 10 minutes cache
+    },
+  },
+});
 
-// Minimal loading fallback
+// Minimal loading fallback - inline styles for immediate rendering
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+  <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--background, #000)' }}>
+    <div style={{ width: 32, height: 32, border: '4px solid var(--primary, #6366f1)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
   </div>
 );
+
+// Deferred toasters component - loads after main content
+const DeferredToasters = () => {
+  const [show, setShow] = useState(false);
+  
+  useEffect(() => {
+    // Delay loading toasters until after main content is interactive
+    const timer = requestIdleCallback ? requestIdleCallback(() => setShow(true)) : setTimeout(() => setShow(true), 100);
+    return () => {
+      if (typeof timer === 'number') {
+        cancelIdleCallback ? cancelIdleCallback(timer) : clearTimeout(timer);
+      }
+    };
+  }, []);
+  
+  if (!show) return null;
+  
+  return (
+    <Suspense fallback={null}>
+      <Toaster />
+      <Sonner />
+    </Suspense>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <CustomerLanguageProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AuthProvider>
-              <ThemeInitializer>
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
+      <Suspense fallback={<PageLoader />}>
+        <CustomerLanguageProvider>
+          <TooltipProvider>
+            <DeferredToasters />
+            <BrowserRouter>
+              <AuthProvider>
+                <ThemeInitializer>
+                  <Suspense fallback={<PageLoader />}>
+                    <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/services" element={<Services />} />
                     <Route path="/services/:slug" element={<ServiceDetail />} />
@@ -118,8 +154,9 @@ const App = () => (
           </BrowserRouter>
         </TooltipProvider>
       </CustomerLanguageProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+    </Suspense>
+  </ThemeProvider>
+</QueryClientProvider>
 );
 
 export default App;
