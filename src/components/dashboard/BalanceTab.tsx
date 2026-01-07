@@ -487,7 +487,13 @@ const BalanceTab = () => {
 
               {/* PayPal Smart Buttons */}
               {selectedGateway?.slug === 'paypal' && user && (
-                <div className="mt-4">
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400">
+                    <Info className="h-4 w-4 mt-0.5 shrink-0" />
+                    <p className="text-xs">
+                      قد تستغرق صفحة الدفع حتى 30 ثانية للتحميل عند الضغط على الزر
+                    </p>
+                  </div>
                   <PayPalButton
                     amount={numericAmount + paymentFee}
                     balanceAmount={numericAmount}
