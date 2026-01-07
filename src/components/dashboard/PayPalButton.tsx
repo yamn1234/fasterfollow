@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
 interface PayPalButtonProps {
-  amount: number; // Amount to charge (including fees)
-  balanceAmount: number; // Amount to add to balance (original amount, bonus added by backend)
+  amount: number;
+  balanceAmount: number;
   userId: string;
   onSuccess: (capturedAmount: number) => void;
   onError: (error: string) => void;
@@ -20,55 +20,66 @@ declare global {
         close: () => void;
       };
     };
+    __paypalLoading?: Promise<boolean>;
   }
 }
+
+// Singleton loader - loads SDK once globally
+const loadPayPalSDK = (): Promise<boolean> => {
+  if (window.paypal) {
+    return Promise.resolve(true);
+  }
+  
+  if (window.__paypalLoading) {
+    return window.__paypalLoading;
+  }
+
+  window.__paypalLoading = new Promise(async (resolve) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('paypal-get-client-id');
+      
+      if (error || !data?.clientId) {
+        console.error("Failed to get PayPal client ID:", error);
+        resolve(false);
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = `https://www.paypal.com/sdk/js?client-id=${data.clientId}&currency=USD&locale=ar_SA&enable-funding=card&disable-funding=paylater,credit`;
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => {
+        console.error("Failed to load PayPal SDK");
+        resolve(false);
+      };
+      document.body.appendChild(script);
+    } catch (err) {
+      console.error("Error loading PayPal:", err);
+      resolve(false);
+    }
+  });
+
+  return window.__paypalLoading;
+};
 
 const PayPalButton = ({ amount, balanceAmount, userId, onSuccess, onError, disabled }: PayPalButtonProps) => {
   const paypalRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
-  const [sdkReady, setSdkReady] = useState(false);
+  const [sdkReady, setSdkReady] = useState(!!window.paypal);
   const buttonsInstance = useRef<any>(null);
 
-  // Load PayPal SDK
+  // Load PayPal SDK once
   useEffect(() => {
-    const loadPayPalScript = async () => {
-      // Check if already loaded
-      if (window.paypal) {
-        setSdkReady(true);
-        setLoading(false);
-        return;
-      }
+    if (window.paypal) {
+      setSdkReady(true);
+      setLoading(false);
+      return;
+    }
 
-      // Get client ID from edge function
-      try {
-        const { data, error } = await supabase.functions.invoke('paypal-get-client-id');
-        
-        if (error || !data?.clientId) {
-          console.error("Failed to get PayPal client ID:", error);
-          setLoading(false);
-          return;
-        }
-
-        const script = document.createElement("script");
-        // Add locale=ar_SA for Arabic, disable-funding for unwanted options
-        script.src = `https://www.paypal.com/sdk/js?client-id=${data.clientId}&currency=USD&locale=ar_SA&enable-funding=card&disable-funding=paylater,credit`;
-        script.async = true;
-        script.onload = () => {
-          setSdkReady(true);
-          setLoading(false);
-        };
-        script.onerror = () => {
-          console.error("Failed to load PayPal SDK");
-          setLoading(false);
-        };
-        document.body.appendChild(script);
-      } catch (err) {
-        console.error("Error loading PayPal:", err);
-        setLoading(false);
-      }
-    };
-
-    loadPayPalScript();
+    loadPayPalSDK().then((ready) => {
+      setSdkReady(ready);
+      setLoading(false);
+    });
   }, []);
 
   // Render PayPal buttons
