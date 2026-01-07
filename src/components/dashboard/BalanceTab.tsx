@@ -17,7 +17,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import PayPalButton from "./PayPalButton";
+import PayPalButton, { preloadPayPalSDK } from "./PayPalButton";
 
 interface PaymentGateway {
   id: string;
@@ -93,6 +93,8 @@ const BalanceTab = () => {
   useEffect(() => {
     fetchGateways();
     fetchBonusSettings();
+    // Preload PayPal SDK early for faster checkout
+    preloadPayPalSDK();
   }, []);
 
   const fetchGateways = async () => {
