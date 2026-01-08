@@ -47,7 +47,7 @@ serve(async (req) => {
   }
 
   try {
-    const { amount, balanceAmount, userId, returnUrl, cancelUrl } = await req.json();
+    const { amount, balanceAmount, userId } = await req.json();
 
     if (!amount || amount <= 0) {
       return new Response(
@@ -70,7 +70,8 @@ serve(async (req) => {
 
     const accessToken = await getPayPalAccessToken();
 
-    // Create PayPal order with redirect URLs for external checkout
+    // Create PayPal order for Smart Payment Buttons
+    // Note: Do NOT include payment_source - the JS SDK handles that
     const orderResponse = await fetch(`${PAYPAL_API_URL}/v2/checkout/orders`, {
       method: "POST",
       headers: {
@@ -90,13 +91,32 @@ serve(async (req) => {
             description: "Account Balance Top-up",
           },
         ],
+        // Application context for digital goods - no shipping, no billing address fields
         application_context: {
           shipping_preference: "NO_SHIPPING",
           user_action: "PAY_NOW",
           brand_name: "FasterFollow",
           locale: "ar-SA",
-          return_url: returnUrl || `${req.headers.get("origin")}/dashboard?tab=balance&payment=paypal-success`,
-          cancel_url: cancelUrl || `${req.headers.get("origin")}/dashboard?tab=balance&payment=paypal-cancel`,
+        },
+        // Pre-fill payer info with default data to minimize form fields
+        payer: {
+          name: {
+            given_name: "Customer",
+            surname: "User",
+          },
+          phone: {
+            phone_type: "MOBILE",
+            phone_number: {
+              national_number: "500000000",
+            },
+          },
+          address: {
+            country_code: "SA",
+            address_line_1: "Digital Product",
+            admin_area_2: "Riyadh",
+            admin_area_1: "Riyadh",
+            postal_code: "12345",
+          },
         },
       }),
     });
@@ -112,9 +132,6 @@ serve(async (req) => {
 
     const orderData = await orderResponse.json();
     console.log("PayPal order created:", orderData.id);
-
-    // Find the approval URL for redirect
-    const approvalUrl = orderData.links?.find((link: any) => link.rel === "approve")?.href;
 
     // Store pending transaction in database
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -142,12 +159,11 @@ serve(async (req) => {
       payment_reference: orderData.id,
     });
 
-    // Return order ID and approval URL for redirect
+    // Return order ID for Smart Payment Buttons
     return new Response(
       JSON.stringify({
         orderId: orderData.id,
         status: orderData.status,
-        approvalUrl: approvalUrl,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
