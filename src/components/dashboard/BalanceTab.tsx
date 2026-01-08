@@ -17,7 +17,6 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import PayPalButton, { preloadPayPalSDK } from "./PayPalButton";
 
 interface PaymentGateway {
   id: string;
@@ -93,8 +92,6 @@ const BalanceTab = () => {
   useEffect(() => {
     fetchGateways();
     fetchBonusSettings();
-    // Preload PayPal SDK early for faster checkout
-    preloadPayPalSDK();
   }, []);
 
   const fetchGateways = async () => {
@@ -160,16 +157,40 @@ const BalanceTab = () => {
   const bonusAmount = (numericAmount * bonusRate) / 100;
   const totalAmount = numericAmount + paymentFee + bonusAmount;
 
+  // PayPal redirect payment handler
+  const handlePayPalPayment = async () => {
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً");
+      return;
+    }
 
-  // PayPal Smart Buttons handlers
-  const handlePayPalSuccess = useCallback((capturedAmount: number) => {
-    toast.success(`تم شحن رصيدك بنجاح! المبلغ: $${capturedAmount}`);
-    refreshProfile();
-  }, [refreshProfile]);
+    setProcessingPayment(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('paypal-create-order', {
+        body: {
+          amount: numericAmount + paymentFee,
+          balanceAmount: numericAmount,
+          userId: user.id,
+          returnUrl: `${window.location.origin}/dashboard?tab=balance&payment=paypal-success`,
+          cancelUrl: `${window.location.origin}/dashboard?tab=balance&payment=paypal-cancel`,
+        },
+      });
 
-  const handlePayPalError = useCallback((error: string) => {
-    toast.error(error);
-  }, []);
+      if (error) throw error;
+
+      if (data?.approvalUrl) {
+        window.location.href = data.approvalUrl;
+        return;
+      } else {
+        throw new Error("لم يتم الحصول على رابط الدفع");
+      }
+    } catch (error) {
+      console.error("PayPal error:", error);
+      toast.error("حدث خطأ في إنشاء طلب الدفع");
+      setProcessingPayment(false);
+    }
+  };
 
   const handleCryptomusPayment = async () => {
     if (!user) {
@@ -251,9 +272,9 @@ const BalanceTab = () => {
       return;
     }
 
-    // PayPal payment is handled by PayPal Smart Buttons, not this submit button
+    // PayPal payment - redirect to external page
     if (selectedGateway.slug === 'paypal') {
-      toast.info("استخدم أزرار PayPal أدناه للدفع");
+      await handlePayPalPayment();
       return;
     }
 
@@ -283,18 +304,53 @@ const BalanceTab = () => {
     toast.success(`تم إرسال طلب شحن بقيمة $${numericAmount.toFixed(2)}`);
   };
 
-  // Handle Cryptomus return
+  // Handle payment returns (PayPal, Cryptomus, etc.)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
+    const token = urlParams.get('token'); // PayPal order ID
 
-    // Handle successful Cryptomus payment
+    // Handle PayPal successful return
+    if (paymentStatus === 'paypal-success' && token && user) {
+      const capturePayPalOrder = async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke('paypal-capture-order', {
+            body: {
+              orderId: token,
+              userId: user.id,
+            },
+          });
+
+          if (error) throw error;
+
+          if (data?.success) {
+            toast.success(`تم شحن رصيدك بنجاح! المبلغ: $${data.capturedAmount}`);
+            refreshProfile();
+          } else {
+            toast.error('حدث خطأ في إتمام الدفع');
+          }
+        } catch (error) {
+          console.error('PayPal capture error:', error);
+          toast.error('حدث خطأ في إتمام الدفع');
+        }
+        window.history.replaceState({}, '', '/dashboard?tab=balance');
+      };
+      capturePayPalOrder();
+    }
+
+    // Handle PayPal cancel
+    if (paymentStatus === 'paypal-cancel') {
+      toast.info('تم إلغاء عملية الدفع');
+      window.history.replaceState({}, '', '/dashboard?tab=balance');
+    }
+
+    // Handle successful Cryptomus/other payment
     if (paymentStatus === 'success') {
       toast.success('تم إتمام الدفع بنجاح! سيتم تحديث رصيدك خلال لحظات.');
       refreshProfile();
       window.history.replaceState({}, '', '/dashboard?tab=balance');
     }
-  }, [refreshProfile]);
+  }, [refreshProfile, user]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -485,63 +541,46 @@ const BalanceTab = () => {
                 </span>
               </div>
 
-              {/* PayPal Smart Buttons */}
-              {selectedGateway?.slug === 'paypal' && user && (
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400">
-                    <Info className="h-4 w-4 mt-0.5 shrink-0" />
-                    <p className="text-xs">
-                      قد تستغرق صفحة الدفع حتى 30 ثانية للتحميل عند الضغط على الزر
-                    </p>
-                  </div>
-                  <PayPalButton
-                    amount={numericAmount + paymentFee}
-                    balanceAmount={numericAmount}
-                    userId={user.id}
-                    onSuccess={handlePayPalSuccess}
-                    onError={handlePayPalError}
-                    disabled={numericAmount < (selectedGateway?.min_amount || 1) || numericAmount > (selectedGateway?.max_amount || 1000)}
-                  />
-                </div>
-              )}
-
-              {/* Regular Submit Button for other gateways */}
-              {selectedGateway?.slug !== 'paypal' && (
-                <Button
-                  variant="hero"
-                  size="lg"
-                  className="w-full mt-4"
-                  onClick={handleSubmit}
-                  disabled={numericAmount < 1 || !selectedGateway || loading || processingPayment}
-                >
-                  {processingPayment ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      جاري المعالجة...
-                    </>
-                  ) : selectedGateway?.slug === 'cryptomus' ? (
-                    <>
-                      <Wallet className="h-5 w-5" />
-                      الدفع بالعملات الرقمية
-                    </>
-                  ) : selectedGateway?.slug === 'one' ? (
-                    <>
-                      <CreditCard className="h-5 w-5" />
-                      الدفع بالفيزا/ماستركارد
-                    </>
-                  ) : selectedGateway?.gateway_type === 'manual' && selectedGateway?.redirect_url ? (
-                    <>
-                      <ExternalLink className="h-5 w-5" />
-                      الذهاب للدفع
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="h-5 w-5" />
-                      شحن الآن
-                    </>
-                  )}
-                </Button>
-              )}
+              {/* Submit Button for all gateways */}
+              <Button
+                variant="hero"
+                size="lg"
+                className="w-full mt-4"
+                onClick={handleSubmit}
+                disabled={numericAmount < 1 || !selectedGateway || loading || processingPayment}
+              >
+                {processingPayment ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    جاري المعالجة...
+                  </>
+                ) : selectedGateway?.slug === 'paypal' ? (
+                  <>
+                    <ExternalLink className="h-5 w-5" />
+                    الدفع عبر PayPal
+                  </>
+                ) : selectedGateway?.slug === 'cryptomus' ? (
+                  <>
+                    <Wallet className="h-5 w-5" />
+                    الدفع بالعملات الرقمية
+                  </>
+                ) : selectedGateway?.slug === 'one' ? (
+                  <>
+                    <CreditCard className="h-5 w-5" />
+                    الدفع بالفيزا/ماستركارد
+                  </>
+                ) : selectedGateway?.gateway_type === 'manual' && selectedGateway?.redirect_url ? (
+                  <>
+                    <ExternalLink className="h-5 w-5" />
+                    الذهاب للدفع
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="h-5 w-5" />
+                    شحن الآن
+                  </>
+                )}
+              </Button>
 
               <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1 mt-4">
                 <Info className="h-3 w-3" />
