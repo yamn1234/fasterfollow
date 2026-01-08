@@ -69,12 +69,16 @@ const DeferredToasters = () => {
   
   useEffect(() => {
     // Delay loading toasters until after main content is interactive
-    const timer = requestIdleCallback ? requestIdleCallback(() => setShow(true)) : setTimeout(() => setShow(true), 100);
-    return () => {
-      if (typeof timer === 'number') {
-        cancelIdleCallback ? cancelIdleCallback(timer) : clearTimeout(timer);
-      }
-    };
+    // Use requestIdleCallback if available, otherwise setTimeout
+    const hasIdleCallback = typeof window !== 'undefined' && 'requestIdleCallback' in window;
+    
+    if (hasIdleCallback) {
+      const id = window.requestIdleCallback(() => setShow(true));
+      return () => window.cancelIdleCallback(id);
+    } else {
+      const id = setTimeout(() => setShow(true), 100);
+      return () => clearTimeout(id);
+    }
   }, []);
   
   if (!show) return null;
