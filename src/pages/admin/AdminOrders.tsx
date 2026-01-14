@@ -93,6 +93,55 @@ const AdminOrders = () => {
 
   useEffect(() => {
     fetchOrders();
+
+    // Set up real-time subscription for orders
+    const channel = supabase
+      .channel('admin-orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+        },
+        async (payload) => {
+          console.log('Order change detected:', payload);
+          
+          if (payload.eventType === 'UPDATE') {
+            const updatedOrder = payload.new as Order;
+            
+            // Get service and profile details for the updated order
+            const { data: serviceData } = await supabase
+              .from('services')
+              .select('name')
+              .eq('id', updatedOrder.service_id)
+              .maybeSingle();
+
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('user_id', updatedOrder.user_id)
+              .maybeSingle();
+
+            setOrders(prev => prev.map(order => 
+              order.id === updatedOrder.id 
+                ? { ...updatedOrder, services: serviceData, profiles: profileData }
+                : order
+            ));
+          } else if (payload.eventType === 'INSERT') {
+            // Fetch complete order details for new orders
+            fetchOrders();
+          } else if (payload.eventType === 'DELETE') {
+            const deletedOrder = payload.old as Order;
+            setOrders(prev => prev.filter(order => order.id !== deletedOrder.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchOrders = async () => {
