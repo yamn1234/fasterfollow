@@ -8,6 +8,9 @@ interface Profile {
   full_name: string | null;
   balance: number;
   avatar_url: string | null;
+  is_suspended: boolean;
+  suspended_at: string | null;
+  suspension_reason: string | null;
 }
 
 interface AuthContextType {
@@ -112,12 +115,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     
-    return { error: error as Error | null };
+    if (error) {
+      return { error: error as Error | null };
+    }
+
+    // Check if user is suspended
+    if (data.user) {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("is_suspended, suspension_reason")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+
+      if (profileData?.is_suspended) {
+        await supabase.auth.signOut();
+        const suspensionError = new Error(
+          profileData.suspension_reason || "تم تعليق حسابك. يرجى التواصل مع الدعم."
+        );
+        suspensionError.name = "AccountSuspended";
+        return { error: suspensionError };
+      }
+    }
+    
+    return { error: null };
   };
 
   const signOut = async () => {

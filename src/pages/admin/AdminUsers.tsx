@@ -66,7 +66,9 @@ interface User {
   created_at: string;
   email?: string;
   role?: string;
-  status?: string;
+  is_suspended: boolean;
+  suspended_at: string | null;
+  suspension_reason: string | null;
 }
 
 const AdminUsers = () => {
@@ -79,6 +81,8 @@ const AdminUsers = () => {
   const [balanceDialogOpen, setBalanceDialogOpen] = useState(false);
   const [balanceAmount, setBalanceAmount] = useState('');
   const [balanceAction, setBalanceAction] = useState<'add' | 'subtract'>('add');
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
+  const [suspensionReason, setSuspensionReason] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -115,7 +119,6 @@ const AdminUsers = () => {
           return {
             ...profile,
             role: roleData?.role || 'user',
-            status: 'active',
           };
         })
       );
@@ -196,6 +199,66 @@ const AdminUsers = () => {
     moderator: 'مشرف',
     support: 'دعم',
     user: 'مستخدم',
+  };
+
+  const handleSuspendUser = async () => {
+    if (!selectedUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          is_suspended: true,
+          suspended_at: new Date().toISOString(),
+          suspension_reason: suspensionReason || 'تم تعليق الحساب بواسطة المدير',
+        })
+        .eq('id', selectedUser.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'تم بنجاح',
+        description: 'تم تعليق الحساب بنجاح',
+      });
+
+      setSuspendDialogOpen(false);
+      setSuspensionReason('');
+      fetchUsers();
+    } catch (error) {
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ في تعليق الحساب',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleUnsuspendUser = async (user: User) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          is_suspended: false,
+          suspended_at: null,
+          suspension_reason: null,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'تم بنجاح',
+        description: 'تم إلغاء تعليق الحساب بنجاح',
+      });
+
+      fetchUsers();
+    } catch (error) {
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ في إلغاء تعليق الحساب',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -306,7 +369,11 @@ const AdminUsers = () => {
                         {format(new Date(user.created_at), 'dd MMM yyyy', { locale: ar })}
                       </TableCell>
                       <TableCell>
-                        <Badge className="bg-green-500/10 text-green-500">نشط</Badge>
+                        {user.is_suspended ? (
+                          <Badge className="bg-red-500/10 text-red-500">معلق</Badge>
+                        ) : (
+                          <Badge className="bg-green-500/10 text-green-500">نشط</Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -340,10 +407,26 @@ const AdminUsers = () => {
                               إعادة تعيين كلمة المرور
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-yellow-600">
-                              <Ban className="w-4 h-4 ml-2" />
-                              تعليق الحساب
-                            </DropdownMenuItem>
+                            {user.is_suspended ? (
+                              <DropdownMenuItem
+                                className="text-green-600"
+                                onClick={() => handleUnsuspendUser(user)}
+                              >
+                                <Ban className="w-4 h-4 ml-2" />
+                                إلغاء تعليق الحساب
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                className="text-yellow-600"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setSuspendDialogOpen(true);
+                                }}
+                              >
+                                <Ban className="w-4 h-4 ml-2" />
+                                تعليق الحساب
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem className="text-destructive">
                               <Trash2 className="w-4 h-4 ml-2" />
                               حذف
@@ -421,6 +504,38 @@ const AdminUsers = () => {
             </Button>
             <Button onClick={handleBalanceUpdate}>
               تأكيد
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Suspend Dialog */}
+      <Dialog open={suspendDialogOpen} onOpenChange={setSuspendDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>تعليق الحساب</DialogTitle>
+            <DialogDescription>
+              هل أنت متأكد من تعليق حساب المستخدم: {selectedUser?.full_name || 'بدون اسم'}؟
+              <br />
+              لن يتمكن المستخدم من تسجيل الدخول حتى يتم إلغاء التعليق.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>سبب التعليق (اختياري)</Label>
+              <Input
+                placeholder="أدخل سبب تعليق الحساب..."
+                value={suspensionReason}
+                onChange={(e) => setSuspensionReason(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSuspendDialogOpen(false)}>
+              إلغاء
+            </Button>
+            <Button variant="destructive" onClick={handleSuspendUser}>
+              تعليق الحساب
             </Button>
           </DialogFooter>
         </DialogContent>
