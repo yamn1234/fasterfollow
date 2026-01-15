@@ -6,6 +6,7 @@ export interface ServiceCategory {
   name: string;
   name_ar: string | null;
   icon: string | null;
+  image_url: string | null;
   slug: string;
 }
 
@@ -39,7 +40,7 @@ export const useServices = () => {
       const [categoriesRes, servicesRes] = await Promise.all([
         supabase
           .from('service_categories')
-          .select('id, name, name_ar, icon, slug')
+          .select('id, name, name_ar, icon, image_url, slug')
           .eq('is_active', true)
           .order('sort_order'),
         supabase
@@ -47,7 +48,7 @@ export const useServices = () => {
           .select(`
             id, name, name_ar, description, description_ar, 
             price, min_quantity, max_quantity, category_id, slug, requires_comments, delivery_time,
-            service_categories(id, name, name_ar, icon, slug)
+            service_categories(id, name, name_ar, icon, image_url, slug)
           `)
           .eq('is_active', true)
           .eq('is_archived', false)
