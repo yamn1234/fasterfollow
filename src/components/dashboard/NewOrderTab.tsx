@@ -252,10 +252,11 @@ const NewOrderTab = () => {
               variant={!selectedCategory ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedCategory("")}
-              className="shrink-0 h-10 px-3 rounded-full text-xs md:text-sm"
+              className="shrink-0 h-10 w-10 md:w-auto md:px-3 rounded-full text-xs md:text-sm p-0 md:p-2"
+              title="الكل"
             >
-              <span className="ml-1.5">📋</span>
-              الكل
+              <span className="text-lg md:text-base">📋</span>
+              <span className="hidden md:inline md:ml-1.5">الكل</span>
             </Button>
             {categories.map((cat) => (
               <Button
@@ -263,10 +264,11 @@ const NewOrderTab = () => {
                 variant={selectedCategory === cat.id ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedCategory(cat.id)}
-                className="shrink-0 h-10 px-3 rounded-full text-xs md:text-sm"
+                className="shrink-0 h-10 w-10 md:w-auto md:px-3 rounded-full text-xs md:text-sm p-0 md:p-2"
+                title={cat.name_ar || cat.name}
               >
-                <span className="ml-1.5 text-base">{getCategoryIcon(cat.name, cat.icon)}</span>
-                <span className="max-w-[80px] truncate">{cat.name_ar || cat.name}</span>
+                <span className="text-lg md:text-base">{getCategoryIcon(cat.name, cat.icon)}</span>
+                <span className="hidden md:inline md:ml-1.5 max-w-[80px] truncate">{cat.name_ar || cat.name}</span>
               </Button>
             ))}
           </div>
@@ -408,7 +410,7 @@ const NewOrderTab = () => {
         </div>
 
         {/* Order Summary */}
-        <div className="lg:col-span-1 order-1 lg:order-2">
+        <div className="lg:col-span-1 order-3 lg:order-2">
           <Card variant="elevated" className="lg:sticky lg:top-6">
             <CardHeader className="pb-3 md:pb-6">
               <CardTitle className="flex items-center gap-2 text-base md:text-lg">
