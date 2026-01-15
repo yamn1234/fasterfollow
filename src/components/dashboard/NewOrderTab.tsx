@@ -67,6 +67,28 @@ const getCategoryIcon = (name: string, icon?: string | null): string => {
   return '📦';
 };
 
+// Helper to check if the icon is a URL (image)
+const isImageUrl = (icon?: string | null): boolean => {
+  if (!icon) return false;
+  return icon.startsWith('http') || icon.startsWith('/') || icon.startsWith('data:');
+};
+
+// Component to render category icon (image or emoji)
+const CategoryIcon = ({ category, size = "md" }: { category: { name: string; icon?: string | null; image_url?: string | null }; size?: "sm" | "md" }) => {
+  const imageUrl = category.image_url;
+  const icon = category.icon;
+  const sizeClasses = size === "sm" ? "h-5 w-5" : "h-6 w-6";
+  
+  // Priority: image_url > icon (if URL) > icon (emoji) > fallback
+  if (imageUrl && isImageUrl(imageUrl)) {
+    return <img src={imageUrl} alt={category.name} className={`${sizeClasses} rounded-full object-cover`} />;
+  }
+  if (icon && isImageUrl(icon)) {
+    return <img src={icon} alt={category.name} className={`${sizeClasses} rounded-full object-cover`} />;
+  }
+  return <span className={size === "sm" ? "text-base" : "text-lg"}>{getCategoryIcon(category.name, icon)}</span>;
+};
+
 const NewOrderTab = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
@@ -252,7 +274,7 @@ const NewOrderTab = () => {
               variant={!selectedCategory ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedCategory("")}
-              className="shrink-0 h-10 w-10 md:w-auto md:px-3 rounded-full text-xs md:text-sm p-0 md:p-2"
+              className="shrink-0 h-10 w-10 md:w-auto md:px-3 rounded-full text-xs md:text-sm p-0 md:p-2 flex items-center justify-center"
               title="الكل"
             >
               <span className="text-lg md:text-base">📋</span>
@@ -264,10 +286,10 @@ const NewOrderTab = () => {
                 variant={selectedCategory === cat.id ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedCategory(cat.id)}
-                className="shrink-0 h-10 w-10 md:w-auto md:px-3 rounded-full text-xs md:text-sm p-0 md:p-2"
+                className="shrink-0 h-10 w-10 md:w-auto md:px-3 rounded-full text-xs md:text-sm p-0 md:p-2 flex items-center justify-center"
                 title={cat.name_ar || cat.name}
               >
-                <span className="text-lg md:text-base">{getCategoryIcon(cat.name, cat.icon)}</span>
+                <CategoryIcon category={cat} size="sm" />
                 <span className="hidden md:inline md:ml-1.5 max-w-[80px] truncate">{cat.name_ar || cat.name}</span>
               </Button>
             ))}
@@ -287,7 +309,33 @@ const NewOrderTab = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 md:space-y-6">
-              {/* Category Selection - Hidden on mobile since we have quick nav */}
+              {/* Category Selection - Hidden on desktop since we have quick nav */}
+              <div className="space-y-2 md:hidden">
+                <Label className="text-sm">اختر المنصة</Label>
+                <Select value={selectedCategory || "all"} onValueChange={(val) => setSelectedCategory(val === "all" ? "" : val)}>
+                  <SelectTrigger className="w-full h-11 text-sm">
+                    <SelectValue placeholder="جميع المنصات" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      <span className="flex items-center gap-2">
+                        <span>📋</span>
+                        جميع المنصات
+                      </span>
+                    </SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        <span className="flex items-center gap-2">
+                          <CategoryIcon category={cat} size="sm" />
+                          {cat.name_ar || cat.name}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Category Selection - Desktop */}
               <div className="space-y-2 hidden md:block">
                 <Label>اختر التصنيف</Label>
                 <Select value={selectedCategory || "all"} onValueChange={(val) => setSelectedCategory(val === "all" ? "" : val)}>
@@ -298,8 +346,10 @@ const NewOrderTab = () => {
                     <SelectItem value="all">جميع التصنيفات</SelectItem>
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
-                        <span className="ml-2">{getCategoryIcon(cat.name, cat.icon)}</span>
-                        {cat.name_ar || cat.name}
+                        <span className="flex items-center gap-2">
+                          <CategoryIcon category={cat} size="sm" />
+                          {cat.name_ar || cat.name}
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
