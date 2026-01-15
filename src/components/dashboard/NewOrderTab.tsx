@@ -72,6 +72,7 @@ const NewOrderTab = () => {
   const { toast } = useToast();
   const { categories, services, loading } = useServices();
   const { selectedCurrency, format, convert } = useCurrency();
+  const scrollRef = useRef<HTMLDivElement>(null);
   
   const [filteredServices, setFilteredServices] = useState(services);
   const [submitting, setSubmitting] = useState(false);
@@ -226,8 +227,6 @@ const NewOrderTab = () => {
       </div>
     );
   }
-
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
