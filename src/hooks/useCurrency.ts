@@ -5,14 +5,33 @@ export interface Currency {
   symbol: string;
   name: string;
   rate: number;
+  flag: string;
 }
 
 export const currencies: Currency[] = [
-  { code: "USD", symbol: "$", name: "دولار أمريكي", rate: 1 },
-  { code: "SAR", symbol: "ر.س", name: "ريال سعودي", rate: 3.75 },
-  { code: "AED", symbol: "د.إ", name: "درهم إماراتي", rate: 3.67 },
-  { code: "EGP", symbol: "ج.م", name: "جنيه مصري", rate: 50.85 },
-  { code: "KWD", symbol: "د.ك", name: "دينار كويتي", rate: 0.31 },
+  // العملات الأساسية
+  { code: "USD", symbol: "$", name: "دولار أمريكي", rate: 1, flag: "🇺🇸" },
+  { code: "EUR", symbol: "€", name: "يورو", rate: 0.92, flag: "🇪🇺" },
+  { code: "GBP", symbol: "£", name: "جنيه إسترليني", rate: 0.79, flag: "🇬🇧" },
+  // دول الخليج
+  { code: "SAR", symbol: "ر.س", name: "ريال سعودي", rate: 3.75, flag: "🇸🇦" },
+  { code: "AED", symbol: "د.إ", name: "درهم إماراتي", rate: 3.67, flag: "🇦🇪" },
+  { code: "KWD", symbol: "د.ك", name: "دينار كويتي", rate: 0.31, flag: "🇰🇼" },
+  { code: "BHD", symbol: "د.ب", name: "دينار بحريني", rate: 0.38, flag: "🇧🇭" },
+  { code: "OMR", symbol: "ر.ع", name: "ريال عماني", rate: 0.38, flag: "🇴🇲" },
+  { code: "QAR", symbol: "ر.ق", name: "ريال قطري", rate: 3.64, flag: "🇶🇦" },
+  // الدول العربية
+  { code: "EGP", symbol: "ج.م", name: "جنيه مصري", rate: 50.85, flag: "🇪🇬" },
+  { code: "JOD", symbol: "د.أ", name: "دينار أردني", rate: 0.71, flag: "🇯🇴" },
+  { code: "LBP", symbol: "ل.ل", name: "ليرة لبنانية", rate: 89500, flag: "🇱🇧" },
+  { code: "MAD", symbol: "د.م", name: "درهم مغربي", rate: 10.05, flag: "🇲🇦" },
+  { code: "TND", symbol: "د.ت", name: "دينار تونسي", rate: 3.15, flag: "🇹🇳" },
+  { code: "DZD", symbol: "د.ج", name: "دينار جزائري", rate: 134.5, flag: "🇩🇿" },
+  { code: "IQD", symbol: "د.ع", name: "دينار عراقي", rate: 1310, flag: "🇮🇶" },
+  { code: "SYP", symbol: "ل.س", name: "ليرة سورية", rate: 13000, flag: "🇸🇾" },
+  { code: "SDG", symbol: "ج.س", name: "جنيه سوداني", rate: 601, flag: "🇸🇩" },
+  { code: "LYD", symbol: "د.ل", name: "دينار ليبي", rate: 4.85, flag: "🇱🇾" },
+  { code: "YER", symbol: "ر.ي", name: "ريال يمني", rate: 250, flag: "🇾🇪" },
 ];
 
 const STORAGE_KEY = "preferred_currency";
