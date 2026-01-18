@@ -44,6 +44,7 @@ const ServiceDetail = lazy(() => import("./pages/ServiceDetail"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const PageView = lazy(() => import("./pages/Page"));
+const Sitemap = lazy(() => import("./pages/Sitemap"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -109,6 +110,7 @@ const App = () => (
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/:slug" element={<BlogPost />} />
                     <Route path="/page/:slug" element={<PageView />} />
+                    <Route path="/sitemap.xml" element={<Sitemap />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/admin/login" element={<AdminAuth />} />
                     <Route
