@@ -18,6 +18,10 @@ import {
   RotateCcw,
   PanelTop,
   PanelBottom,
+  Search,
+  Download,
+  ExternalLink,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -384,6 +388,10 @@ const AdminSettings = () => {
           <TabsTrigger value="payments" className="text-xs md:text-sm">
             <Database className="w-4 h-4 md:ml-2" />
             <span className="hidden md:inline">المدفوعات</span>
+          </TabsTrigger>
+          <TabsTrigger value="seo" className="text-xs md:text-sm">
+            <Search className="w-4 h-4 md:ml-2" />
+            <span className="hidden md:inline">SEO</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1611,8 +1619,196 @@ const AdminSettings = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* SEO Tab */}
+        <TabsContent value="seo" className="space-y-4">
+          <SitemapCard />
+        </TabsContent>
       </Tabs>
     </div>
+  );
+};
+
+// Sitemap Card Component
+const SitemapCard = () => {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [sitemapStats, setSitemapStats] = useState<{
+    services: number;
+    blogPosts: number;
+    pages: number;
+    categories: number;
+    lastGenerated: string;
+  } | null>(null);
+
+  const baseUrl = 'https://fasterfollow.lovable.app';
+  const sitemapUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sitemap?baseUrl=${encodeURIComponent(baseUrl)}`;
+
+  const fetchSitemapStats = async () => {
+    setLoading(true);
+    try {
+      const { data: services } = await supabase
+        .from('services')
+        .select('id', { count: 'exact' })
+        .eq('is_active', true)
+        .eq('is_archived', false);
+      
+      const { data: blogPosts } = await supabase
+        .from('blog_posts')
+        .select('id', { count: 'exact' })
+        .eq('status', 'published')
+        .eq('is_archived', false);
+      
+      const { data: pages } = await supabase
+        .from('pages')
+        .select('id', { count: 'exact' })
+        .eq('is_published', true)
+        .eq('is_archived', false);
+      
+      const { data: categories } = await supabase
+        .from('service_categories')
+        .select('id', { count: 'exact' })
+        .eq('is_active', true);
+
+      setSitemapStats({
+        services: services?.length || 0,
+        blogPosts: blogPosts?.length || 0,
+        pages: pages?.length || 0,
+        categories: categories?.length || 0,
+        lastGenerated: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error fetching sitemap stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSitemapStats();
+  }, []);
+
+  const handleDownloadSitemap = async () => {
+    try {
+      const downloadUrl = `${sitemapUrl}&download=true`;
+      window.open(downloadUrl, '_blank');
+      toast({
+        title: 'جاري التحميل',
+        description: 'سيتم تحميل ملف sitemap.xml',
+      });
+    } catch (error) {
+      toast({
+        title: 'خطأ',
+        description: 'فشل تحميل الـ Sitemap',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleViewSitemap = () => {
+    window.open(sitemapUrl, '_blank');
+  };
+
+  const handleCopyUrl = () => {
+    navigator.clipboard.writeText(sitemapUrl);
+    toast({
+      title: 'تم النسخ',
+      description: 'تم نسخ رابط الـ Sitemap',
+    });
+  };
+
+  const totalUrls = sitemapStats 
+    ? 4 + sitemapStats.services + sitemapStats.blogPosts + sitemapStats.pages + sitemapStats.categories 
+    : 0;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Search className="w-5 h-5" />
+          خريطة الموقع (Sitemap)
+        </CardTitle>
+        <CardDescription>
+          يتم تحديث الـ Sitemap تلقائياً عند إضافة أو تعديل المحتوى
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Stats */}
+        {sitemapStats && (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-primary">{totalUrls}</p>
+              <p className="text-sm text-muted-foreground">إجمالي الروابط</p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold">{sitemapStats.services}</p>
+              <p className="text-sm text-muted-foreground">خدمات</p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold">{sitemapStats.blogPosts}</p>
+              <p className="text-sm text-muted-foreground">مقالات</p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold">{sitemapStats.pages}</p>
+              <p className="text-sm text-muted-foreground">صفحات</p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold">{sitemapStats.categories}</p>
+              <p className="text-sm text-muted-foreground">تصنيفات</p>
+            </div>
+          </div>
+        )}
+
+        {/* URL Display */}
+        <div className="space-y-2">
+          <Label>رابط الـ Sitemap</Label>
+          <div className="flex gap-2">
+            <Input
+              value={sitemapUrl}
+              readOnly
+              className="font-mono text-xs"
+            />
+            <Button variant="outline" size="icon" onClick={handleCopyUrl}>
+              <ExternalLink className="w-4 h-4" />
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            أضف هذا الرابط في Google Search Console لفهرسة موقعك
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={handleViewSitemap} variant="outline">
+            <ExternalLink className="w-4 h-4 ml-2" />
+            عرض الـ Sitemap
+          </Button>
+          <Button onClick={handleDownloadSitemap}>
+            <Download className="w-4 h-4 ml-2" />
+            تحميل sitemap.xml
+          </Button>
+          <Button variant="ghost" onClick={fetchSitemapStats} disabled={loading}>
+            {loading ? (
+              <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4 ml-2" />
+            )}
+            تحديث الإحصائيات
+          </Button>
+        </div>
+
+        {/* Instructions */}
+        <div className="bg-muted/30 rounded-lg p-4 space-y-2">
+          <h4 className="font-semibold text-sm">كيفية إضافة الـ Sitemap لمحركات البحث:</h4>
+          <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+            <li>انسخ رابط الـ Sitemap أعلاه</li>
+            <li>اذهب إلى Google Search Console</li>
+            <li>اختر موقعك ثم انتقل إلى "Sitemaps"</li>
+            <li>الصق الرابط واضغط "إرسال"</li>
+          </ol>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
