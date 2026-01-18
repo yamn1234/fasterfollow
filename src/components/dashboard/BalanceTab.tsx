@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import PayPalButton, { preloadPayPalSDK } from "./PayPalButton";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface PaymentGateway {
   id: string;
@@ -82,6 +83,7 @@ const presetAmounts = [5, 10, 25, 50, 100];
 
 const BalanceTab = () => {
   const { user, refreshProfile } = useAuth();
+  const { selectedCurrency, format: formatCurrency } = useCurrency();
   const [amount, setAmount] = useState<string>("10");
   const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [gateways, setGateways] = useState<PaymentGateway[]>([]);
@@ -456,17 +458,37 @@ const BalanceTab = () => {
           {/* Order Summary */}
           <Card variant="elevated">
             <CardHeader>
-              <CardTitle>ملخص الطلب</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                <span>ملخص الطلب</span>
+                <span className="text-sm font-normal text-muted-foreground flex items-center gap-1">
+                  <span className="text-base">{selectedCurrency.flag}</span>
+                  {selectedCurrency.code}
+                </span>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">المبلغ</span>
-                <span className="font-medium">${numericAmount.toFixed(2)}</span>
+                <div className="text-left">
+                  <span className="font-medium">${numericAmount.toFixed(2)}</span>
+                  {selectedCurrency.code !== 'USD' && (
+                    <span className="text-sm text-muted-foreground mr-2">
+                      ({formatCurrency(numericAmount)})
+                    </span>
+                  )}
+                </div>
               </div>
               {selectedGateway && paymentFee > 0 && (
                 <div className="flex justify-between text-muted-foreground">
                   <span>رسوم الدفع</span>
-                  <span>+${paymentFee.toFixed(2)}</span>
+                  <div className="text-left">
+                    <span>+${paymentFee.toFixed(2)}</span>
+                    {selectedCurrency.code !== 'USD' && (
+                      <span className="text-sm mr-2">
+                        ({formatCurrency(paymentFee)})
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
               {bonusAmount > 0 && (
@@ -475,14 +497,30 @@ const BalanceTab = () => {
                     <Sparkles className="h-4 w-4" />
                     مكافأة {bonusRate}%
                   </span>
-                  <span className="font-medium">+${bonusAmount.toFixed(2)}</span>
+                  <div className="text-left">
+                    <span className="font-medium">+${bonusAmount.toFixed(2)}</span>
+                    {selectedCurrency.code !== 'USD' && (
+                      <span className="text-sm mr-2">
+                        ({formatCurrency(bonusAmount)})
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
-              <div className="border-t border-border pt-4 flex justify-between">
-                <span className="font-bold">الإجمالي</span>
-                <span className="font-bold text-xl text-gradient">
-                  ${totalAmount.toFixed(2)}
-                </span>
+              <div className="border-t border-border pt-4">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold">الإجمالي</span>
+                  <div className="text-left">
+                    <span className="font-bold text-xl text-gradient">
+                      ${totalAmount.toFixed(2)}
+                    </span>
+                    {selectedCurrency.code !== 'USD' && (
+                      <div className="text-sm text-muted-foreground">
+                        ≈ {formatCurrency(totalAmount)}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* PayPal Smart Buttons */}

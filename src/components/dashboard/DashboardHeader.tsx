@@ -184,24 +184,26 @@ const DashboardHeader = ({ onGoHome, onNavigate }: DashboardHeaderProps) => {
         {/* Currency Selector */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-1 h-9 px-2 md:px-3">
-              <span className="font-medium">{selectedCurrency.code}</span>
+            <Button variant="ghost" size="sm" className="gap-1.5 h-9 px-2 md:px-3">
+              <span className="text-base">{selectedCurrency.flag}</span>
+              <span className="font-medium hidden sm:inline">{selectedCurrency.code}</span>
               <ChevronDown className="h-3 w-3" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-popover z-50">
+          <DropdownMenuContent align="end" className="w-56 max-h-80 overflow-y-auto bg-popover z-50">
             <DropdownMenuLabel>{t('selectCurrency')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {currencies.map((currency) => (
               <DropdownMenuItem
                 key={currency.code}
-                className={`cursor-pointer flex justify-between ${
+                className={`cursor-pointer flex items-center gap-2 ${
                   selectedCurrency.code === currency.code ? "bg-primary/10 text-primary" : ""
                 }`}
                 onClick={() => setSelectedCurrency(currency)}
               >
-                <span>{currency.name}</span>
-                <span className="text-muted-foreground">{currency.symbol}</span>
+                <span className="text-lg">{currency.flag}</span>
+                <span className="flex-1">{currency.name}</span>
+                <span className="text-muted-foreground text-sm">{currency.symbol}</span>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
