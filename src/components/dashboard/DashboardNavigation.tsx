@@ -38,7 +38,7 @@ const menuItems = [
 
 const DashboardNavigation = ({ activeTab, setActiveTab }: DashboardNavigationProps) => {
   return (
-    <div className="border-b border-border/50 bg-background/95 backdrop-blur-sm sticky top-14 md:top-16 z-40">
+    <div className="hidden md:block border-b border-border/50 bg-background/95 backdrop-blur-sm sticky top-14 md:top-16 z-40">
       <div className="px-3 md:px-6 py-2 md:py-3">
         <div className="flex items-center gap-1.5 md:gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {/* Home Button */}
@@ -51,10 +51,10 @@ const DashboardNavigation = ({ activeTab, setActiveTab }: DashboardNavigationPro
                 className="shrink-0 rounded-xl hover:bg-secondary"
               >
                 <Home className="h-4 w-4" />
-                <span className="hidden sm:inline mr-2">الرئيسية</span>
+                <span className="mr-2">الرئيسية</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="sm:hidden">
+            <TooltipContent side="bottom">
               الرئيسية
             </TooltipContent>
           </Tooltip>
@@ -77,10 +77,10 @@ const DashboardNavigation = ({ activeTab, setActiveTab }: DashboardNavigationPro
                   }`}
                 >
                   <item.icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{item.title}</span>
+                  <span>{item.title}</span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="sm:hidden">
+              <TooltipContent side="bottom">
                 {item.title}
               </TooltipContent>
             </Tooltip>

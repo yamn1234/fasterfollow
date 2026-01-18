@@ -10,6 +10,7 @@ import RedeemCouponTab from "@/components/dashboard/RedeemCouponTab";
 import ProfileTab from "@/components/dashboard/ProfileTab";
 import SettingsTab from "@/components/dashboard/SettingsTab";
 import DashboardNavigation from "@/components/dashboard/DashboardNavigation";
+import MobileBottomNav from "@/components/dashboard/MobileBottomNav";
 
 export type TabType = "overview" | "new-order" | "orders" | "transactions" | "balance" | "coupon" | "support" | "profile" | "settings";
 
@@ -45,9 +46,10 @@ const Dashboard = () => {
     <div className="min-h-screen flex flex-col w-full bg-background">
       <DashboardHeader onGoHome={() => setActiveTab("overview")} onNavigate={(tab) => setActiveTab(tab as TabType)} />
       <DashboardNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
-      <main className="flex-1 p-3 md:p-6 overflow-auto">
+      <main className="flex-1 p-3 md:p-6 overflow-auto pb-20 md:pb-6">
         {renderContent()}
       </main>
+      <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
     </div>
   );
 };
