@@ -34,7 +34,45 @@ export const currencies: Currency[] = [
   { code: "YER", symbol: "ر.ي", name: "ريال يمني", rate: 250, flag: "🇾🇪" },
 ];
 
+// خريطة الدول إلى العملات
+const countryToCurrency: Record<string, string> = {
+  US: "USD", GB: "GBP", 
+  // الاتحاد الأوروبي
+  DE: "EUR", FR: "EUR", IT: "EUR", ES: "EUR", NL: "EUR", BE: "EUR", AT: "EUR", PT: "EUR", IE: "EUR", FI: "EUR", GR: "EUR",
+  // دول الخليج
+  SA: "SAR", AE: "AED", KW: "KWD", BH: "BHD", OM: "OMR", QA: "QAR",
+  // الدول العربية
+  EG: "EGP", JO: "JOD", LB: "LBP", MA: "MAD", TN: "TND", DZ: "DZD", IQ: "IQD", SY: "SYP", SD: "SDG", LY: "LYD", YE: "YER",
+};
+
 const STORAGE_KEY = "preferred_currency";
+const GEO_DETECTED_KEY = "geo_currency_detected";
+
+// كشف الموقع الجغرافي وتحديد العملة
+const detectCurrencyByLocation = async (): Promise<Currency | null> => {
+  try {
+    // استخدام API مجاني لكشف الموقع
+    const response = await fetch('https://ipapi.co/json/', { 
+      signal: AbortSignal.timeout(5000) 
+    });
+    
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    const countryCode = data.country_code;
+    
+    if (countryCode && countryToCurrency[countryCode]) {
+      const currencyCode = countryToCurrency[countryCode];
+      const currency = currencies.find(c => c.code === currencyCode);
+      return currency || null;
+    }
+    
+    return null;
+  } catch (error) {
+    console.log('Could not detect location for currency:', error);
+    return null;
+  }
+};
 
 export const useCurrency = () => {
   const [selectedCurrency, setSelectedCurrencyState] = useState<Currency>(() => {
@@ -45,6 +83,23 @@ export const useCurrency = () => {
     }
     return currencies[0];
   });
+
+  // كشف العملة حسب الموقع الجغرافي عند أول زيارة
+  useEffect(() => {
+    const hasDetected = localStorage.getItem(GEO_DETECTED_KEY);
+    const hasSavedCurrency = localStorage.getItem(STORAGE_KEY);
+    
+    // فقط إذا لم يتم الكشف مسبقاً ولم يختر المستخدم عملة
+    if (!hasDetected && !hasSavedCurrency) {
+      detectCurrencyByLocation().then(detectedCurrency => {
+        if (detectedCurrency) {
+          setSelectedCurrencyState(detectedCurrency);
+          localStorage.setItem(STORAGE_KEY, detectedCurrency.code);
+        }
+        localStorage.setItem(GEO_DETECTED_KEY, 'true');
+      });
+    }
+  }, []);
 
   // Listen for changes from other components
   useEffect(() => {
