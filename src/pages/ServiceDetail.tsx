@@ -49,6 +49,13 @@ interface ServiceDetail {
   icon: string | null;
   image_url: string | null;
   requires_comments: boolean | null;
+  // SEO fields
+  seo_title: string | null;
+  seo_description: string | null;
+  seo_keywords: string | null;
+  og_title: string | null;
+  og_description: string | null;
+  og_image: string | null;
   category: {
     name: string;
     name_ar: string | null;
@@ -90,13 +97,14 @@ const ServiceDetail = () => {
     try {
       setLoading(true);
 
-      // Fetch service
+      // Fetch service with SEO fields
       const { data: serviceData, error: serviceError } = await supabase
         .from('services')
         .select(`
           id, name, name_ar, description, description_ar, price,
           min_quantity, max_quantity, average_rating, reviews_count, delivery_time,
           icon, image_url, requires_comments,
+          seo_title, seo_description, seo_keywords, og_title, og_description, og_image,
           service_categories(name, name_ar)
         `)
         .eq('slug', slug)
@@ -110,12 +118,80 @@ const ServiceDetail = () => {
         return;
       }
 
-      setService({
+      const serviceWithSeo = {
         ...serviceData,
         requires_comments: serviceData.requires_comments,
         category: serviceData.service_categories,
-      });
+      };
+      setService(serviceWithSeo);
       setOrderQuantity(serviceData.min_quantity || 100);
+
+      // Update document title and meta tags
+      const pageTitle = serviceData.seo_title || serviceData.name_ar || serviceData.name;
+      document.title = `${pageTitle} | فاستر فولو`;
+
+      // Update meta description
+      const metaDescription = serviceData.seo_description || serviceData.description_ar || serviceData.description || '';
+      let descMeta = document.querySelector('meta[name="description"]');
+      if (descMeta) {
+        descMeta.setAttribute('content', metaDescription);
+      } else {
+        descMeta = document.createElement('meta');
+        descMeta.setAttribute('name', 'description');
+        descMeta.setAttribute('content', metaDescription);
+        document.head.appendChild(descMeta);
+      }
+
+      // Update meta keywords
+      if (serviceData.seo_keywords) {
+        let keywordsMeta = document.querySelector('meta[name="keywords"]');
+        if (keywordsMeta) {
+          keywordsMeta.setAttribute('content', serviceData.seo_keywords);
+        } else {
+          keywordsMeta = document.createElement('meta');
+          keywordsMeta.setAttribute('name', 'keywords');
+          keywordsMeta.setAttribute('content', serviceData.seo_keywords);
+          document.head.appendChild(keywordsMeta);
+        }
+      }
+
+      // Update OG tags
+      const ogTitle = serviceData.og_title || pageTitle;
+      const ogDescription = serviceData.og_description || metaDescription;
+      const ogImage = serviceData.og_image || serviceData.image_url || '';
+
+      let ogTitleMeta = document.querySelector('meta[property="og:title"]');
+      if (ogTitleMeta) {
+        ogTitleMeta.setAttribute('content', ogTitle);
+      }
+
+      let ogDescMeta = document.querySelector('meta[property="og:description"]');
+      if (ogDescMeta) {
+        ogDescMeta.setAttribute('content', ogDescription);
+      }
+
+      if (ogImage) {
+        let ogImageMeta = document.querySelector('meta[property="og:image"]');
+        if (ogImageMeta) {
+          ogImageMeta.setAttribute('content', ogImage);
+        } else {
+          ogImageMeta = document.createElement('meta');
+          ogImageMeta.setAttribute('property', 'og:image');
+          ogImageMeta.setAttribute('content', ogImage);
+          document.head.appendChild(ogImageMeta);
+        }
+      }
+
+      // Update Twitter tags
+      let twitterTitleMeta = document.querySelector('meta[name="twitter:title"]');
+      if (twitterTitleMeta) {
+        twitterTitleMeta.setAttribute('content', ogTitle);
+      }
+
+      let twitterDescMeta = document.querySelector('meta[name="twitter:description"]');
+      if (twitterDescMeta) {
+        twitterDescMeta.setAttribute('content', ogDescription);
+      }
 
       // Fetch approved reviews
       const { data: reviewsData } = await supabase
