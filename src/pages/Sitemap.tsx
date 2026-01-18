@@ -7,7 +7,7 @@ const Sitemap = () => {
   useEffect(() => {
     const fetchSitemap = async () => {
       try {
-        const baseUrl = 'https://fasterfollow.lovable.app';
+        const baseUrl = 'https://fasterfollow.net';
         const sitemapUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sitemap?baseUrl=${encodeURIComponent(baseUrl)}`;
         
         const response = await fetch(sitemapUrl);
