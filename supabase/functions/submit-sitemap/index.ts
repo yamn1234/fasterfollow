@@ -90,6 +90,22 @@ async function getAccessToken(serviceAccount: ServiceAccountKey): Promise<string
   return data.access_token;
 }
 
+function normalizeSiteUrl(input: string): string {
+  const siteUrl = (input ?? '').trim();
+
+  // Domain properties use this format in the Search Console API
+  if (siteUrl.startsWith('sc-domain:')) return siteUrl;
+
+  // URL-prefix properties must include the trailing slash (e.g. https://example.com/)
+  if (/^https?:\/\//i.test(siteUrl)) {
+    return siteUrl.endsWith('/') ? siteUrl : `${siteUrl}/`;
+  }
+
+  // If a bare domain was provided, assume https
+  const assumed = `https://${siteUrl}`;
+  return assumed.endsWith('/') ? assumed : `${assumed}/`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -107,21 +123,25 @@ Deno.serve(async (req) => {
 
     const { siteUrl, sitemapUrl } = await req.json();
 
-    if (!siteUrl || !sitemapUrl) {
+    if (typeof siteUrl !== 'string' || typeof sitemapUrl !== 'string' || !siteUrl.trim() || !sitemapUrl.trim()) {
       return new Response(
         JSON.stringify({ success: false, error: 'siteUrl and sitemapUrl are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Submitting sitemap:', sitemapUrl, 'for site:', siteUrl);
+    const normalizedSiteUrl = normalizeSiteUrl(siteUrl);
+    const normalizedSitemapUrl = sitemapUrl.trim();
+
+    console.log('Submitting sitemap:', normalizedSitemapUrl, 'for site:', normalizedSiteUrl);
 
     const serviceAccount: ServiceAccountKey = JSON.parse(serviceAccountJson);
     const accessToken = await getAccessToken(serviceAccount);
 
     // Submit sitemap to Google Search Console
-    const encodedSiteUrl = encodeURIComponent(siteUrl);
-    const encodedSitemapUrl = encodeURIComponent(sitemapUrl);
+    let apiSiteUrl = normalizedSiteUrl;
+    let encodedSiteUrl = encodeURIComponent(apiSiteUrl);
+    const encodedSitemapUrl = encodeURIComponent(normalizedSitemapUrl);
     
     const submitResponse = await fetch(
       `https://www.googleapis.com/webmasters/v3/sites/${encodedSiteUrl}/sitemaps/${encodedSitemapUrl}`,
@@ -134,15 +154,58 @@ Deno.serve(async (req) => {
       }
     );
 
-    if (!submitResponse.ok) {
-      const error = await submitResponse.text();
-      console.error('Sitemap submission error:', error);
+    let finalSubmitResponse = submitResponse;
+    let errorText = '';
+
+    if (!finalSubmitResponse.ok) {
+      errorText = await finalSubmitResponse.text();
+      console.error('Sitemap submission error:', errorText);
+
+      // If the site was verified as a Domain property in Search Console, the API expects:
+      //   sc-domain:example.com
+      if (finalSubmitResponse.status === 403 && !apiSiteUrl.startsWith('sc-domain:')) {
+        try {
+          const host = new URL(apiSiteUrl).hostname.replace(/^www\./, '');
+          const domainProperty = `sc-domain:${host}`;
+          const encodedDomainSiteUrl = encodeURIComponent(domainProperty);
+
+          console.log('Retrying sitemap submission using domain property:', domainProperty);
+
+          const retryResponse = await fetch(
+            `https://www.googleapis.com/webmasters/v3/sites/${encodedDomainSiteUrl}/sitemaps/${encodedSitemapUrl}`,
+            {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (retryResponse.ok) {
+            apiSiteUrl = domainProperty;
+            encodedSiteUrl = encodedDomainSiteUrl;
+            finalSubmitResponse = retryResponse;
+            errorText = '';
+          } else {
+            const retryError = await retryResponse.text();
+            console.error('Domain property sitemap submission error:', retryError);
+            finalSubmitResponse = retryResponse;
+            errorText = retryError || errorText;
+          }
+        } catch (retryErr) {
+          console.error('Domain property retry failed:', retryErr);
+        }
+      }
+    }
+
+    if (!finalSubmitResponse.ok) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `Failed to submit sitemap: ${submitResponse.status} - ${error}` 
+        JSON.stringify({
+          success: false,
+          error: `Failed to submit sitemap: ${finalSubmitResponse.status} - ${errorText}`,
         }),
-        { status: submitResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: finalSubmitResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
