@@ -1648,7 +1648,8 @@ const SitemapCard = () => {
   } | null>(null);
 
   const baseUrl = 'https://fasterfollow.lovable.app';
-  const sitemapUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sitemap?baseUrl=${encodeURIComponent(baseUrl)}`;
+  const sitemapEdgeFunctionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sitemap?baseUrl=${encodeURIComponent(baseUrl)}`;
+  const sitemapUrl = `${baseUrl}/sitemap.xml`; // This is the URL to submit to Google
 
   const fetchSitemapStats = async () => {
     setLoading(true);
@@ -1696,7 +1697,7 @@ const SitemapCard = () => {
 
   const handleDownloadSitemap = async () => {
     try {
-      const downloadUrl = `${sitemapUrl}&download=true`;
+      const downloadUrl = `${sitemapEdgeFunctionUrl}&download=true`;
       window.open(downloadUrl, '_blank');
       toast({
         title: 'جاري التحميل',
