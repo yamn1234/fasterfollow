@@ -1649,8 +1649,8 @@ const SitemapCard = () => {
 
   const baseUrl = 'https://fasterfollow.net';
   const sitemapEdgeFunctionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sitemap?baseUrl=${encodeURIComponent(baseUrl)}`;
-  // Use the Edge Function URL directly for Google Search Console submission
-  const sitemapUrl = sitemapEdgeFunctionUrl;
+  // Use the domain sitemap URL - Cloudflare redirects to Edge Function
+  const sitemapUrl = `${baseUrl}/sitemap.xml`;
 
   const fetchSitemapStats = async () => {
     setLoading(true);
