@@ -1647,7 +1647,7 @@ const SitemapCard = () => {
     message: string;
   } | null>(null);
 
-  const baseUrl = 'https://fasterfollow.lovable.app';
+  const baseUrl = 'https://fasterfollow.net';
   const sitemapEdgeFunctionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sitemap?baseUrl=${encodeURIComponent(baseUrl)}`;
   const sitemapUrl = `${baseUrl}/sitemap.xml`; // This is the URL to submit to Google
 
