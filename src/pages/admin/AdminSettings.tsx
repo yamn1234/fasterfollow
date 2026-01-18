@@ -1633,12 +1633,18 @@ const AdminSettings = () => {
 const SitemapCard = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [sitemapStats, setSitemapStats] = useState<{
     services: number;
     blogPosts: number;
     pages: number;
     categories: number;
     lastGenerated: string;
+  } | null>(null);
+  const [lastSubmission, setLastSubmission] = useState<{
+    success: boolean;
+    date: string;
+    message: string;
   } | null>(null);
 
   const baseUrl = 'https://fasterfollow.lovable.app';
@@ -1717,6 +1723,49 @@ const SitemapCard = () => {
     });
   };
 
+  const handleSubmitToGoogle = async () => {
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('submit-sitemap', {
+        body: {
+          siteUrl: baseUrl,
+          sitemapUrl: sitemapUrl,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        setLastSubmission({
+          success: true,
+          date: new Date().toISOString(),
+          message: 'تم إرسال الـ Sitemap بنجاح إلى Google',
+        });
+        toast({
+          title: 'تم الإرسال بنجاح',
+          description: 'تم إرسال الـ Sitemap إلى Google Search Console',
+        });
+      } else {
+        throw new Error(data.error || 'فشل إرسال الـ Sitemap');
+      }
+    } catch (error) {
+      console.error('Error submitting sitemap:', error);
+      const errorMessage = error instanceof Error ? error.message : 'فشل إرسال الـ Sitemap';
+      setLastSubmission({
+        success: false,
+        date: new Date().toISOString(),
+        message: errorMessage,
+      });
+      toast({
+        title: 'خطأ',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const totalUrls = sitemapStats 
     ? 4 + sitemapStats.services + sitemapStats.blogPosts + sitemapStats.pages + sitemapStats.categories 
     : 0;
@@ -1783,9 +1832,17 @@ const SitemapCard = () => {
             <ExternalLink className="w-4 h-4 ml-2" />
             عرض الـ Sitemap
           </Button>
-          <Button onClick={handleDownloadSitemap}>
+          <Button onClick={handleDownloadSitemap} variant="outline">
             <Download className="w-4 h-4 ml-2" />
             تحميل sitemap.xml
+          </Button>
+          <Button onClick={handleSubmitToGoogle} disabled={submitting} className="bg-green-600 hover:bg-green-700">
+            {submitting ? (
+              <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+            ) : (
+              <Globe className="w-4 h-4 ml-2" />
+            )}
+            إرسال إلى Google
           </Button>
           <Button variant="ghost" onClick={fetchSitemapStats} disabled={loading}>
             {loading ? (
@@ -1797,15 +1854,33 @@ const SitemapCard = () => {
           </Button>
         </div>
 
+        {/* Last Submission Status */}
+        {lastSubmission && (
+          <div className={`rounded-lg p-4 ${lastSubmission.success ? 'bg-green-500/10 border border-green-500/20' : 'bg-destructive/10 border border-destructive/20'}`}>
+            <div className="flex items-center gap-2">
+              {lastSubmission.success ? (
+                <div className="w-2 h-2 bg-green-500 rounded-full" />
+              ) : (
+                <div className="w-2 h-2 bg-destructive rounded-full" />
+              )}
+              <p className={`font-medium text-sm ${lastSubmission.success ? 'text-green-600' : 'text-destructive'}`}>
+                {lastSubmission.message}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {new Date(lastSubmission.date).toLocaleString('ar-SA')}
+            </p>
+          </div>
+        )}
+
         {/* Instructions */}
         <div className="bg-muted/30 rounded-lg p-4 space-y-2">
-          <h4 className="font-semibold text-sm">كيفية إضافة الـ Sitemap لمحركات البحث:</h4>
-          <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-            <li>انسخ رابط الـ Sitemap أعلاه</li>
-            <li>اذهب إلى Google Search Console</li>
-            <li>اختر موقعك ثم انتقل إلى "Sitemaps"</li>
-            <li>الصق الرابط واضغط "إرسال"</li>
-          </ol>
+          <h4 className="font-semibold text-sm">ملاحظات مهمة:</h4>
+          <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+            <li>تأكد من إضافة موقعك وتثبيته في Google Search Console</li>
+            <li>تأكد من إضافة بريد الـ Service Account كمالك للموقع</li>
+            <li>يمكنك إرسال الـ Sitemap تلقائياً عند كل تحديث للمحتوى</li>
+          </ul>
         </div>
       </CardContent>
     </Card>
