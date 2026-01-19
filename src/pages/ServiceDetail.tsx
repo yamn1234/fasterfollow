@@ -33,6 +33,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import SEOHead from '@/components/SEOHead';
+import JsonLd from '@/components/JsonLd';
 
 interface ServiceDetail {
   id: string;
@@ -357,6 +359,44 @@ const ServiceDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={service.seo_title || service.name_ar || service.name}
+        description={service.seo_description || service.description_ar || service.description || ''}
+        keywords={service.seo_keywords || undefined}
+        canonicalUrl={`/services/${slug}`}
+        ogImage={service.og_image || service.image_url || undefined}
+        ogType="product"
+        productPrice={service.price}
+        productCurrency="USD"
+        productAvailability="InStock"
+      />
+      <JsonLd
+        data={[
+          {
+            type: 'Product',
+            name: service.name_ar || service.name,
+            description: service.description_ar || service.description || '',
+            image: service.image_url || undefined,
+            brand: 'فاستر فولو',
+            price: service.price,
+            priceCurrency: 'USD',
+            availability: 'InStock',
+            url: `https://fasterfollow.net/services/${slug}`,
+            aggregateRating: service.average_rating && service.reviews_count ? {
+              ratingValue: service.average_rating,
+              reviewCount: service.reviews_count,
+            } : undefined,
+          },
+          {
+            type: 'BreadcrumbList',
+            items: [
+              { name: 'الرئيسية', url: '/' },
+              { name: 'الخدمات', url: '/services' },
+              { name: service.name_ar || service.name, url: `/services/${slug}` },
+            ],
+          },
+        ]}
+      />
       <Header />
 
       <main className="container py-8">

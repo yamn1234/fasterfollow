@@ -10,6 +10,8 @@ import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import SEOHead from '@/components/SEOHead';
+import JsonLd from '@/components/JsonLd';
 
 interface BlogPost {
   id: string;
@@ -81,6 +83,22 @@ const Blog = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="المدونة - آخر المقالات والأخبار"
+        description="اقرأ آخر المقالات والنصائح حول زيادة المتابعين وتحسين التفاعل على السوشيال ميديا"
+        keywords="مدونة, مقالات, نصائح سوشيال ميديا, زيادة متابعين"
+        canonicalUrl="/blog"
+        ogType="website"
+      />
+      <JsonLd
+        data={{
+          type: 'BreadcrumbList',
+          items: [
+            { name: 'الرئيسية', url: '/' },
+            { name: 'المدونة', url: '/blog' },
+          ],
+        }}
+      />
       <Header />
 
       <main className="container py-8">
