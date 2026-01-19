@@ -3,8 +3,27 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Cache-Control': 'public, max-age=3600',
 };
+
+// Helper to format date to ISO-8601 (YYYY-MM-DD)
+function formatDate(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+  } catch {
+    return new Date().toISOString().split('T')[0];
+  }
+}
+
+// Helper to escape XML special characters
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -20,97 +39,133 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const baseUrl = url.searchParams.get('baseUrl') || 'https://fasterfollow.net';
 
-    // Static pages - exclude sensitive pages (auth, dashboard, admin, cart, checkout)
+    // Static pages with proper priorities
     const staticPages = [
       { loc: '/', priority: '1.0', changefreq: 'daily' },
       { loc: '/services', priority: '0.9', changefreq: 'daily' },
       { loc: '/blog', priority: '0.8', changefreq: 'daily' },
     ];
 
-    // Fetch services
-    const { data: services } = await supabase
+    // Fetch all active services
+    const { data: services, error: servicesError } = await supabase
       .from('services')
-      .select('slug, updated_at')
+      .select('slug, updated_at, is_indexable')
       .eq('is_active', true)
-      .eq('is_archived', false);
+      .eq('is_archived', false)
+      .order('sort_order', { ascending: true });
 
-    // Fetch blog posts
-    const { data: blogPosts } = await supabase
+    if (servicesError) {
+      console.error('Error fetching services:', servicesError);
+    }
+
+    // Fetch all published blog posts
+    const { data: blogPosts, error: blogError } = await supabase
       .from('blog_posts')
-      .select('slug, updated_at')
+      .select('slug, updated_at, is_indexable')
       .eq('status', 'published')
-      .eq('is_archived', false);
+      .eq('is_archived', false)
+      .order('published_at', { ascending: false });
 
-    // Fetch pages
-    const { data: pages } = await supabase
+    if (blogError) {
+      console.error('Error fetching blog posts:', blogError);
+    }
+
+    // Fetch all published pages
+    const { data: pages, error: pagesError } = await supabase
       .from('pages')
-      .select('slug, updated_at')
+      .select('slug, updated_at, is_indexable')
       .eq('is_published', true)
       .eq('is_archived', false);
 
-    // Fetch service categories
-    const { data: categories } = await supabase
+    if (pagesError) {
+      console.error('Error fetching pages:', pagesError);
+    }
+
+    // Fetch active service categories (for potential category pages)
+    const { data: categories, error: categoriesError } = await supabase
       .from('service_categories')
       .select('slug, updated_at')
       .eq('is_active', true);
 
-    // Build sitemap XML
-    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+    if (categoriesError) {
+      console.error('Error fetching categories:', categoriesError);
+    }
+
+    // Build XML sitemap following sitemaps.org protocol
+    const xmlParts: string[] = [];
+    
+    // XML declaration and urlset opening
+    xmlParts.push('<?xml version="1.0" encoding="UTF-8"?>');
+    xmlParts.push('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
 
     // Add static pages
+    const today = formatDate(new Date().toISOString());
     for (const page of staticPages) {
-      xml += '  <url>\n';
-      xml += `    <loc>${baseUrl}${page.loc}</loc>\n`;
-      xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
-      xml += `    <priority>${page.priority}</priority>\n`;
-      xml += `    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>\n`;
-      xml += '  </url>\n';
+      xmlParts.push('  <url>');
+      xmlParts.push(`    <loc>${escapeXml(baseUrl + page.loc)}</loc>`);
+      xmlParts.push(`    <lastmod>${today}</lastmod>`);
+      xmlParts.push(`    <changefreq>${page.changefreq}</changefreq>`);
+      xmlParts.push(`    <priority>${page.priority}</priority>`);
+      xmlParts.push('  </url>');
     }
 
-    // Add services
+    // Add services (only indexable ones)
     if (services) {
       for (const service of services) {
-        xml += '  <url>\n';
-        xml += `    <loc>${baseUrl}/services/${service.slug}</loc>\n`;
-        xml += `    <changefreq>weekly</changefreq>\n`;
-        xml += `    <priority>0.8</priority>\n`;
-        xml += `    <lastmod>${new Date(service.updated_at).toISOString().split('T')[0]}</lastmod>\n`;
-        xml += '  </url>\n';
+        // Skip non-indexable services
+        if (service.is_indexable === false) continue;
+        
+        xmlParts.push('  <url>');
+        xmlParts.push(`    <loc>${escapeXml(baseUrl + '/services/' + service.slug)}</loc>`);
+        xmlParts.push(`    <lastmod>${formatDate(service.updated_at)}</lastmod>`);
+        xmlParts.push('    <changefreq>weekly</changefreq>');
+        xmlParts.push('    <priority>0.8</priority>');
+        xmlParts.push('  </url>');
       }
     }
 
-    // Add blog posts
+    // Add blog posts (only indexable ones)
     if (blogPosts) {
       for (const post of blogPosts) {
-        xml += '  <url>\n';
-        xml += `    <loc>${baseUrl}/blog/${post.slug}</loc>\n`;
-        xml += `    <changefreq>monthly</changefreq>\n`;
-        xml += `    <priority>0.7</priority>\n`;
-        xml += `    <lastmod>${new Date(post.updated_at).toISOString().split('T')[0]}</lastmod>\n`;
-        xml += '  </url>\n';
+        // Skip non-indexable posts
+        if (post.is_indexable === false) continue;
+        
+        xmlParts.push('  <url>');
+        xmlParts.push(`    <loc>${escapeXml(baseUrl + '/blog/' + post.slug)}</loc>`);
+        xmlParts.push(`    <lastmod>${formatDate(post.updated_at)}</lastmod>`);
+        xmlParts.push('    <changefreq>monthly</changefreq>');
+        xmlParts.push('    <priority>0.7</priority>');
+        xmlParts.push('  </url>');
       }
     }
 
-    // Add pages
+    // Add pages (only indexable ones)
     if (pages) {
       for (const page of pages) {
-        xml += '  <url>\n';
-        xml += `    <loc>${baseUrl}/page/${page.slug}</loc>\n`;
-        xml += `    <changefreq>monthly</changefreq>\n`;
-        xml += `    <priority>0.6</priority>\n`;
-        xml += `    <lastmod>${new Date(page.updated_at).toISOString().split('T')[0]}</lastmod>\n`;
-        xml += '  </url>\n';
+        // Skip non-indexable pages
+        if (page.is_indexable === false) continue;
+        
+        xmlParts.push('  <url>');
+        xmlParts.push(`    <loc>${escapeXml(baseUrl + '/page/' + page.slug)}</loc>`);
+        xmlParts.push(`    <lastmod>${formatDate(page.updated_at)}</lastmod>`);
+        xmlParts.push('    <changefreq>monthly</changefreq>');
+        xmlParts.push('    <priority>0.6</priority>');
+        xmlParts.push('  </url>');
       }
     }
 
-    // Note: Categories with query params are excluded per SEO best practices
-    // Category pages should have clean URLs like /services/category-slug instead
+    // Close urlset
+    xmlParts.push('</urlset>');
 
-    xml += '</urlset>';
+    const xml = xmlParts.join('\n');
 
-    // Validate XML - ensure no 404/301 URLs or query params
-    // The XML is already clean since we only include active/published items
+    // Calculate counts for logging
+    const serviceCount = services?.filter(s => s.is_indexable !== false).length || 0;
+    const blogCount = blogPosts?.filter(b => b.is_indexable !== false).length || 0;
+    const pageCount = pages?.filter(p => p.is_indexable !== false).length || 0;
+    const totalUrls = staticPages.length + serviceCount + blogCount + pageCount;
+
+    console.log(`Generated sitemap: ${totalUrls} URLs (${staticPages.length} static, ${serviceCount} services, ${blogCount} blog posts, ${pageCount} pages)`);
 
     // Check if download is requested
     const download = url.searchParams.get('download') === 'true';
@@ -118,23 +173,29 @@ Deno.serve(async (req) => {
     const headers: Record<string, string> = {
       ...corsHeaders,
       'Content-Type': 'application/xml; charset=utf-8',
-      'X-Robots-Tag': 'noindex', // Sitemap itself shouldn't be indexed
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      'X-Robots-Tag': 'noindex',
+      'X-Content-Type-Options': 'nosniff',
     };
 
     if (download) {
       headers['Content-Disposition'] = 'attachment; filename="sitemap.xml"';
     }
 
-    console.log(`Generated sitemap with ${staticPages.length} static pages, ${services?.length || 0} services, ${blogPosts?.length || 0} blog posts, ${pages?.length || 0} pages, ${categories?.length || 0} categories`);
-
-    return new Response(xml, { headers });
+    return new Response(xml, { 
+      status: 200,
+      headers 
+    });
   } catch (error) {
     console.error('Error generating sitemap:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to generate sitemap' }),
+      '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>',
       { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        status: 200, 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/xml; charset=utf-8' 
+        } 
       }
     );
   }
