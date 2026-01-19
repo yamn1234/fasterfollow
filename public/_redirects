@@ -1,3 +1,6 @@
+# Sitemap redirect to Edge Function
+/sitemap.xml https://jljizjuzliucwcvzrtkr.supabase.co/functions/v1/sitemap?baseUrl=https://fasterfollow.net 301
+
 # Static HTML pages for SEO (crawlers will see these)
 /services/boost-snapchat-score /services/boost-snapchat-score.html 200
 /services/snapchat-arab-followers /services/snapchat-arab-followers.html 200
