@@ -1,5 +1,5 @@
-# Static sitemap.xml is served directly from public folder
-# Dynamic sitemap API still available at /api/sitemap for admin tools
+# Sitemap proxy to backend function (serves XML directly, no redirect, no query params)
+/sitemap.xml https://jljizjuzliucwcvzrtkr.supabase.co/functions/v1/sitemap 200!
 
 # Static HTML pages for SEO (crawlers will see these)
 /services/boost-snapchat-score /services/boost-snapchat-score.html 200
