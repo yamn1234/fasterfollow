@@ -47,31 +47,51 @@ const countryToCurrency: Record<string, string> = {
 
 const STORAGE_KEY = "preferred_currency";
 const GEO_DETECTED_KEY = "geo_currency_detected";
+const GEO_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 ساعة
 
 // كشف الموقع الجغرافي وتحديد العملة
 const detectCurrencyByLocation = async (): Promise<Currency | null> => {
   try {
     // استخدام API مجاني لكشف الموقع
+    console.log('[Currency] Detecting location...');
     const response = await fetch('https://ipapi.co/json/', { 
       signal: AbortSignal.timeout(5000) 
     });
     
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.log('[Currency] API response not ok:', response.status);
+      return null;
+    }
     
     const data = await response.json();
+    console.log('[Currency] Location data:', data.country_code, data.country_name);
     const countryCode = data.country_code;
     
     if (countryCode && countryToCurrency[countryCode]) {
       const currencyCode = countryToCurrency[countryCode];
       const currency = currencies.find(c => c.code === currencyCode);
+      console.log('[Currency] Detected currency:', currencyCode);
       return currency || null;
     }
     
+    console.log('[Currency] No currency mapping for:', countryCode);
     return null;
   } catch (error) {
-    console.log('Could not detect location for currency:', error);
+    console.log('[Currency] Could not detect location:', error);
     return null;
   }
+};
+
+// التحقق مما إذا كان يجب إعادة الكشف
+const shouldRedetect = (): boolean => {
+  const lastDetection = localStorage.getItem(GEO_DETECTED_KEY);
+  if (!lastDetection) return true;
+  
+  const timestamp = parseInt(lastDetection, 10);
+  if (isNaN(timestamp)) return true;
+  
+  // إعادة الكشف إذا مر أكثر من 24 ساعة
+  return Date.now() - timestamp > GEO_CACHE_DURATION;
 };
 
 export const useCurrency = () => {
@@ -84,20 +104,24 @@ export const useCurrency = () => {
     return currencies[0];
   });
 
-  // كشف العملة حسب الموقع الجغرافي عند أول زيارة
+  // كشف العملة حسب الموقع الجغرافي
   useEffect(() => {
-    const hasDetected = localStorage.getItem(GEO_DETECTED_KEY);
     const hasSavedCurrency = localStorage.getItem(STORAGE_KEY);
     
-    // فقط إذا لم يتم الكشف مسبقاً ولم يختر المستخدم عملة
-    if (!hasDetected && !hasSavedCurrency) {
+    // فقط إذا لم يختر المستخدم عملة يدوياً ويجب إعادة الكشف
+    if (!hasSavedCurrency && shouldRedetect()) {
+      console.log('[Currency] Starting geo-detection...');
       detectCurrencyByLocation().then(detectedCurrency => {
         if (detectedCurrency) {
+          console.log('[Currency] Setting detected currency:', detectedCurrency.code);
           setSelectedCurrencyState(detectedCurrency);
           localStorage.setItem(STORAGE_KEY, detectedCurrency.code);
         }
-        localStorage.setItem(GEO_DETECTED_KEY, 'true');
+        // حفظ وقت الكشف
+        localStorage.setItem(GEO_DETECTED_KEY, Date.now().toString());
       });
+    } else {
+      console.log('[Currency] Skipping detection - saved:', hasSavedCurrency, 'redetect:', shouldRedetect());
     }
   }, []);
 
