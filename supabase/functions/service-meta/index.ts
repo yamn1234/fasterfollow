@@ -5,7 +5,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function escapeHtml(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 Deno.serve(async (req) => {
+  console.log('service-meta function called');
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -18,6 +30,8 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const slug = url.searchParams.get('slug');
     const baseUrl = url.searchParams.get('baseUrl') || 'https://fasterfollow.net';
+
+    console.log('Slug:', slug);
 
     if (!slug) {
       return new Response(
@@ -47,11 +61,14 @@ Deno.serve(async (req) => {
     }
 
     if (!service) {
+      console.log('Service not found for slug:', slug);
       return new Response(
         JSON.stringify({ error: 'Service not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('Service found:', service.name);
 
     // Build meta tags
     const title = service.seo_title || service.name_ar || service.name;
@@ -136,13 +153,3 @@ Deno.serve(async (req) => {
     );
   }
 });
-
-function escapeHtml(text: string): string {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
