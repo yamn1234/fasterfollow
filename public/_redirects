@@ -1,0 +1,10 @@
+# Redirect crawlers to static HTML files
+/services/boost-snapchat-score /services/boost-snapchat-score.html 200
+/services/snapchat-arab-followers /services/snapchat-arab-followers.html 200
+/services/Instagram-Arab-followers /services/Instagram-Arab-followers.html 200
+/services/tiktok-arab-followers- /services/tiktok-arab-followers-.html 200
+/services/youtube-native-ads-views /services/youtube-native-ads-views.html 200
+/services/Jaco-followers /services/Jaco-followers.html 200
+
+# SPA fallback for all other routes
+/* /index.html 200
