@@ -10,6 +10,8 @@ import Footer from "@/components/Footer";
 import { useHomepageSettings } from "@/hooks/useHomepageSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import SEOHead from "@/components/SEOHead";
+import JsonLd, { getOrganizationSchema, getWebSiteSchema } from "@/components/JsonLd";
 
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
@@ -75,6 +77,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEOHead
+        title="أفضل سيرفر بيع متابعين بالخليج"
+        description="أفضل موقع لزيادة المتابعين والتفاعل على انستجرام، تيك توك، سناب شات، يوتيوب وتويتر. خدمات سريعة وآمنة بأفضل الأسعار."
+        keywords="زيادة متابعين, شراء متابعين, متابعين انستجرام, متابعين تيك توك, متابعين سناب شات"
+        canonicalUrl="/"
+      />
+      <JsonLd data={[getOrganizationSchema(), getWebSiteSchema()]} />
       <Header />
       <main className="flex-1 min-h-[calc(100vh-200px)]">
         {sections.map((section) => renderSection(section.id))}

@@ -1,8 +1,32 @@
+# FasterFollow.net Robots.txt - 2025 Best Practices
+# Last updated: 2025-01-19
+
+# Allow all major search engines
 User-agent: Googlebot
 Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /api/*
+Disallow: /*?*
+
+User-agent: Googlebot-Image
+Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /admin
 
 User-agent: Bingbot
 Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /api/*
+Disallow: /*?*
 
 User-agent: Twitterbot
 Allow: /
@@ -10,7 +34,36 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
+User-agent: LinkedInBot
 Allow: /
 
+User-agent: Slurp
+Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /admin
+
+User-agent: DuckDuckBot
+Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /admin
+
+User-agent: *
+Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /api/*
+Disallow: /*?*
+
+# Sitemap location
 Sitemap: https://fasterfollow.net/sitemap.xml
+
+# Crawl-delay for general bots (optional)
+Crawl-delay: 1
+
+# Host directive (for Yandex)
+Host: https://fasterfollow.net

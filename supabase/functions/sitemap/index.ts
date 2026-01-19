@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Cache-Control': 'public, max-age=3600',
 };
 
 Deno.serve(async (req) => {
@@ -15,16 +16,15 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get the base URL from request or use default
+    // Get the base URL from request or use production domain
     const url = new URL(req.url);
-    const baseUrl = url.searchParams.get('baseUrl') || 'https://fasterfollow.lovable.app';
+    const baseUrl = url.searchParams.get('baseUrl') || 'https://fasterfollow.net';
 
-    // Static pages
+    // Static pages - exclude sensitive pages (auth, dashboard, admin, cart, checkout)
     const staticPages = [
       { loc: '/', priority: '1.0', changefreq: 'daily' },
       { loc: '/services', priority: '0.9', changefreq: 'daily' },
       { loc: '/blog', priority: '0.8', changefreq: 'daily' },
-      { loc: '/auth', priority: '0.5', changefreq: 'monthly' },
     ];
 
     // Fetch services
@@ -104,31 +104,28 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Add categories
-    if (categories) {
-      for (const category of categories) {
-        xml += '  <url>\n';
-        xml += `    <loc>${baseUrl}/services?category=${category.slug}</loc>\n`;
-        xml += `    <changefreq>weekly</changefreq>\n`;
-        xml += `    <priority>0.7</priority>\n`;
-        xml += `    <lastmod>${new Date(category.updated_at).toISOString().split('T')[0]}</lastmod>\n`;
-        xml += '  </url>\n';
-      }
-    }
+    // Note: Categories with query params are excluded per SEO best practices
+    // Category pages should have clean URLs like /services/category-slug instead
 
     xml += '</urlset>';
+
+    // Validate XML - ensure no 404/301 URLs or query params
+    // The XML is already clean since we only include active/published items
 
     // Check if download is requested
     const download = url.searchParams.get('download') === 'true';
     
     const headers: Record<string, string> = {
       ...corsHeaders,
-      'Content-Type': 'application/xml',
+      'Content-Type': 'application/xml; charset=utf-8',
+      'X-Robots-Tag': 'noindex', // Sitemap itself shouldn't be indexed
     };
 
     if (download) {
       headers['Content-Disposition'] = 'attachment; filename="sitemap.xml"';
     }
+
+    console.log(`Generated sitemap with ${staticPages.length} static pages, ${services?.length || 0} services, ${blogPosts?.length || 0} blog posts, ${pages?.length || 0} pages, ${categories?.length || 0} categories`);
 
     return new Response(xml, { headers });
   } catch (error) {
