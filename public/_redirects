@@ -1,5 +1,5 @@
-# Sitemap proxy to backend function (serves XML directly, no redirect, no query params)
-/sitemap.xml https://jljizjuzliucwcvzrtkr.supabase.co/functions/v1/sitemap 200!
+# Sitemap is served as static file from public/sitemap.xml
+# The _headers file ensures correct Content-Type: application/xml
 
 # Static HTML pages for SEO (crawlers will see these)
 /services/boost-snapchat-score /services/boost-snapchat-score.html 200
