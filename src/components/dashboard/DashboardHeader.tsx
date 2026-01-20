@@ -321,7 +321,7 @@ const DashboardHeader = ({ onGoHome, onNavigate }: DashboardHeaderProps) => {
               <div className="flex flex-col">
                 <span>{profile?.full_name || (language === 'ar' ? "المستخدم" : "User")}</span>
                 <span className="text-xs text-muted-foreground font-normal">
-                  {t('yourBalance')}: ${profile?.balance?.toFixed(2) || "0.00"}
+                  {t('yourBalance')}: {convertedBalance}
                 </span>
               </div>
             </DropdownMenuLabel>

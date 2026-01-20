@@ -18,6 +18,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface Order {
   id: string;
@@ -43,6 +44,7 @@ interface OverviewTabProps {
 const OverviewTab = ({ onNavigate }: OverviewTabProps) => {
   const { profile, user } = useAuth();
   const { t, isArabic } = useTranslation();
+  const { format } = useCurrency();
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<OrderStats>({ total: 0, completed: 0, inProgress: 0 });
   const [loading, setLoading] = useState(true);
@@ -111,7 +113,7 @@ const OverviewTab = ({ onNavigate }: OverviewTabProps) => {
   const statsData = [
     {
       title: isArabic ? "الرصيد الحالي" : "Current Balance",
-      value: `$${profile?.balance?.toFixed(2) || "0.00"}`,
+      value: format(profile?.balance || 0),
       icon: Wallet,
       trend: isArabic ? "رصيدك المتاح للشراء" : "Available for purchases",
       trendUp: (profile?.balance || 0) > 0,
