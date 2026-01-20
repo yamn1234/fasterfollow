@@ -1,10 +1,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Zap, Shield, DollarSign, Headphones, Gift, Clock, LucideIcon } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Feature {
   icon: string;
   title: string;
+  title_en?: string;
   description: string;
+  description_en?: string;
 }
 
 interface FeaturesSettings {
@@ -26,18 +29,60 @@ const iconMap: Record<string, LucideIcon> = {
   Clock,
 };
 
-const defaultFeatures: Feature[] = [
-  { icon: 'Zap', title: 'سرعة فائقة', description: 'تبدأ الخدمة خلال دقائق من الطلب مع تسليم تدريجي طبيعي' },
-  { icon: 'Shield', title: 'ضمان كامل', description: 'نضمن جميع خدماتنا مع تعويض فوري في حالة النقص' },
-  { icon: 'DollarSign', title: 'أسعار تنافسية', description: 'أفضل الأسعار في السوق مع جودة عالية لا مثيل لها' },
-  { icon: 'Headphones', title: 'دعم فني 24/7', description: 'فريق دعم متخصص جاهز لمساعدتك في أي وقت' },
-  { icon: 'Gift', title: 'هدايا مجانية', description: 'احصل على رصيد مجاني عند كل شحن وخدمات مجانية' },
-  { icon: 'Clock', title: 'تشغيل آلي', description: 'نظام آلي متطور لبدء الخدمة فوراً بدون تأخير' },
-];
-
 const FeaturesSection = ({ settings }: FeaturesSectionProps) => {
-  const title = settings?.title || 'لماذا متجر المتابعين؟';
-  const subtitle = settings?.subtitle || 'نقدم لك تجربة فريدة ومميزة تجعلنا الخيار الأول لآلاف العملاء';
+  const { t, isArabic } = useTranslation();
+  
+  const defaultFeatures: Feature[] = [
+    { 
+      icon: 'Zap', 
+      title: 'سرعة فائقة', 
+      title_en: 'Ultra Fast',
+      description: 'تبدأ الخدمة خلال دقائق من الطلب مع تسليم تدريجي طبيعي',
+      description_en: 'Service starts within minutes with natural gradual delivery'
+    },
+    { 
+      icon: 'Shield', 
+      title: 'ضمان كامل', 
+      title_en: 'Full Guarantee',
+      description: 'نضمن جميع خدماتنا مع تعويض فوري في حالة النقص',
+      description_en: 'We guarantee all services with immediate compensation for any shortage'
+    },
+    { 
+      icon: 'DollarSign', 
+      title: 'أسعار تنافسية', 
+      title_en: 'Competitive Prices',
+      description: 'أفضل الأسعار في السوق مع جودة عالية لا مثيل لها',
+      description_en: 'Best prices in the market with unmatched quality'
+    },
+    { 
+      icon: 'Headphones', 
+      title: 'دعم فني 24/7', 
+      title_en: '24/7 Support',
+      description: 'فريق دعم متخصص جاهز لمساعدتك في أي وقت',
+      description_en: 'Dedicated support team ready to help you anytime'
+    },
+    { 
+      icon: 'Gift', 
+      title: 'هدايا مجانية', 
+      title_en: 'Free Bonuses',
+      description: 'احصل على رصيد مجاني عند كل شحن وخدمات مجانية',
+      description_en: 'Get free balance on every deposit and free services'
+    },
+    { 
+      icon: 'Clock', 
+      title: 'تشغيل آلي', 
+      title_en: 'Auto Processing',
+      description: 'نظام آلي متطور لبدء الخدمة فوراً بدون تأخير',
+      description_en: 'Advanced automated system for instant service start'
+    },
+  ];
+
+  const title = isArabic 
+    ? (settings?.title || 'لماذا متجر المتابعين؟')
+    : 'Why Choose Us?';
+  const subtitle = isArabic 
+    ? (settings?.subtitle || 'نقدم لك تجربة فريدة ومميزة تجعلنا الخيار الأول لآلاف العملاء')
+    : 'We offer a unique experience that makes us the first choice for thousands of customers';
   const features = settings?.features || defaultFeatures;
 
   return (
@@ -55,15 +100,18 @@ const FeaturesSection = ({ settings }: FeaturesSectionProps) => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
           {features.map((feature, index) => {
             const IconComponent = iconMap[feature.icon] || Zap;
+            const featureTitle = isArabic ? feature.title : (feature.title_en || feature.title);
+            const featureDescription = isArabic ? feature.description : (feature.description_en || feature.description);
+            
             return (
               <Card key={index} variant="feature" className="group">
                 <CardContent className="p-6 sm:p-8 text-center">
                   <div className="mx-auto w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <IconComponent className="h-8 w-8 text-primary-foreground" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                  <h3 className="text-xl font-bold mb-3">{featureTitle}</h3>
                   <p className="text-muted-foreground leading-relaxed">
-                    {feature.description}
+                    {featureDescription}
                   </p>
                 </CardContent>
               </Card>

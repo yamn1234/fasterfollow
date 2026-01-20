@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Category {
   id: string;
@@ -32,6 +33,8 @@ const platformColors: Record<string, string> = {
   'سناب': 'from-yellow-400 to-yellow-500',
   'threads': 'from-gray-800 to-gray-900',
   'ثريدز': 'from-gray-800 to-gray-900',
+  'jaco': 'from-green-500 to-green-700',
+  'جاكو': 'from-green-500 to-green-700',
 };
 
 const platformIcons: Record<string, string> = {
@@ -51,6 +54,8 @@ const platformIcons: Record<string, string> = {
   'سناب': '👻',
   'threads': '🧵',
   'ثريدز': '🧵',
+  'jaco': '🟢',
+  'جاكو': '🟢',
 };
 
 const getPlatformColor = (name: string) => {
@@ -95,9 +100,17 @@ interface PlatformsSectionProps {
 }
 
 const PlatformsSection = ({ settings }: PlatformsSectionProps) => {
-  const title = settings?.title || 'اختر';
-  const titleHighlight = settings?.title_highlight || 'منصتك المفضلة';
-  const subtitle = settings?.subtitle || 'نوفر خدمات لجميع منصات التواصل الاجتماعي الشهيرة بأسعار تنافسية وجودة عالية';
+  const { t, isArabic } = useTranslation();
+  
+  const title = isArabic 
+    ? (settings?.title || 'اختر')
+    : 'Choose Your';
+  const titleHighlight = isArabic 
+    ? (settings?.title_highlight || 'منصتك المفضلة')
+    : 'Favorite Platform';
+  const subtitle = isArabic 
+    ? (settings?.subtitle || 'نوفر خدمات لجميع منصات التواصل الاجتماعي الشهيرة بأسعار تنافسية وجودة عالية')
+    : 'We provide services for all popular social media platforms at competitive prices and high quality';
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -154,6 +167,13 @@ const PlatformsSection = ({ settings }: PlatformsSectionProps) => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 stagger-children">
           {categories.map((category) => {
             const visual = getCategoryVisual(category);
+            const categoryName = isArabic 
+              ? (category.name_ar || category.name)
+              : category.name;
+            const categoryDescription = isArabic 
+              ? (category.description_ar || category.description)
+              : category.description;
+              
             return (
             <Link key={category.id} to={`/services?category=${category.slug}`}>
               <Card variant="platform" className="cursor-pointer group h-full">
@@ -161,7 +181,7 @@ const PlatformsSection = ({ settings }: PlatformsSectionProps) => {
                   {visual.type === 'image' ? (
                     <img
                       src={visual.value}
-                      alt={category.name_ar || category.name}
+                      alt={categoryName}
                       width="64"
                       height="64"
                       loading="lazy"
@@ -175,11 +195,11 @@ const PlatformsSection = ({ settings }: PlatformsSectionProps) => {
                     </div>
                   )}
                   <h3 className="font-bold text-lg mb-2">
-                    {category.name_ar || category.name}
+                    {categoryName}
                   </h3>
-                  {category.description_ar || category.description ? (
+                  {categoryDescription ? (
                     <p className="text-xs text-muted-foreground line-clamp-2">
-                      {category.description_ar || category.description}
+                      {categoryDescription}
                     </p>
                   ) : null}
                 </CardContent>
