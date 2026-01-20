@@ -10,12 +10,14 @@ import {
   Clock, 
   TrendingUp,
   ArrowUpLeft,
+  ArrowUpRight,
   Plus,
   Loader2,
   Zap
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { ar } from "date-fns/locale";
+import { ar, enUS } from "date-fns/locale";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Order {
   id: string;
@@ -34,26 +36,27 @@ interface OrderStats {
   inProgress: number;
 }
 
-const statusLabels: Record<string, { label: string; color: string }> = {
-  pending: { label: "في الانتظار", color: "bg-yellow-500" },
-  processing: { label: "قيد المعالجة", color: "bg-blue-500" },
-  in_progress: { label: "قيد التنفيذ", color: "bg-orange-500" },
-  completed: { label: "مكتمل", color: "bg-green-500" },
-  partial: { label: "جزئي", color: "bg-purple-500" },
-  cancelled: { label: "ملغي", color: "bg-gray-500" },
-  refunded: { label: "مسترد", color: "bg-blue-400" },
-  failed: { label: "فشل", color: "bg-red-500" },
-};
-
 interface OverviewTabProps {
   onNavigate?: (tab: string) => void;
 }
 
 const OverviewTab = ({ onNavigate }: OverviewTabProps) => {
   const { profile, user } = useAuth();
+  const { t, isArabic } = useTranslation();
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<OrderStats>({ total: 0, completed: 0, inProgress: 0 });
   const [loading, setLoading] = useState(true);
+
+  const statusLabels: Record<string, { label: string; color: string }> = {
+    pending: { label: isArabic ? "في الانتظار" : "Pending", color: "bg-yellow-500" },
+    processing: { label: isArabic ? "قيد المعالجة" : "Processing", color: "bg-blue-500" },
+    in_progress: { label: isArabic ? "قيد التنفيذ" : "In Progress", color: "bg-orange-500" },
+    completed: { label: isArabic ? "مكتمل" : "Completed", color: "bg-green-500" },
+    partial: { label: isArabic ? "جزئي" : "Partial", color: "bg-purple-500" },
+    cancelled: { label: isArabic ? "ملغي" : "Cancelled", color: "bg-gray-500" },
+    refunded: { label: isArabic ? "مسترد" : "Refunded", color: "bg-blue-400" },
+    failed: { label: isArabic ? "فشل" : "Failed", color: "bg-red-500" },
+  };
 
   useEffect(() => {
     if (user) {
@@ -102,36 +105,40 @@ const OverviewTab = ({ onNavigate }: OverviewTabProps) => {
     }
   };
 
-  const firstName = profile?.full_name?.split(" ")[0] || "المستخدم";
+  const firstName = profile?.full_name?.split(" ")[0] || (isArabic ? "المستخدم" : "User");
   const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 
   const statsData = [
     {
-      title: "الرصيد الحالي",
+      title: isArabic ? "الرصيد الحالي" : "Current Balance",
       value: `$${profile?.balance?.toFixed(2) || "0.00"}`,
       icon: Wallet,
-      trend: "رصيدك المتاح للشراء",
+      trend: isArabic ? "رصيدك المتاح للشراء" : "Available for purchases",
       trendUp: (profile?.balance || 0) > 0,
     },
     {
-      title: "إجمالي الطلبات",
+      title: isArabic ? "إجمالي الطلبات" : "Total Orders",
       value: stats.total.toString(),
       icon: ShoppingBag,
-      trend: stats.total > 0 ? `${stats.total} طلب حتى الآن` : "ابدأ طلبك الأول",
+      trend: stats.total > 0 
+        ? (isArabic ? `${stats.total} طلب حتى الآن` : `${stats.total} orders so far`)
+        : (isArabic ? "ابدأ طلبك الأول" : "Start your first order"),
       trendUp: stats.total > 0,
     },
     {
-      title: "طلبات مكتملة",
+      title: isArabic ? "طلبات مكتملة" : "Completed Orders",
       value: stats.completed.toString(),
       icon: CheckCircle,
-      trend: `${completionRate}% نسبة الإكمال`,
+      trend: `${completionRate}% ${isArabic ? 'نسبة الإكمال' : 'completion rate'}`,
       trendUp: completionRate > 50,
     },
     {
-      title: "طلبات قيد التنفيذ",
+      title: isArabic ? "طلبات قيد التنفيذ" : "In Progress",
       value: stats.inProgress.toString(),
       icon: Clock,
-      trend: stats.inProgress > 0 ? `${stats.inProgress} طلب نشط` : "لا توجد طلبات نشطة",
+      trend: stats.inProgress > 0 
+        ? (isArabic ? `${stats.inProgress} طلب نشط` : `${stats.inProgress} active orders`)
+        : (isArabic ? "لا توجد طلبات نشطة" : "No active orders"),
       trendUp: false,
     },
   ];
@@ -144,24 +151,28 @@ const OverviewTab = ({ onNavigate }: OverviewTabProps) => {
     );
   }
 
+  const ArrowIcon = isArabic ? ArrowUpLeft : ArrowUpRight;
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Welcome */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">مرحباً، {firstName}! 👋</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">
+            {isArabic ? `مرحباً، ${firstName}! 👋` : `Hello, ${firstName}! 👋`}
+          </h1>
           <p className="text-muted-foreground mt-1">
-            إليك ملخص نشاطك في FasterFollow
+            {isArabic ? 'إليك ملخص نشاطك في FasterFollow' : 'Here is your FasterFollow activity summary'}
           </p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" onClick={() => onNavigate?.("balance")}>
             <Plus className="h-4 w-4" />
-            شحن الرصيد
+            {t('addBalance')}
           </Button>
           <Button variant="default" onClick={() => onNavigate?.("new-order")}>
             <Zap className="h-4 w-4" />
-            طلب جديد
+            {t('newOrder')}
           </Button>
         </div>
       </div>
@@ -194,10 +205,10 @@ const OverviewTab = ({ onNavigate }: OverviewTabProps) => {
       {/* Recent Orders */}
       <Card variant="elevated">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>آخر الطلبات</CardTitle>
+          <CardTitle>{isArabic ? 'آخر الطلبات' : 'Recent Orders'}</CardTitle>
           <Button variant="ghost" size="sm" className="gap-1" onClick={() => onNavigate?.("orders")}>
-            عرض الكل
-            <ArrowUpLeft className="h-4 w-4" />
+            {isArabic ? 'عرض الكل' : 'View All'}
+            <ArrowIcon className="h-4 w-4" />
           </Button>
         </CardHeader>
         <CardContent>
@@ -205,6 +216,9 @@ const OverviewTab = ({ onNavigate }: OverviewTabProps) => {
             <div className="space-y-3">
               {recentOrders.map((order) => {
                 const statusInfo = statusLabels[order.status || "pending"];
+                const serviceName = isArabic 
+                  ? (order.service?.name_ar || order.service?.name)
+                  : (order.service?.name || order.service?.name_ar);
                 return (
                   <div
                     key={order.id}
@@ -216,20 +230,23 @@ const OverviewTab = ({ onNavigate }: OverviewTabProps) => {
                       </div>
                       <div>
                         <p className="font-medium text-sm md:text-base">
-                          {order.service?.name_ar || order.service?.name || "خدمة محذوفة"}
+                          {serviceName || (isArabic ? "خدمة محذوفة" : "Deleted service")}
                         </p>
                         <p className="text-xs md:text-sm text-muted-foreground">
-                          #{order.id.slice(0, 8)} • {order.quantity.toLocaleString()} وحدة
+                          #{order.id.slice(0, 8)} • {order.quantity.toLocaleString()} {isArabic ? 'وحدة' : 'units'}
                         </p>
                       </div>
                     </div>
-                    <div className="text-left">
+                    <div className={isArabic ? "text-left" : "text-right"}>
                       <div className="flex items-center gap-2">
                         <span className={`h-2 w-2 rounded-full ${statusInfo.color}`} />
                         <span className="text-xs md:text-sm font-medium">{statusInfo.label}</span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(order.created_at), { addSuffix: true, locale: ar })}
+                        {formatDistanceToNow(new Date(order.created_at), { 
+                          addSuffix: true, 
+                          locale: isArabic ? ar : enUS 
+                        })}
                       </p>
                     </div>
                   </div>
@@ -239,10 +256,12 @@ const OverviewTab = ({ onNavigate }: OverviewTabProps) => {
           ) : (
             <div className="text-center py-12">
               <ShoppingBag className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-              <p className="text-muted-foreground">لا توجد طلبات بعد</p>
+              <p className="text-muted-foreground">
+                {isArabic ? 'لا توجد طلبات بعد' : 'No orders yet'}
+              </p>
               <Button variant="default" className="mt-4" onClick={() => onNavigate?.("new-order")}>
                 <Zap className="h-4 w-4" />
-                ابدأ طلبك الأول
+                {isArabic ? 'ابدأ طلبك الأول' : 'Start your first order'}
               </Button>
             </div>
           )}

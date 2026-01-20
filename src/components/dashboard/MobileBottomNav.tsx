@@ -4,6 +4,11 @@ import {
   Zap,
   Wallet,
   MoreHorizontal,
+  Receipt,
+  MessageSquare,
+  Ticket,
+  User,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,30 +17,32 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Receipt, MessageSquare, Ticket, User, Settings } from "lucide-react";
 import type { TabType } from "@/pages/Dashboard";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface MobileBottomNavProps {
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
 }
 
-const mainItems = [
-  { id: "overview" as TabType, title: "الرئيسية", icon: LayoutDashboard },
-  { id: "new-order" as TabType, title: "طلب جديد", icon: Zap },
-  { id: "orders" as TabType, title: "طلباتي", icon: ShoppingBag },
-  { id: "balance" as TabType, title: "الرصيد", icon: Wallet },
-];
-
-const moreItems = [
-  { id: "transactions" as TabType, title: "سجل العمليات", icon: Receipt },
-  { id: "coupon" as TabType, title: "كوبون", icon: Ticket },
-  { id: "support" as TabType, title: "الدعم الفني", icon: MessageSquare },
-  { id: "profile" as TabType, title: "الملف الشخصي", icon: User },
-  { id: "settings" as TabType, title: "الإعدادات", icon: Settings },
-];
-
 const MobileBottomNav = ({ activeTab, setActiveTab }: MobileBottomNavProps) => {
+  const { t, isArabic } = useTranslation();
+
+  const mainItems = [
+    { id: "overview" as TabType, title: t('home'), icon: LayoutDashboard },
+    { id: "new-order" as TabType, title: t('newOrder'), icon: Zap },
+    { id: "orders" as TabType, title: t('myOrders'), icon: ShoppingBag },
+    { id: "balance" as TabType, title: isArabic ? 'الرصيد' : 'Balance', icon: Wallet },
+  ];
+
+  const moreItems = [
+    { id: "transactions" as TabType, title: t('transactions'), icon: Receipt },
+    { id: "coupon" as TabType, title: t('coupon'), icon: Ticket },
+    { id: "support" as TabType, title: t('support'), icon: MessageSquare },
+    { id: "profile" as TabType, title: t('profile'), icon: User },
+    { id: "settings" as TabType, title: t('settings'), icon: Settings },
+  ];
+
   const isMoreActive = moreItems.some(item => item.id === activeTab);
 
   return (
@@ -70,7 +77,7 @@ const MobileBottomNav = ({ activeTab, setActiveTab }: MobileBottomNavProps) => {
               }`}
             >
               <MoreHorizontal className={`h-5 w-5 ${isMoreActive ? "text-primary" : ""}`} />
-              <span className="text-[10px] font-medium">المزيد</span>
+              <span className="text-[10px] font-medium">{isArabic ? 'المزيد' : 'More'}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 mb-2">
