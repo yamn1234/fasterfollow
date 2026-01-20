@@ -1,9 +1,11 @@
 import { ShoppingCart, Mail, MessageCircle, Phone, Send } from "lucide-react";
 import { useHeaderFooterSettings } from "@/hooks/useHeaderFooterSettings";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const { footerSettings } = useHeaderFooterSettings();
+  const { t, isArabic } = useTranslation();
 
   const getSocialIcon = (type: string) => {
     switch (type) {
@@ -22,6 +24,10 @@ const Footer = () => {
   };
 
   const enabledSocialLinks = footerSettings.social_links.filter(link => link.enabled);
+
+  const footerDescription = isArabic 
+    ? footerSettings.description
+    : 'The best social media services store in the Arab world. We provide high-quality services at competitive prices.';
 
   return (
     <footer className="bg-foreground text-background py-12 lg:py-16">
@@ -47,7 +53,7 @@ const Footer = () => {
               <span className="text-xl font-bold">{footerSettings.logo_text}</span>
             </a>
             <p className="text-background/70 mb-6 leading-relaxed">
-              {footerSettings.description}
+              {footerDescription}
             </p>
             <div className="flex gap-3">
               {enabledSocialLinks.map((link, index) => (
@@ -86,7 +92,7 @@ const Footer = () => {
 
         <div className="border-t border-background/10 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-background/60 text-sm">
-            © {currentYear} {footerSettings.copyright_text}
+            © {currentYear} {footerSettings.copyright_text}. {t('allRightsReserved')}
           </p>
           {footerSettings.show_payment_logos && (
             <div className="flex items-center gap-4">

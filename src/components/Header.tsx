@@ -4,11 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, ShoppingCart, User, LayoutDashboard, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHeaderFooterSettings } from "@/hooks/useHeaderFooterSettings";
+import { useTranslation } from "@/hooks/useTranslation";
+import LanguageToggle from "@/components/LanguageToggle";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, profile } = useAuth();
   const { headerSettings } = useHeaderFooterSettings();
+  const { t, isArabic } = useTranslation();
 
   const navItems = headerSettings.nav_items;
 
@@ -60,10 +63,12 @@ const Header = () => {
         </nav>
 
         {/* Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <LanguageToggle variant="text" />
+          
           {user && headerSettings.show_balance && (
             <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-secondary rounded-lg">
-              <span className="text-sm text-muted-foreground">رصيدك:</span>
+              <span className="text-sm text-muted-foreground">{t('yourBalance')}</span>
               <span className="font-bold text-primary">
                 ${profile?.balance?.toFixed(2) || "0.00"}
               </span>
@@ -75,22 +80,22 @@ const Header = () => {
               <Link to="/dashboard">
                 <Button variant="outline" size="default" className="hidden sm:flex">
                   <LayoutDashboard className="h-4 w-4" />
-                  لوحة التحكم
+                  {t('controlPanel')}
                 </Button>
               </Link>
 
               <Link to="/dashboard">
                 <Button variant="hero" size="default">
                   <User className="h-4 w-4" />
-                  <span className="hidden sm:inline">حسابي</span>
+                  <span className="hidden sm:inline">{t('myAccount')}</span>
                 </Button>
               </Link>
             </>
           ) : (
             <Link to="/auth">
-              <Button variant="hero" size="default" aria-label="تسجيل الدخول">
+              <Button variant="hero" size="default" aria-label={t('loginBtn')}>
                 <LogIn className="h-4 w-4" />
-                <span className="hidden sm:inline">تسجيل الدخول</span>
+                <span className="hidden sm:inline">{t('loginBtn')}</span>
               </Button>
             </Link>
           )}
@@ -118,7 +123,7 @@ const Header = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 <LayoutDashboard className="h-4 w-4" />
-                لوحة التحكم
+                {t('controlPanel')}
               </Link>
             ) : (
               <Link
@@ -127,7 +132,7 @@ const Header = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 <LogIn className="h-4 w-4" />
-                تسجيل الدخول
+                {t('loginBtn')}
               </Link>
             )}
             {navItems.map((item) =>

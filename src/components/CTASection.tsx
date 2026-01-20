@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Gift, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Gift, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface CTASettings {
   badge_text: string;
@@ -16,12 +17,26 @@ interface CTASectionProps {
 }
 
 const CTASection = ({ settings }: CTASectionProps) => {
-  const badgeText = settings?.badge_text || 'احصل على رصيد مجاني للتجربة';
-  const title = settings?.title || 'ابدأ رحلتك نحو النجاح';
-  const subtitle = settings?.subtitle || 'على السوشيال ميديا';
-  const description = settings?.description || 'سجل الآن واحصل على رصيد مجاني لتجربة جميع خدماتنا. لا يوجد حد أدنى للشحن!';
-  const buttonText = settings?.button_text || 'سجل الآن مجاناً';
+  const { t, isArabic } = useTranslation();
+  
+  const badgeText = isArabic 
+    ? (settings?.badge_text || 'احصل على رصيد مجاني للتجربة')
+    : 'Get Free Balance to Try';
+  const title = isArabic 
+    ? (settings?.title || 'ابدأ رحلتك نحو النجاح')
+    : 'Start Your Journey to Success';
+  const subtitle = isArabic 
+    ? (settings?.subtitle || 'على السوشيال ميديا')
+    : 'on Social Media';
+  const description = isArabic 
+    ? (settings?.description || 'سجل الآن واحصل على رصيد مجاني لتجربة جميع خدماتنا. لا يوجد حد أدنى للشحن!')
+    : 'Register now and get free balance to try all our services. No minimum deposit!';
+  const buttonText = isArabic 
+    ? (settings?.button_text || 'سجل الآن مجاناً')
+    : 'Register Now for Free';
   const buttonLink = settings?.button_link || '/auth';
+
+  const ArrowIcon = isArabic ? ArrowLeft : ArrowRight;
 
   return (
     <section className="py-12 sm:py-16 lg:py-24 relative overflow-hidden">
@@ -57,7 +72,7 @@ const CTASection = ({ settings }: CTASectionProps) => {
               <Link to={buttonLink}>
                 <Sparkles className="h-5 w-5" />
                 {buttonText}
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowIcon className="h-5 w-5" />
               </Link>
             </Button>
             <Button
@@ -67,7 +82,7 @@ const CTASection = ({ settings }: CTASectionProps) => {
               asChild
             >
               <Link to="/dashboard">
-                تواصل معنا
+                {t('contactUs')}
               </Link>
             </Button>
           </div>
@@ -75,15 +90,21 @@ const CTASection = ({ settings }: CTASectionProps) => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12 pt-8 border-t border-primary-foreground/20">
             <div className="text-center">
               <div className="text-3xl font-bold text-primary-foreground">+10,000</div>
-              <div className="text-sm text-primary-foreground/70">عميل نشط</div>
+              <div className="text-sm text-primary-foreground/70">
+                {isArabic ? 'عميل نشط' : 'Active Customers'}
+              </div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-primary-foreground">+1M</div>
-              <div className="text-sm text-primary-foreground/70">طلب مكتمل</div>
+              <div className="text-sm text-primary-foreground/70">
+                {isArabic ? 'طلب مكتمل' : 'Completed Orders'}
+              </div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-primary-foreground">99%</div>
-              <div className="text-sm text-primary-foreground/70">رضا العملاء</div>
+              <div className="text-sm text-primary-foreground/70">
+                {isArabic ? 'رضا العملاء' : 'Customer Satisfaction'}
+              </div>
             </div>
           </div>
         </div>
