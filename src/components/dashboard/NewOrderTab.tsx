@@ -100,6 +100,7 @@ const NewOrderTab = () => {
   
   const [filteredServices, setFilteredServices] = useState(services);
   const [submitting, setSubmitting] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
   
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedService, setSelectedService] = useState<string>("");
@@ -125,6 +126,7 @@ const NewOrderTab = () => {
   useEffect(() => {
     if (selectedServiceData) {
       setQuantity(String(selectedServiceData.min_quantity || 100));
+      setShowFullDescription(false);
     }
   }, [selectedService]);
 
@@ -390,8 +392,20 @@ const NewOrderTab = () => {
                   <div className="p-2.5 md:p-3 rounded-lg bg-secondary/50 border mt-2">
                     <p className="text-xs md:text-sm text-muted-foreground flex items-start gap-2">
                       <Info className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0 mt-0.5 text-primary" />
-                      <span className="line-clamp-3 md:line-clamp-none">{selectedServiceData.description_ar || selectedServiceData.description}</span>
+                      <span className={showFullDescription ? "" : "line-clamp-2"}>{selectedServiceData.description_ar || selectedServiceData.description}</span>
                     </p>
+                    {(selectedServiceData.description_ar || selectedServiceData.description || "").length > 80 && (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 mt-1 text-xs text-primary hover:underline"
+                        onClick={() => setShowFullDescription(!showFullDescription)}
+                      >
+                        {showFullDescription 
+                          ? (isArabic ? 'عرض أقل' : 'Show Less') 
+                          : (isArabic ? 'قراءة المزيد' : 'Read More')}
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
