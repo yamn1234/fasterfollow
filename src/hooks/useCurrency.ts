@@ -46,13 +46,13 @@ const countryToCurrency: Record<string, string> = {
 };
 
 const STORAGE_KEY = "preferred_currency";
+const MANUAL_SELECTION_KEY = "currency_manually_selected";
 const GEO_DETECTED_KEY = "geo_currency_detected";
 const GEO_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 ساعة
 
 // كشف الموقع الجغرافي وتحديد العملة
 const detectCurrencyByLocation = async (): Promise<Currency | null> => {
   try {
-    // استخدام API مجاني لكشف الموقع
     console.log('[Currency] Detecting location...');
     const response = await fetch('https://ipapi.co/json/', { 
       signal: AbortSignal.timeout(5000) 
@@ -84,6 +84,10 @@ const detectCurrencyByLocation = async (): Promise<Currency | null> => {
 
 // التحقق مما إذا كان يجب إعادة الكشف
 const shouldRedetect = (): boolean => {
+  // لا تعيد الكشف إذا اختار المستخدم العملة يدوياً
+  const isManuallySelected = localStorage.getItem(MANUAL_SELECTION_KEY) === 'true';
+  if (isManuallySelected) return false;
+  
   const lastDetection = localStorage.getItem(GEO_DETECTED_KEY);
   if (!lastDetection) return true;
   
@@ -106,10 +110,8 @@ export const useCurrency = () => {
 
   // كشف العملة حسب الموقع الجغرافي
   useEffect(() => {
-    const hasSavedCurrency = localStorage.getItem(STORAGE_KEY);
-    
-    // فقط إذا لم يختر المستخدم عملة يدوياً ويجب إعادة الكشف
-    if (!hasSavedCurrency && shouldRedetect()) {
+    // فقط إذا يجب إعادة الكشف
+    if (shouldRedetect()) {
       console.log('[Currency] Starting geo-detection...');
       detectCurrencyByLocation().then(detectedCurrency => {
         if (detectedCurrency) {
@@ -121,7 +123,7 @@ export const useCurrency = () => {
         localStorage.setItem(GEO_DETECTED_KEY, Date.now().toString());
       });
     } else {
-      console.log('[Currency] Skipping detection - saved:', hasSavedCurrency, 'redetect:', shouldRedetect());
+      console.log('[Currency] Skipping detection - manual or cached');
     }
   }, []);
 
@@ -159,6 +161,8 @@ export const useCurrency = () => {
   const setSelectedCurrency = useCallback((currency: Currency) => {
     setSelectedCurrencyState(currency);
     localStorage.setItem(STORAGE_KEY, currency.code);
+    // علامة على أن المستخدم اختار العملة يدوياً
+    localStorage.setItem(MANUAL_SELECTION_KEY, 'true');
   }, []);
 
   const convert = useCallback((amountInUSD: number): number => {
