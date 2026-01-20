@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useServices } from "@/hooks/useServices";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useTranslation } from "@/hooks/useTranslation";
 import { 
   Select, 
   SelectContent, 
@@ -94,6 +95,7 @@ const NewOrderTab = () => {
   const { toast } = useToast();
   const { categories, services, loading } = useServices();
   const { selectedCurrency, format, convert } = useCurrency();
+  const { t, isArabic } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const [filteredServices, setFilteredServices] = useState(services);
@@ -131,8 +133,8 @@ const NewOrderTab = () => {
 
     if (!link.trim()) {
       toast({
-        title: "خطأ",
-        description: "يرجى إدخال الرابط",
+        title: isArabic ? "خطأ" : "Error",
+        description: isArabic ? "يرجى إدخال الرابط" : "Please enter the link",
         variant: "destructive",
       });
       return;
@@ -140,8 +142,8 @@ const NewOrderTab = () => {
 
     if (!canAfford) {
       toast({
-        title: "رصيد غير كافٍ",
-        description: "يرجى شحن رصيدك أولاً",
+        title: isArabic ? "رصيد غير كافٍ" : "Insufficient Balance",
+        description: isArabic ? "يرجى شحن رصيدك أولاً" : "Please add balance first",
         variant: "destructive",
       });
       return;
@@ -150,8 +152,8 @@ const NewOrderTab = () => {
     // Check if comments are required
     if (selectedServiceData.requires_comments && !comments.trim()) {
       toast({
-        title: "خطأ",
-        description: "يرجى إدخال التعليقات المطلوبة",
+        title: isArabic ? "خطأ" : "Error",
+        description: isArabic ? "يرجى إدخال التعليقات المطلوبة" : "Please enter the required comments",
         variant: "destructive",
       });
       return;
@@ -162,8 +164,8 @@ const NewOrderTab = () => {
     
     if (quantityNum < minQty || quantityNum > maxQty) {
       toast({
-        title: "خطأ في الكمية",
-        description: `الكمية يجب أن تكون بين ${minQty} و ${maxQty}`,
+        title: isArabic ? "خطأ في الكمية" : "Invalid Quantity",
+        description: isArabic ? `الكمية يجب أن تكون بين ${minQty} و ${maxQty}` : `Quantity must be between ${minQty} and ${maxQty}`,
         variant: "destructive",
       });
       return;
@@ -204,24 +206,24 @@ const NewOrderTab = () => {
         if (placeError) {
           console.error("Error placing order with provider:", placeError);
           toast({
-            title: "تم إنشاء الطلب",
-            description: "الطلب في انتظار الإرسال للمزود",
+            title: isArabic ? "تم إنشاء الطلب" : "Order Created",
+            description: isArabic ? "الطلب في انتظار الإرسال للمزود" : "Order pending delivery to provider",
           });
         } else if (placeResult?.success) {
           toast({
-            title: "تم إرسال الطلب بنجاح! 🎉",
-            description: "سيتم تنفيذ طلبك قريباً",
+            title: isArabic ? "تم إرسال الطلب بنجاح! 🎉" : "Order Submitted Successfully! 🎉",
+            description: isArabic ? "سيتم تنفيذ طلبك قريباً" : "Your order will be processed soon",
           });
         } else {
           toast({
-            title: "تم إنشاء الطلب",
-            description: placeResult?.error || "في انتظار المعالجة",
+            title: isArabic ? "تم إنشاء الطلب" : "Order Created",
+            description: placeResult?.error || (isArabic ? "في انتظار المعالجة" : "Pending processing"),
           });
         }
       } else {
         toast({
-          title: "تم إنشاء الطلب بنجاح! 🎉",
-          description: "سيتم تنفيذ طلبك قريباً",
+          title: isArabic ? "تم إنشاء الطلب بنجاح! 🎉" : "Order Created Successfully! 🎉",
+          description: isArabic ? "سيتم تنفيذ طلبك قريباً" : "Your order will be processed soon",
         });
       }
 
@@ -233,8 +235,8 @@ const NewOrderTab = () => {
     } catch (error: any) {
       console.error("Error creating order:", error);
       toast({
-        title: "خطأ",
-        description: error.message || "فشل في إنشاء الطلب",
+        title: isArabic ? "خطأ" : "Error",
+        description: error.message || (isArabic ? "فشل في إنشاء الطلب" : "Failed to create order"),
         variant: "destructive",
       });
     } finally {
@@ -255,10 +257,10 @@ const NewOrderTab = () => {
       <div>
         <h1 className="text-xl md:text-3xl font-bold flex items-center gap-2 md:gap-3">
           <Sparkles className="h-5 w-5 md:h-7 md:w-7 text-primary" />
-          طلب خدمة جديدة
+          {isArabic ? 'طلب خدمة جديدة' : 'New Service Order'}
         </h1>
         <p className="text-sm md:text-base text-muted-foreground mt-1">
-          اختر الخدمة المطلوبة وأدخل تفاصيل الطلب
+          {isArabic ? 'اختر الخدمة المطلوبة وأدخل تفاصيل الطلب' : 'Select the service and enter order details'}
         </p>
       </div>
 
@@ -266,7 +268,7 @@ const NewOrderTab = () => {
       <div className="relative">
         <div className="flex items-center gap-2 mb-2">
           <Layers className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-muted-foreground">تصفح سريع</span>
+          <span className="text-sm font-medium text-muted-foreground">{isArabic ? 'تصفح سريع' : 'Quick Browse'}</span>
         </div>
         <ScrollArea className="w-full whitespace-nowrap" dir="rtl">
           <div ref={scrollRef} className="flex gap-2 pb-2">
@@ -275,10 +277,10 @@ const NewOrderTab = () => {
               size="sm"
               onClick={() => setSelectedCategory("")}
               className="shrink-0 h-10 w-10 md:w-auto md:px-3 rounded-full text-xs md:text-sm p-0 md:p-2 flex items-center justify-center"
-              title="الكل"
+              title={isArabic ? "الكل" : "All"}
             >
               <span className="text-lg md:text-base">📋</span>
-              <span className="hidden md:inline md:ml-1.5">الكل</span>
+              <span className="hidden md:inline md:ml-1.5">{isArabic ? 'الكل' : 'All'}</span>
             </Button>
             {categories.map((cat) => (
               <Button
@@ -287,10 +289,10 @@ const NewOrderTab = () => {
                 size="sm"
                 onClick={() => setSelectedCategory(cat.id)}
                 className="shrink-0 h-10 w-10 md:w-auto md:px-3 rounded-full text-xs md:text-sm p-0 md:p-2 flex items-center justify-center"
-                title={cat.name_ar || cat.name}
+                title={isArabic ? (cat.name_ar || cat.name) : cat.name}
               >
                 <CategoryIcon category={cat} size="sm" />
-                <span className="hidden md:inline md:ml-1.5 max-w-[80px] truncate">{cat.name_ar || cat.name}</span>
+                <span className="hidden md:inline md:ml-1.5 max-w-[80px] truncate">{isArabic ? (cat.name_ar || cat.name) : cat.name}</span>
               </Button>
             ))}
           </div>
@@ -305,29 +307,29 @@ const NewOrderTab = () => {
             <CardHeader className="pb-3 md:pb-6">
               <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                 <Package className="h-4 w-4 md:h-5 md:w-5" />
-                تفاصيل الطلب
+                {isArabic ? 'تفاصيل الطلب' : 'Order Details'}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 md:space-y-6">
               {/* Category Selection - Hidden on desktop since we have quick nav */}
               <div className="space-y-2 md:hidden">
-                <Label className="text-sm">اختر المنصة</Label>
+                <Label className="text-sm">{isArabic ? 'اختر المنصة' : 'Select Platform'}</Label>
                 <Select value={selectedCategory || "all"} onValueChange={(val) => setSelectedCategory(val === "all" ? "" : val)}>
                   <SelectTrigger className="w-full h-11 text-sm">
-                    <SelectValue placeholder="جميع المنصات" />
+                    <SelectValue placeholder={isArabic ? "جميع المنصات" : "All Platforms"} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">
                       <span className="flex items-center gap-2">
                         <span>📋</span>
-                        جميع المنصات
+                        {isArabic ? 'جميع المنصات' : 'All Platforms'}
                       </span>
                     </SelectItem>
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         <span className="flex items-center gap-2">
                           <CategoryIcon category={cat} size="sm" />
-                          {cat.name_ar || cat.name}
+                          {isArabic ? (cat.name_ar || cat.name) : cat.name}
                         </span>
                       </SelectItem>
                     ))}
@@ -337,18 +339,18 @@ const NewOrderTab = () => {
 
               {/* Category Selection - Desktop */}
               <div className="space-y-2 hidden md:block">
-                <Label>اختر التصنيف</Label>
+                <Label>{isArabic ? 'اختر التصنيف' : 'Select Category'}</Label>
                 <Select value={selectedCategory || "all"} onValueChange={(val) => setSelectedCategory(val === "all" ? "" : val)}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="جميع التصنيفات" />
+                    <SelectValue placeholder={isArabic ? "جميع التصنيفات" : "All Categories"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">جميع التصنيفات</SelectItem>
+                    <SelectItem value="all">{isArabic ? 'جميع التصنيفات' : 'All Categories'}</SelectItem>
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         <span className="flex items-center gap-2">
                           <CategoryIcon category={cat} size="sm" />
-                          {cat.name_ar || cat.name}
+                          {isArabic ? (cat.name_ar || cat.name) : cat.name}
                         </span>
                       </SelectItem>
                     ))}
@@ -358,16 +360,16 @@ const NewOrderTab = () => {
 
               {/* Service Selection */}
               <div className="space-y-2">
-                <Label className="text-sm md:text-base">اختر الخدمة</Label>
+                <Label className="text-sm md:text-base">{isArabic ? 'اختر الخدمة' : 'Select Service'}</Label>
                 <Select value={selectedService} onValueChange={setSelectedService}>
                   <SelectTrigger className="w-full h-11 md:h-10 text-sm">
-                    <SelectValue placeholder="اختر الخدمة المطلوبة" />
+                    <SelectValue placeholder={isArabic ? "اختر الخدمة المطلوبة" : "Select the service"} />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
                     {filteredServices.map((service) => (
                       <SelectItem key={service.id} value={service.id} className="py-3">
                         <div className="flex flex-col gap-1 w-full">
-                          <span className="text-sm font-medium line-clamp-2">{service.name_ar || service.name}</span>
+                          <span className="text-sm font-medium line-clamp-2">{isArabic ? (service.name_ar || service.name) : service.name}</span>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <span className="text-primary font-semibold">
                               {format(service.price)}/1K
@@ -396,7 +398,7 @@ const NewOrderTab = () => {
 
               {/* Link Input */}
               <div className="space-y-2">
-                <Label className="text-sm md:text-base">الرابط</Label>
+                <Label className="text-sm md:text-base">{isArabic ? 'الرابط' : 'Link'}</Label>
                 <div className="relative">
                   <LinkIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -410,20 +412,20 @@ const NewOrderTab = () => {
 
               {/* Quantity Input */}
               <div className="space-y-2">
-                <Label className="text-sm md:text-base">الكمية</Label>
+                <Label className="text-sm md:text-base">{isArabic ? 'الكمية' : 'Quantity'}</Label>
                 <Input
                   type="number"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                   min={selectedServiceData?.min_quantity || 1}
                   max={selectedServiceData?.max_quantity || 1000000}
-                  placeholder="أدخل الكمية"
+                  placeholder={isArabic ? "أدخل الكمية" : "Enter quantity"}
                   className="h-11 md:h-10 text-sm"
                 />
                 {selectedServiceData && (
                   <p className="text-xs text-muted-foreground">
-                    الحد الأدنى: {selectedServiceData.min_quantity || 1} | 
-                    الحد الأقصى: {selectedServiceData.max_quantity?.toLocaleString() || "غير محدود"}
+                    {isArabic ? 'الحد الأدنى' : 'Min'}: {selectedServiceData.min_quantity || 1} | 
+                    {isArabic ? 'الحد الأقصى' : 'Max'}: {selectedServiceData.max_quantity?.toLocaleString() || (isArabic ? "غير محدود" : "Unlimited")}
                   </p>
                 )}
               </div>
@@ -433,10 +435,10 @@ const NewOrderTab = () => {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2 text-sm md:text-base">
                     <MessageSquare className="h-4 w-4" />
-                    التعليقات (1 لكل سطر)
+                    {isArabic ? 'التعليقات (1 لكل سطر)' : 'Comments (1 per line)'}
                   </Label>
                   <Textarea
-                    placeholder="أدخل التعليقات هنا، كل تعليق في سطر منفصل..."
+                    placeholder={isArabic ? "أدخل التعليقات هنا، كل تعليق في سطر منفصل..." : "Enter comments here, one per line..."}
                     value={comments}
                     onChange={(e) => {
                       const newComments = e.target.value;

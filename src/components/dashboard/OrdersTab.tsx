@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Search, Filter, Eye, Loader2, ShoppingBag, ExternalLink, Star } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
-import { ar } from "date-fns/locale";
+import { ar, enUS } from "date-fns/locale";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Order {
   id: string;
@@ -49,20 +50,22 @@ interface Order {
   } | null;
 }
 
-const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  pending: { label: "في الانتظار", variant: "outline" },
-  processing: { label: "قيد المعالجة", variant: "secondary" },
-  in_progress: { label: "قيد التنفيذ", variant: "secondary" },
-  completed: { label: "مكتمل", variant: "default" },
-  partial: { label: "جزئي", variant: "outline" },
-  cancelled: { label: "ملغي", variant: "destructive" },
-  refunded: { label: "مسترد", variant: "outline" },
-  failed: { label: "فشل", variant: "destructive" },
-};
+const getStatusConfig = (isArabic: boolean): Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> => ({
+  pending: { label: isArabic ? "في الانتظار" : "Pending", variant: "outline" },
+  processing: { label: isArabic ? "قيد المعالجة" : "Processing", variant: "secondary" },
+  in_progress: { label: isArabic ? "قيد التنفيذ" : "In Progress", variant: "secondary" },
+  completed: { label: isArabic ? "مكتمل" : "Completed", variant: "default" },
+  partial: { label: isArabic ? "جزئي" : "Partial", variant: "outline" },
+  cancelled: { label: isArabic ? "ملغي" : "Cancelled", variant: "destructive" },
+  refunded: { label: isArabic ? "مسترد" : "Refunded", variant: "outline" },
+  failed: { label: isArabic ? "فشل" : "Failed", variant: "destructive" },
+});
 
 const OrdersTab = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t, isArabic } = useTranslation();
+  const statusConfig = getStatusConfig(isArabic);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -96,7 +99,10 @@ const OrdersTab = () => {
 
       if (error) throw error;
 
-      toast({ title: 'شكراً لك!', description: 'تم إرسال تقييمك وسيتم مراجعته' });
+      toast({ 
+        title: isArabic ? 'شكراً لك!' : 'Thank you!', 
+        description: isArabic ? 'تم إرسال تقييمك وسيتم مراجعته' : 'Your review has been submitted' 
+      });
       setReviewedOrders(prev => new Set(prev).add(selectedOrder.id));
       setShowReviewDialog(false);
       setReviewComment("");
@@ -265,21 +271,21 @@ const OrdersTab = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold">طلباتي</h1>
+        <h1 className="text-2xl md:text-3xl font-bold">{t('myOrders')}</h1>
         <p className="text-muted-foreground mt-1">
-          تتبع جميع طلباتك وحالتها
+          {isArabic ? 'تتبع جميع طلباتك وحالتها' : 'Track all your orders and their status'}
         </p>
       </div>
 
       <Card variant="elevated">
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <CardTitle>سجل الطلبات ({orders.length})</CardTitle>
+            <CardTitle>{isArabic ? 'سجل الطلبات' : 'Order History'} ({orders.length})</CardTitle>
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="بحث برقم الطلب أو الخدمة..."
+                  placeholder={isArabic ? "بحث برقم الطلب أو الخدمة..." : "Search by order ID or service..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full sm:w-64 pr-10"
@@ -288,17 +294,17 @@ const OrdersTab = () => {
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-40">
                   <Filter className="h-4 w-4 ml-2" />
-                  <SelectValue placeholder="الحالة" />
+                  <SelectValue placeholder={isArabic ? "الحالة" : "Status"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">جميع الحالات</SelectItem>
-                  <SelectItem value="pending">في الانتظار</SelectItem>
-                  <SelectItem value="processing">قيد المعالجة</SelectItem>
-                  <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-                  <SelectItem value="completed">مكتمل</SelectItem>
-                  <SelectItem value="partial">جزئي</SelectItem>
-                  <SelectItem value="cancelled">ملغي</SelectItem>
-                  <SelectItem value="failed">فشل</SelectItem>
+                  <SelectItem value="all">{isArabic ? "جميع الحالات" : "All Statuses"}</SelectItem>
+                  <SelectItem value="pending">{statusConfig.pending.label}</SelectItem>
+                  <SelectItem value="processing">{statusConfig.processing.label}</SelectItem>
+                  <SelectItem value="in_progress">{statusConfig.in_progress.label}</SelectItem>
+                  <SelectItem value="completed">{statusConfig.completed.label}</SelectItem>
+                  <SelectItem value="partial">{statusConfig.partial.label}</SelectItem>
+                  <SelectItem value="cancelled">{statusConfig.cancelled.label}</SelectItem>
+                  <SelectItem value="failed">{statusConfig.failed.label}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -319,7 +325,7 @@ const OrdersTab = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="font-medium text-sm">
-                        {order.service?.name_ar || order.service?.name || "خدمة محذوفة"}
+                        {isArabic ? (order.service?.name_ar || order.service?.name) : (order.service?.name || order.service?.name_ar) || (isArabic ? "خدمة محذوفة" : "Deleted service")}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         #{order.id.slice(0, 8)}
@@ -328,7 +334,7 @@ const OrdersTab = () => {
                     <Badge variant={config.variant}>{config.label}</Badge>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">الكمية: {order.quantity.toLocaleString()}</span>
+                    <span className="text-muted-foreground">{isArabic ? 'الكمية' : 'Qty'}: {order.quantity.toLocaleString()}</span>
                     <span className="font-medium">${order.price.toFixed(2)}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -350,14 +356,14 @@ const OrdersTab = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-right">رقم الطلب</TableHead>
-                  <TableHead className="text-right">الخدمة</TableHead>
-                  <TableHead className="text-right">الكمية</TableHead>
-                  <TableHead className="text-right">السعر</TableHead>
-                  <TableHead className="text-right">التقدم</TableHead>
-                  <TableHead className="text-right">الحالة</TableHead>
-                  <TableHead className="text-right">التاريخ</TableHead>
-                  <TableHead className="text-right">إجراءات</TableHead>
+                  <TableHead className={isArabic ? "text-right" : "text-left"}>{isArabic ? 'رقم الطلب' : 'Order ID'}</TableHead>
+                  <TableHead className={isArabic ? "text-right" : "text-left"}>{isArabic ? 'الخدمة' : 'Service'}</TableHead>
+                  <TableHead className={isArabic ? "text-right" : "text-left"}>{isArabic ? 'الكمية' : 'Quantity'}</TableHead>
+                  <TableHead className={isArabic ? "text-right" : "text-left"}>{isArabic ? 'السعر' : 'Price'}</TableHead>
+                  <TableHead className={isArabic ? "text-right" : "text-left"}>{isArabic ? 'التقدم' : 'Progress'}</TableHead>
+                  <TableHead className={isArabic ? "text-right" : "text-left"}>{isArabic ? 'الحالة' : 'Status'}</TableHead>
+                  <TableHead className={isArabic ? "text-right" : "text-left"}>{isArabic ? 'التاريخ' : 'Date'}</TableHead>
+                  <TableHead className={isArabic ? "text-right" : "text-left"}>{isArabic ? 'إجراءات' : 'Actions'}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -370,7 +376,7 @@ const OrdersTab = () => {
                       <TableCell>
                         <div>
                           <p className="font-medium">
-                            {order.service?.name_ar || order.service?.name || "خدمة محذوفة"}
+                            {isArabic ? (order.service?.name_ar || order.service?.name) : (order.service?.name || order.service?.name_ar) || (isArabic ? "خدمة محذوفة" : "Deleted service")}
                           </p>
                           <p className="text-xs text-muted-foreground truncate max-w-[150px]">
                             {order.link}
@@ -394,13 +400,13 @@ const OrdersTab = () => {
                         <Badge variant={config.variant}>{config.label}</Badge>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {formatDistanceToNow(new Date(order.created_at), { addSuffix: true, locale: ar })}
+                        {formatDistanceToNow(new Date(order.created_at), { addSuffix: true, locale: isArabic ? ar : enUS })}
                       </TableCell>
                       <TableCell>
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          title="عرض التفاصيل"
+                          title={isArabic ? "عرض التفاصيل" : "View Details"}
                           onClick={() => setSelectedOrder(order)}
                         >
                           <Eye className="h-4 w-4" />
@@ -417,7 +423,7 @@ const OrdersTab = () => {
             <div className="text-center py-12">
               <ShoppingBag className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
               <p className="text-muted-foreground">
-                {orders.length === 0 ? "لا توجد طلبات بعد" : "لا توجد طلبات مطابقة للبحث"}
+                {orders.length === 0 ? (isArabic ? "لا توجد طلبات بعد" : "No orders yet") : (isArabic ? "لا توجد طلبات مطابقة للبحث" : "No orders match your search")}
               </p>
             </div>
           )}
@@ -428,31 +434,31 @@ const OrdersTab = () => {
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>تفاصيل الطلب</DialogTitle>
+            <DialogTitle>{isArabic ? 'تفاصيل الطلب' : 'Order Details'}</DialogTitle>
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">رقم الطلب</p>
+                  <p className="text-sm text-muted-foreground">{isArabic ? 'رقم الطلب' : 'Order ID'}</p>
                   <p className="font-medium">#{selectedOrder.id.slice(0, 8)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">الحالة</p>
+                  <p className="text-sm text-muted-foreground">{isArabic ? 'الحالة' : 'Status'}</p>
                   <Badge variant={statusConfig[selectedOrder.status || "pending"].variant}>
                     {statusConfig[selectedOrder.status || "pending"].label}
                   </Badge>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">الكمية</p>
+                  <p className="text-sm text-muted-foreground">{isArabic ? 'الكمية' : 'Quantity'}</p>
                   <p className="font-medium">{selectedOrder.quantity.toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">السعر</p>
+                  <p className="text-sm text-muted-foreground">{isArabic ? 'السعر' : 'Price'}</p>
                   <p className="font-medium">${selectedOrder.price.toFixed(2)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">البداية</p>
+                  <p className="text-sm text-muted-foreground">{isArabic ? 'البداية' : 'Start Count'}</p>
                   <p className="font-medium">{selectedOrder.start_count?.toLocaleString() || "-"}</p>
                 </div>
                 <div>
