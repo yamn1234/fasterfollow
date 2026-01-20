@@ -7,6 +7,7 @@ import ServicesSection from "@/components/ServicesSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
+import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import { useHomepageSettings } from "@/hooks/useHomepageSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
@@ -89,6 +90,7 @@ const Index = () => {
         {sections.map((section) => renderSection(section.id))}
       </main>
       <Footer />
+      <FloatingWhatsAppButton />
     </div>
   );
 };
