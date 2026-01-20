@@ -390,10 +390,29 @@ const NewOrderTab = () => {
                 </Select>
                 {selectedServiceData && (selectedServiceData.description_ar || selectedServiceData.description) && (
                   <div className="p-2.5 md:p-3 rounded-lg bg-secondary/50 border mt-2">
-                    <p className="text-xs md:text-sm text-muted-foreground flex items-start gap-2">
+                    <div className="text-xs md:text-sm text-muted-foreground flex items-start gap-2">
                       <Info className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0 mt-0.5 text-primary" />
-                      <span className={showFullDescription ? "" : "line-clamp-2"}>{selectedServiceData.description_ar || selectedServiceData.description}</span>
-                    </p>
+                      <div className={showFullDescription ? "" : "line-clamp-2"}>
+                        {(selectedServiceData.description_ar || selectedServiceData.description || "").split('\n').map((line, idx, arr) => (
+                          <span key={idx}>
+                            {line.split(/(https?:\/\/[^\s]+)/g).map((part, partIdx) => 
+                              part.match(/^https?:\/\//) ? (
+                                <a 
+                                  key={partIdx} 
+                                  href={part} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline break-all"
+                                >
+                                  {part}
+                                </a>
+                              ) : part
+                            )}
+                            {idx < arr.length - 1 && <br />}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                     {(selectedServiceData.description_ar || selectedServiceData.description || "").length > 80 && (
                       <Button
                         variant="link"
