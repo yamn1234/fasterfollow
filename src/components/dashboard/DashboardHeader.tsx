@@ -174,11 +174,11 @@ const DashboardHeader = ({ onGoHome, onNavigate }: DashboardHeaderProps) => {
         {/* Language Toggle */}
         <Button
           variant="ghost"
-          size="icon"
-          className="h-9 w-9"
+          size="sm"
+          className="h-9 px-2 font-medium text-sm"
           onClick={toggleLanguage}
         >
-          <Languages className="h-4 w-4" />
+          {language === 'ar' ? 'EN' : 'عربي'}
         </Button>
 
         {/* Currency Selector */}
