@@ -83,18 +83,18 @@ const defaultFooterLinkGroups: FooterLinkGroup[] = [
 
 const defaultHeaderSettings: HeaderSettings = {
   logo_url: '',
-  logo_text: 'متجر المتابعين',
+  logo_text: 'فاستر فولو',
   show_balance: true,
   nav_items: defaultNavItems,
 };
 
 const defaultFooterSettings: FooterSettings = {
   logo_url: '',
-  logo_text: 'متجر المتابعين',
+  logo_text: 'فاستر فولو',
   description: 'أفضل وأسرع موقع لزيادة المتابعين والتفاعل على جميع منصات التواصل الاجتماعي في العالم العربي.',
   social_links: defaultSocialLinks,
   link_groups: defaultFooterLinkGroups,
-  copyright_text: 'متجر المتابعين. جميع الحقوق محفوظة.',
+  copyright_text: 'فاستر فولو. جميع الحقوق محفوظة.',
   show_payment_logos: true,
 };
 
