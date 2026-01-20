@@ -365,18 +365,18 @@ const NewOrderTab = () => {
                   <SelectTrigger className="w-full h-11 md:h-10 text-sm">
                     <SelectValue placeholder={isArabic ? "اختر الخدمة المطلوبة" : "Select the service"} />
                   </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
+                  <SelectContent className="max-h-[60vh] w-[calc(100vw-2rem)] md:w-auto md:max-w-[500px] z-[100]">
                     {filteredServices.map((service) => (
-                      <SelectItem key={service.id} value={service.id} className="py-3">
-                        <div className="flex flex-col gap-1 w-full">
-                          <span className="text-sm font-medium line-clamp-2">{isArabic ? (service.name_ar || service.name) : service.name}</span>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <SelectItem key={service.id} value={service.id} className="py-2.5 px-2">
+                        <div className="flex flex-col gap-0.5 max-w-full overflow-hidden">
+                          <span className="text-xs md:text-sm font-medium whitespace-normal break-words leading-tight">{isArabic ? (service.name_ar || service.name) : service.name}</span>
+                          <div className="flex items-center gap-2 text-[10px] md:text-xs text-muted-foreground">
                             <span className="text-primary font-semibold">
                               {format(service.price)}/1K
                             </span>
                             {service.delivery_time && (
                               <span className="flex items-center gap-0.5">
-                                <Clock className="h-3 w-3" />
+                                <Clock className="h-2.5 w-2.5 md:h-3 md:w-3" />
                                 {service.delivery_time}
                               </span>
                             )}
