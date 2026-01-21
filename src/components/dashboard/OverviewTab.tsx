@@ -22,6 +22,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 
 interface Order {
   id: string;
+  order_number: number;
   quantity: number;
   status: string;
   created_at: string;
@@ -73,6 +74,7 @@ const OverviewTab = ({ onNavigate }: OverviewTabProps) => {
         .from("orders")
         .select(`
           id,
+          order_number,
           quantity,
           status,
           created_at,
@@ -235,7 +237,7 @@ const OverviewTab = ({ onNavigate }: OverviewTabProps) => {
                           {serviceName || (isArabic ? "خدمة محذوفة" : "Deleted service")}
                         </p>
                         <p className="text-xs md:text-sm text-muted-foreground">
-                          #{order.id.slice(0, 8)} • {order.quantity.toLocaleString()} {isArabic ? 'وحدة' : 'units'}
+                          <span className="text-primary font-medium">#{order.order_number}</span> • {order.quantity.toLocaleString()} {isArabic ? 'وحدة' : 'units'}
                         </p>
                       </div>
                     </div>

@@ -448,6 +448,7 @@ export type Database = {
           id: string
           ip_address: string | null
           link: string
+          order_number: number
           price: number
           provider_id: string | null
           quantity: number
@@ -468,6 +469,7 @@ export type Database = {
           id?: string
           ip_address?: string | null
           link: string
+          order_number?: number
           price: number
           provider_id?: string | null
           quantity: number
@@ -488,6 +490,7 @@ export type Database = {
           id?: string
           ip_address?: string | null
           link?: string
+          order_number?: number
           price?: number
           provider_id?: string | null
           quantity?: number
