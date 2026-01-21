@@ -36,6 +36,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 
 interface Order {
   id: string;
+  order_number: number;
   link: string;
   quantity: number;
   price: number;
@@ -170,14 +171,14 @@ const OrdersTab = () => {
             const { data } = await supabase
               .from("orders")
               .select(`
-                id, link, quantity, price, status, start_count, remains,
+                id, order_number, link, quantity, price, status, start_count, remains,
                 created_at, completed_at, service:services(name, name_ar)
               `)
               .eq("id", payload.new.id)
               .single();
             
             if (data) {
-              setOrders(prev => [data, ...prev]);
+              setOrders(prev => [data as Order, ...prev]);
             }
           } else if (payload.eventType === 'UPDATE') {
             setOrders(prev => prev.map(order => {
@@ -222,6 +223,7 @@ const OrdersTab = () => {
         .from("orders")
         .select(`
           id,
+          order_number,
           link,
           quantity,
           price,
@@ -245,7 +247,9 @@ const OrdersTab = () => {
   };
 
   const filteredOrders = orders.filter((order) => {
+    const orderNum = order.order_number?.toString() || '';
     const matchesSearch =
+      orderNum.includes(searchQuery) ||
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (order.service?.name_ar || order.service?.name || "").includes(searchQuery) ||
       order.link.includes(searchQuery);
@@ -328,7 +332,7 @@ const OrdersTab = () => {
                         {isArabic ? (order.service?.name_ar || order.service?.name) : (order.service?.name || order.service?.name_ar) || (isArabic ? "خدمة محذوفة" : "Deleted service")}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        #{order.id.slice(0, 8)}
+                        #{order.order_number}
                       </p>
                     </div>
                     <Badge variant={config.variant}>{config.label}</Badge>
@@ -372,7 +376,7 @@ const OrdersTab = () => {
                   const config = statusConfig[order.status || "pending"];
                   return (
                     <TableRow key={order.id}>
-                      <TableCell className="font-medium">#{order.id.slice(0, 8)}</TableCell>
+                      <TableCell className="font-bold text-primary">#{order.order_number}</TableCell>
                       <TableCell>
                         <div>
                           <p className="font-medium">
@@ -441,7 +445,7 @@ const OrdersTab = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">{isArabic ? 'رقم الطلب' : 'Order ID'}</p>
-                  <p className="font-medium">#{selectedOrder.id.slice(0, 8)}</p>
+                  <p className="font-bold text-primary text-lg">#{selectedOrder.order_number}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{isArabic ? 'الحالة' : 'Status'}</p>

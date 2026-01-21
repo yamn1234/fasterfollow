@@ -62,6 +62,7 @@ type OrderStatus = 'pending' | 'processing' | 'in_progress' | 'completed' | 'par
 
 interface Order {
   id: string;
+  order_number: number;
   user_id: string;
   service_id: string;
   quantity: number;
@@ -73,8 +74,11 @@ interface Order {
   external_order_id: string | null;
   created_at: string;
   updated_at: string;
-  service?: { name: string };
-  profile?: { full_name: string };
+  comments: string | null;
+  ip_address: string | null;
+  service?: { name: string; name_ar?: string };
+  profile?: { full_name: string; user_id: string };
+  user_email?: string;
 }
 
 const AdminOrders = () => {
@@ -87,6 +91,7 @@ const AdminOrders = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<OrderStatus>('pending');
   const [startCount, setStartCount] = useState('');
   const [remains, setRemains] = useState('');
@@ -160,21 +165,25 @@ const AdminOrders = () => {
           // Get service name
           const { data: serviceData } = await supabase
             .from('services')
-            .select('name')
+            .select('name, name_ar')
             .eq('id', order.service_id)
             .maybeSingle();
 
           // Get profile name
           const { data: profileData } = await supabase
             .from('profiles')
-            .select('full_name')
+            .select('full_name, user_id')
             .eq('user_id', order.user_id)
             .maybeSingle();
+
+          // Get user email from auth (admin only)
+          const { data: userData } = await supabase.auth.admin.getUserById(order.user_id).catch(() => ({ data: null }));
 
           return {
             ...order,
             services: serviceData,
             profiles: profileData,
+            user_email: userData?.user?.email || null,
           };
         })
       );
@@ -250,7 +259,7 @@ const AdminOrders = () => {
           amount: order.price,
           balance_before: profile.balance,
           balance_after: profile.balance + order.price,
-          description: `استرداد طلب #${order.id.slice(0, 8)}`,
+          description: `استرداد طلب #${order.order_number}`,
         });
       }
 
@@ -330,9 +339,12 @@ const AdminOrders = () => {
   };
 
   const filteredOrders = orders.filter((order) => {
+    const orderNum = order.order_number?.toString() || '';
     const matchesSearch =
+      orderNum.includes(searchQuery) ||
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.link.toLowerCase().includes(searchQuery.toLowerCase());
+      order.link.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (order as any).profiles?.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -432,15 +444,15 @@ const AdminOrders = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>رقم الطلب</TableHead>
-                  <TableHead>رقم الطلب الخارجي</TableHead>
+                  <TableHead className="w-24">رقم الطلب</TableHead>
+                  <TableHead>العميل</TableHead>
                   <TableHead>الخدمة</TableHead>
-                  <TableHead>الكمية</TableHead>
-                  <TableHead>السعر</TableHead>
-                  <TableHead>الحالة</TableHead>
-                  <TableHead>البداية / المتبقي</TableHead>
-                  <TableHead>التاريخ</TableHead>
-                  <TableHead className="text-left">إجراءات</TableHead>
+                  <TableHead className="w-20">الكمية</TableHead>
+                  <TableHead className="w-24">السعر</TableHead>
+                  <TableHead className="w-28">الحالة</TableHead>
+                  <TableHead className="w-28">البداية/المتبقي</TableHead>
+                  <TableHead className="w-32">التاريخ</TableHead>
+                  <TableHead className="text-left w-16">إجراءات</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -460,28 +472,38 @@ const AdminOrders = () => {
                   filteredOrders.map((order) => {
                     const status = statusConfig[order.status];
                     const StatusIcon = status.icon;
+                    const customerName = (order as any).profiles?.full_name || 'غير محدد';
+                    const serviceName = (order as any).services?.name || (order as any).services?.name_ar || 'غير محدد';
                     return (
-                      <TableRow key={order.id}>
+                      <TableRow key={order.id} className="hover:bg-muted/50">
                         <TableCell>
-                          <span className="font-mono text-sm">#{order.id.slice(0, 8)}</span>
+                          <span className="font-bold text-primary">#{order.order_number}</span>
+                          {order.external_order_id && (
+                            <span className="block text-xs text-muted-foreground">
+                              API: {order.external_order_id}
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell>
-                          <span className="font-mono text-sm text-muted-foreground">
-                            {order.external_order_id || '-'}
-                          </span>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-sm">{customerName}</span>
+                            <span className="text-xs text-muted-foreground truncate max-w-[150px]">
+                              {order.user_email || order.user_id.slice(0, 8)}
+                            </span>
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium truncate max-w-[200px]">
-                              {(order as any).services?.name || 'غير محدد'}
+                            <p className="font-medium truncate max-w-[200px] text-sm">
+                              {serviceName}
                             </p>
                             <p className="text-xs text-muted-foreground truncate max-w-[200px]">
                               {order.link}
                             </p>
                           </div>
                         </TableCell>
-                        <TableCell>{order.quantity.toLocaleString()}</TableCell>
-                        <TableCell>${order.price.toFixed(2)}</TableCell>
+                        <TableCell className="font-medium">{order.quantity.toLocaleString()}</TableCell>
+                        <TableCell className="font-medium text-primary">${order.price.toFixed(2)}</TableCell>
                         <TableCell>
                           <Badge className={`${status.color} gap-1`}>
                             <StatusIcon className="w-3 h-3" />
@@ -489,12 +511,17 @@ const AdminOrders = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm">
-                            {order.start_count || '-'} / {order.remains || '-'}
+                          <span className="text-sm font-mono">
+                            {order.start_count ?? '-'} / {order.remains ?? '-'}
                           </span>
                         </TableCell>
                         <TableCell>
-                          {format(new Date(order.created_at), 'dd MMM HH:mm', { locale: ar })}
+                          <span className="text-sm">
+                            {format(new Date(order.created_at), 'dd/MM/yyyy', { locale: ar })}
+                          </span>
+                          <span className="block text-xs text-muted-foreground">
+                            {format(new Date(order.created_at), 'HH:mm', { locale: ar })}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
@@ -506,7 +533,12 @@ const AdminOrders = () => {
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>إجراءات</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setViewDialogOpen(true);
+                                }}
+                              >
                                 <Eye className="w-4 h-4 ml-2" />
                                 عرض التفاصيل
                               </DropdownMenuItem>
@@ -576,13 +608,142 @@ const AdminOrders = () => {
         </CardContent>
       </Card>
 
+      {/* View Order Details Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              تفاصيل الطلب #{selectedOrder?.order_number}
+            </DialogTitle>
+            <DialogDescription>
+              معلومات كاملة عن الطلب والعميل
+            </DialogDescription>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-6">
+              {/* Order Info */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">رقم الطلب</p>
+                  <p className="font-bold text-lg text-primary">#{selectedOrder.order_number}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">رقم API الخارجي</p>
+                  <p className="font-mono">{selectedOrder.external_order_id || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">الحالة</p>
+                  <Badge className={`${statusConfig[selectedOrder.status].color} gap-1 mt-1`}>
+                    {statusConfig[selectedOrder.status].label}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">تاريخ الطلب</p>
+                  <p>{format(new Date(selectedOrder.created_at), 'dd/MM/yyyy HH:mm', { locale: ar })}</p>
+                </div>
+              </div>
+
+              {/* Customer Info */}
+              <div className="space-y-2">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <span className="w-2 h-2 bg-primary rounded-full"></span>
+                  معلومات العميل
+                </h4>
+                <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg">
+                  <div>
+                    <p className="text-sm text-muted-foreground">اسم العميل</p>
+                    <p className="font-medium">{(selectedOrder as any).profiles?.full_name || 'غير محدد'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">البريد الإلكتروني</p>
+                    <p className="font-medium text-sm">{selectedOrder.user_email || selectedOrder.user_id.slice(0, 8)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">عنوان IP</p>
+                    <p className="font-mono text-sm">{selectedOrder.ip_address || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">معرف المستخدم</p>
+                    <p className="font-mono text-xs">{selectedOrder.user_id}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Service Info */}
+              <div className="space-y-2">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <span className="w-2 h-2 bg-primary rounded-full"></span>
+                  تفاصيل الخدمة
+                </h4>
+                <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg">
+                  <div className="col-span-2">
+                    <p className="text-sm text-muted-foreground">الخدمة</p>
+                    <p className="font-medium">{(selectedOrder as any).services?.name || (selectedOrder as any).services?.name_ar || 'غير محدد'}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm text-muted-foreground">الرابط</p>
+                    <a href={selectedOrder.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all text-sm">
+                      {selectedOrder.link}
+                    </a>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">الكمية</p>
+                    <p className="font-bold text-lg">{selectedOrder.quantity.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">السعر</p>
+                    <p className="font-bold text-lg text-primary">${selectedOrder.price.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">العدد الأولي</p>
+                    <p className="font-mono">{selectedOrder.start_count ?? '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">المتبقي</p>
+                    <p className="font-mono">{selectedOrder.remains ?? '-'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Comments */}
+              {selectedOrder.comments && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <span className="w-2 h-2 bg-primary rounded-full"></span>
+                    ملاحظات العميل
+                  </h4>
+                  <div className="p-4 border rounded-lg bg-muted/30">
+                    <p className="text-sm whitespace-pre-wrap">{selectedOrder.comments}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
+              إغلاق
+            </Button>
+            <Button onClick={() => {
+              setViewDialogOpen(false);
+              setNewStatus(selectedOrder?.status || 'pending');
+              setStartCount(selectedOrder?.start_count?.toString() || '');
+              setRemains(selectedOrder?.remains?.toString() || '');
+              setUpdateDialogOpen(true);
+            }}>
+              <Pencil className="w-4 h-4 ml-2" />
+              تعديل الحالة
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Update Status Dialog */}
       <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>تحديث حالة الطلب</DialogTitle>
             <DialogDescription>
-              طلب #{selectedOrder?.id.slice(0, 8)}
+              طلب #{selectedOrder?.order_number}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
