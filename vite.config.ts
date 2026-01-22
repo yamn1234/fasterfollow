@@ -4,16 +4,22 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { execSync } from "child_process";
 
-// Custom plugin to generate sitemap on build
-function sitemapPlugin() {
+// Custom plugin to generate sitemap and service pages on build
+function seoPlugin() {
   return {
-    name: "sitemap-generator",
+    name: "seo-generator",
     buildEnd: () => {
-      console.log("Running sitemap generator...");
+      console.log("Running SEO generators...");
       try {
+        // Generate static service pages for SEO
+        console.log("Generating static service pages...");
+        execSync("bun run src/lib/generate-service-pages.ts", { stdio: "inherit" });
+        
+        // Generate sitemap
+        console.log("Generating sitemap...");
         execSync("bun run src/lib/generate-sitemap.ts", { stdio: "inherit" });
       } catch (error) {
-        console.error("Failed to generate sitemap:", error);
+        console.error("Failed to run SEO generators:", error);
       }
     },
   };
@@ -28,7 +34,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-    sitemapPlugin(),
+    seoPlugin(),
   ].filter(Boolean),
   resolve: {
     alias: {
