@@ -724,6 +724,9 @@ export type Database = {
           is_suspended: boolean
           suspended_at: string | null
           suspension_reason: string | null
+          two_factor_backup_codes: string[] | null
+          two_factor_enabled: boolean
+          two_factor_secret: string | null
           updated_at: string
           user_id: string
         }
@@ -736,6 +739,9 @@ export type Database = {
           is_suspended?: boolean
           suspended_at?: string | null
           suspension_reason?: string | null
+          two_factor_backup_codes?: string[] | null
+          two_factor_enabled?: boolean
+          two_factor_secret?: string | null
           updated_at?: string
           user_id: string
         }
@@ -748,6 +754,9 @@ export type Database = {
           is_suspended?: boolean
           suspended_at?: string | null
           suspension_reason?: string | null
+          two_factor_backup_codes?: string[] | null
+          two_factor_enabled?: boolean
+          two_factor_secret?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1211,6 +1220,45 @@ export type Database = {
           },
         ]
       }
+      two_factor_codes: {
+        Row: {
+          attempts: number
+          code_hash: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          ip_address: string | null
+          used: boolean
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          ip_address?: string | null
+          used?: boolean
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          used?: boolean
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1238,6 +1286,7 @@ export type Database = {
     }
     Functions: {
       cleanup_expired_password_resets: { Args: never; Returns: undefined }
+      cleanup_expired_two_factor_codes: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

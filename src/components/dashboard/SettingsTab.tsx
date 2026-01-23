@@ -29,6 +29,7 @@ import {
   Languages,
   DollarSign
 } from "lucide-react";
+import TwoFactorSettings from "./TwoFactorSettings";
 
 const SettingsTab = () => {
   const { user } = useAuth();
@@ -258,6 +259,9 @@ const SettingsTab = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Two-Factor Authentication */}
+      <TwoFactorSettings />
 
       {/* Security Settings */}
       <Card variant="elevated">

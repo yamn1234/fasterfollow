@@ -23,6 +23,8 @@ const Auth = () => {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isVerifyCode, setIsVerifyCode] = useState(false);
   const [isResetPassword, setIsResetPassword] = useState(false);
+  const [is2FAVerify, setIs2FAVerify] = useState(false);
+  const [pending2FAUserId, setPending2FAUserId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -208,16 +210,56 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await signIn(email, password);
-        if (error) {
-          if (error.message.includes("Invalid login credentials")) {
-            toast.error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+        // First check if user has 2FA enabled
+        const { data: userData } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (userData?.user) {
+          // Check if 2FA is enabled
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("two_factor_enabled, is_suspended, suspension_reason")
+            .eq("user_id", userData.user.id)
+            .single();
+          
+          // Check suspension
+          if (profileData?.is_suspended) {
+            await supabase.auth.signOut();
+            toast.error(profileData.suspension_reason || "تم تعليق حسابك. يرجى التواصل مع الدعم.");
+            setIsLoading(false);
+            return;
+          }
+          
+          if (profileData?.two_factor_enabled) {
+            // Sign out first, then require 2FA
+            await supabase.auth.signOut();
+            
+            // Send 2FA code
+            const { data: sendData, error: sendError } = await supabase.functions.invoke("two-factor-send", {
+              body: { user_id: userData.user.id, email }
+            });
+            
+            if (sendError || !sendData?.success) {
+              toast.error(sendData?.error || "فشل إرسال رمز التحقق");
+              setIsLoading(false);
+              return;
+            }
+            
+            setPending2FAUserId(userData.user.id);
+            setIs2FAVerify(true);
+            setCodeExpiresAt(new Date(Date.now() + 10 * 60 * 1000));
+            setRemainingTime(600);
+            setOtpCode("");
+            toast.success("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
           } else {
-            toast.error(error.message);
+            // No 2FA, proceed normally
+            toast.success("تم تسجيل الدخول بنجاح!");
+            navigate("/dashboard");
           }
         } else {
-          toast.success("تم تسجيل الدخول بنجاح!");
-          navigate("/dashboard");
+          toast.error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
         }
       } else {
         const { error } = await signUp(email, password, fullName);
@@ -231,6 +273,76 @@ const Auth = () => {
           toast.success("تم إنشاء الحساب بنجاح!");
           navigate("/dashboard");
         }
+      }
+    } catch (error) {
+      toast.error("حدث خطأ غير متوقع");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handle2FAVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!otpCode || otpCode.length !== 6) {
+      setErrors({ otp: "يرجى إدخال رمز التحقق المكون من 6 أرقام" });
+      return;
+    }
+    
+    if (!pending2FAUserId) {
+      toast.error("جلسة غير صالحة. يرجى تسجيل الدخول مرة أخرى.");
+      setIs2FAVerify(false);
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // Verify 2FA code
+      const { data: verifyData, error: verifyError } = await supabase.functions.invoke("two-factor-verify", {
+        body: { user_id: pending2FAUserId, code: otpCode }
+      });
+      
+      if (verifyError || !verifyData?.success) {
+        toast.error(verifyData?.error || "رمز التحقق غير صحيح");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Sign in again
+      const { error: signInError } = await signIn(email, password);
+      
+      if (signInError) {
+        toast.error("حدث خطأ أثناء تسجيل الدخول");
+        setIs2FAVerify(false);
+      } else {
+        toast.success("تم تسجيل الدخول بنجاح!");
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      toast.error("حدث خطأ غير متوقع");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResend2FACode = async () => {
+    if (!pending2FAUserId) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("two-factor-send", {
+        body: { user_id: pending2FAUserId, email }
+      });
+      
+      if (error || !data?.success) {
+        toast.error(data?.error || "فشل إعادة إرسال الرمز");
+      } else {
+        toast.success("تم إعادة إرسال رمز التحقق");
+        setCodeExpiresAt(new Date(Date.now() + 10 * 60 * 1000));
+        setRemainingTime(600);
+        setOtpCode("");
       }
     } catch (error) {
       toast.error("حدث خطأ غير متوقع");
@@ -436,6 +548,112 @@ const Auth = () => {
                   "حفظ كلمة المرور الجديدة"
                 )}
               </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
+    );
+  }
+
+  // 2FA Verification Form
+  if (is2FAVerify) {
+    return (
+      <div className="min-h-screen gradient-hero flex items-center justify-center p-4">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 right-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+        </div>
+
+        <Card className="w-full max-w-md relative z-10 shadow-lg border-0">
+          <CardHeader className="text-center space-y-4">
+            <Link to="/" className="flex items-center justify-center gap-2 mx-auto">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
+                <ShoppingCart className="h-6 w-6 text-primary-foreground" />
+              </div>
+            </Link>
+            <div>
+              <CardTitle className="text-2xl font-bold">التحقق الثنائي</CardTitle>
+              <CardDescription className="mt-2">
+                تم إرسال رمز التحقق إلى {email}
+              </CardDescription>
+            </div>
+          </CardHeader>
+
+          <form onSubmit={handle2FAVerify}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="otp2fa">رمز التحقق</Label>
+                <Input
+                  id="otp2fa"
+                  type="text"
+                  placeholder="أدخل الرمز المكون من 6 أرقام"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="text-center text-lg tracking-widest"
+                  disabled={isLoading}
+                  dir="ltr"
+                  maxLength={6}
+                />
+                {errors.otp && (
+                  <p className="text-sm text-destructive">{errors.otp}</p>
+                )}
+              </div>
+
+              {/* Countdown timer */}
+              {remainingTime > 0 && (
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">
+                    الرمز صالح لمدة: <span className="font-mono text-primary font-bold">{formatTime(remainingTime)}</span>
+                  </p>
+                </div>
+              )}
+              {remainingTime === 0 && codeExpiresAt && (
+                <div className="text-center">
+                  <p className="text-sm text-destructive">انتهت صلاحية الرمز</p>
+                </div>
+              )}
+            </CardContent>
+
+            <CardFooter className="flex flex-col gap-4">
+              <Button
+                type="submit"
+                variant="hero"
+                size="lg"
+                className="w-full"
+                disabled={isLoading || remainingTime === 0}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    جاري التحقق...
+                  </>
+                ) : (
+                  "تسجيل الدخول"
+                )}
+              </Button>
+
+              <button
+                type="button"
+                onClick={handleResend2FACode}
+                disabled={isLoading}
+                className="text-sm text-primary font-medium hover:underline disabled:opacity-50"
+              >
+                إعادة إرسال الرمز
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIs2FAVerify(false);
+                  setPending2FAUserId(null);
+                  setOtpCode("");
+                  setErrors({});
+                  setCodeExpiresAt(null);
+                }}
+                className="text-sm text-muted-foreground hover:underline"
+              >
+                العودة لتسجيل الدخول
+              </button>
             </CardFooter>
           </form>
         </Card>
