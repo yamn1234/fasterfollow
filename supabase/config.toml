@@ -44,3 +44,12 @@ verify_jwt = false
 
 [functions.send-password-recovery]
 verify_jwt = false
+
+[functions.password-reset-request]
+verify_jwt = false
+
+[functions.password-reset-verify]
+verify_jwt = false
+
+[functions.password-reset-complete]
+verify_jwt = false

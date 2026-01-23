@@ -12,7 +12,10 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 const emailSchema = z.string().email("البريد الإلكتروني غير صالح");
-const passwordSchema = z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+const passwordSchema = z.string()
+  .min(8, "كلمة المرور يجب أن تكون 8 أحرف على الأقل")
+  .regex(/[a-zA-Z]/, "كلمة المرور يجب أن تحتوي على حروف")
+  .regex(/[0-9]/, "كلمة المرور يجب أن تحتوي على أرقام");
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -25,9 +28,12 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [otpCode, setOtpCode] = useState("");
+  const [resetToken, setResetToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [codeExpiresAt, setCodeExpiresAt] = useState<Date | null>(null);
+  const [remainingTime, setRemainingTime] = useState(0);
   const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string; confirmPassword?: string; otp?: string }>({});
   
   const { signIn, signUp } = useAuth();
@@ -40,6 +46,29 @@ const Auth = () => {
       setIsResetPassword(true);
     }
   }, [searchParams]);
+
+  // Countdown timer for OTP expiry
+  useEffect(() => {
+    if (!codeExpiresAt) return;
+    
+    const interval = setInterval(() => {
+      const now = new Date();
+      const diff = Math.max(0, Math.floor((codeExpiresAt.getTime() - now.getTime()) / 1000));
+      setRemainingTime(diff);
+      
+      if (diff === 0) {
+        clearInterval(interval);
+      }
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [codeExpiresAt]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,16 +85,51 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      // Use Supabase's built-in password reset with redirect
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?type=recovery`,
+      // Use our custom OTP system
+      const { data, error } = await supabase.functions.invoke('password-reset-request', {
+        body: { 
+          email,
+          ip_address: null,
+          user_agent: navigator.userAgent
+        }
       });
 
       if (error) {
-        toast.error(error.message);
+        toast.error("حدث خطأ. يرجى المحاولة لاحقاً.");
+      } else if (data?.success === false) {
+        toast.error(data.error || "حدث خطأ");
       } else {
-        toast.success("تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني");
+        toast.success(data?.message || "إذا كان الإيميل مسجل لدينا، سيتم إرسال كود التحقق");
         setIsForgotPassword(false);
+        setIsVerifyCode(true);
+        setCodeExpiresAt(new Date(Date.now() + 10 * 60 * 1000)); // 10 minutes
+        setRemainingTime(600);
+      }
+    } catch {
+      toast.error("حدث خطأ غير متوقع");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('password-reset-request', {
+        body: { 
+          email,
+          ip_address: null,
+          user_agent: navigator.userAgent
+        }
+      });
+
+      if (error || data?.success === false) {
+        toast.error(data?.error || "حدث خطأ. يرجى المحاولة لاحقاً.");
+      } else {
+        toast.success("تم إعادة إرسال كود التحقق");
+        setCodeExpiresAt(new Date(Date.now() + 10 * 60 * 1000));
+        setRemainingTime(600);
+        setOtpCode("");
       }
     } catch {
       toast.error("حدث خطأ غير متوقع");
@@ -85,16 +149,17 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: otpCode,
-        type: 'email',
+      const { data, error } = await supabase.functions.invoke('password-reset-verify', {
+        body: { email, code: otpCode }
       });
 
       if (error) {
-        toast.error("كود التحقق غير صحيح أو منتهي الصلاحية");
+        toast.error("حدث خطأ. يرجى المحاولة لاحقاً.");
+      } else if (data?.success === false) {
+        toast.error(data.error || "كود التحقق غير صحيح");
       } else {
         toast.success("تم التحقق بنجاح");
+        setResetToken(data.reset_token);
         setIsVerifyCode(false);
         setPassword("");
         setConfirmPassword("");
@@ -216,16 +281,37 @@ const Auth = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: password
-      });
-      
-      if (error) {
-        toast.error(error.message);
+      // Use our custom password reset system if we have a reset token
+      if (resetToken && email) {
+        const { data, error } = await supabase.functions.invoke('password-reset-complete', {
+          body: { email, reset_token: resetToken, new_password: password }
+        });
+
+        if (error || data?.success === false) {
+          toast.error(data?.error || "حدث خطأ. يرجى المحاولة لاحقاً.");
+        } else {
+          toast.success("تم تغيير كلمة المرور بنجاح!");
+          setIsResetPassword(false);
+          setResetToken("");
+          setEmail("");
+          setPassword("");
+          setConfirmPassword("");
+          // Redirect to login
+          setIsLogin(true);
+        }
       } else {
-        toast.success("تم تغيير كلمة المرور بنجاح!");
-        setIsResetPassword(false);
-        navigate("/dashboard");
+        // Fallback to Supabase auth for legacy recovery links
+        const { error } = await supabase.auth.updateUser({
+          password: password
+        });
+        
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success("تم تغيير كلمة المرور بنجاح!");
+          setIsResetPassword(false);
+          navigate("/dashboard");
+        }
       }
     } catch (error) {
       toast.error("حدث خطأ غير متوقع");
@@ -321,6 +407,16 @@ const Auth = () => {
                   <p className="text-sm text-destructive">{errors.confirmPassword}</p>
                 )}
               </div>
+
+              {/* Password requirements */}
+              <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg space-y-1">
+                <p className="font-medium">متطلبات كلمة المرور:</p>
+                <ul className="list-disc list-inside space-y-0.5">
+                  <li className={password.length >= 8 ? "text-green-600" : ""}>8 أحرف على الأقل</li>
+                  <li className={/[a-zA-Z]/.test(password) ? "text-green-600" : ""}>تحتوي على حروف</li>
+                  <li className={/[0-9]/.test(password) ? "text-green-600" : ""}>تحتوي على أرقام</li>
+                </ul>
+              </div>
             </CardContent>
 
             <CardFooter className="flex flex-col gap-4">
@@ -390,6 +486,20 @@ const Auth = () => {
                   <p className="text-sm text-destructive">{errors.otp}</p>
                 )}
               </div>
+
+              {/* Countdown timer */}
+              {remainingTime > 0 && (
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">
+                    الكود صالح لمدة: <span className="font-mono text-primary font-bold">{formatTime(remainingTime)}</span>
+                  </p>
+                </div>
+              )}
+              {remainingTime === 0 && codeExpiresAt && (
+                <div className="text-center">
+                  <p className="text-sm text-destructive">انتهت صلاحية الكود</p>
+                </div>
+              )}
             </CardContent>
 
             <CardFooter className="flex flex-col gap-4">
@@ -398,7 +508,7 @@ const Auth = () => {
                 variant="hero"
                 size="lg"
                 className="w-full"
-                disabled={isLoading}
+                disabled={isLoading || remainingTime === 0}
               >
                 {isLoading ? (
                   <>
@@ -412,13 +522,9 @@ const Auth = () => {
 
               <button
                 type="button"
-                onClick={() => {
-                  setIsVerifyCode(false);
-                  setIsForgotPassword(true);
-                  setOtpCode("");
-                  setErrors({});
-                }}
-                className="text-sm text-primary font-medium hover:underline"
+                onClick={handleResendCode}
+                disabled={isLoading}
+                className="text-sm text-primary font-medium hover:underline disabled:opacity-50"
               >
                 إعادة إرسال الكود
               </button>
@@ -429,6 +535,7 @@ const Auth = () => {
                   setIsVerifyCode(false);
                   setOtpCode("");
                   setErrors({});
+                  setCodeExpiresAt(null);
                 }}
                 className="text-sm text-muted-foreground hover:underline"
               >
