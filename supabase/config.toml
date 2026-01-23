@@ -53,3 +53,12 @@ verify_jwt = false
 
 [functions.password-reset-complete]
 verify_jwt = false
+
+[functions.two-factor-send]
+verify_jwt = false
+
+[functions.two-factor-verify]
+verify_jwt = false
+
+[functions.two-factor-toggle]
+verify_jwt = false
