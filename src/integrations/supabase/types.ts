@@ -591,6 +591,45 @@ export type Database = {
         }
         Relationships: []
       }
+      password_resets: {
+        Row: {
+          attempts: number
+          code_hash: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          ip_address: string | null
+          used: boolean
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          ip_address?: string | null
+          used?: boolean
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          used?: boolean
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_gateways: {
         Row: {
           config: Json | null
@@ -1198,6 +1237,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_password_resets: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
