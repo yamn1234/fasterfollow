@@ -56,20 +56,16 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      // Send OTP code to email (code-based recovery)
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: false,
-        },
+      // Use Supabase's built-in password reset with redirect
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?type=recovery`,
       });
 
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success("تم إرسال كود التحقق إلى بريدك الإلكتروني");
+        toast.success("تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني");
         setIsForgotPassword(false);
-        setIsVerifyCode(true);
       }
     } catch {
       toast.error("حدث خطأ غير متوقع");
@@ -464,7 +460,7 @@ const Auth = () => {
             <div>
               <CardTitle className="text-2xl font-bold">استعادة كلمة المرور</CardTitle>
               <CardDescription className="mt-2">
-                أدخل بريدك الإلكتروني لإرسال كود التحقق
+                أدخل بريدك الإلكتروني لإرسال رابط استعادة كلمة المرور
               </CardDescription>
             </div>
           </CardHeader>
@@ -506,7 +502,7 @@ const Auth = () => {
                     جاري الإرسال...
                   </>
                 ) : (
-                  "إرسال كود التحقق"
+                  "إرسال رابط الاستعادة"
                 )}
               </Button>
 
