@@ -46,8 +46,21 @@ export const SEOHead = ({
   alternateLanguages,
   schemaJson,
 }: SEOHeadProps) => {
-  const seoTitle = truncate(title, 60);
-  const seoDescription = truncate(description, 155);
+  // Strip pipe-separated suffixes from auto-generated names (e.g. "Name | Part2 | Part3")
+  // keeping only the first segment when the total exceeds 60 chars
+  const cleanTitle = title.includes('|') && title.length > 60
+    ? title.split('|')[0].trim()
+    : title;
+
+  const seoTitle = truncate(cleanTitle, 60);
+
+  // Ensure description is never empty — generate a fallback sentence when missing/too short
+  const rawDescription =
+    description && description.trim().length > 20
+      ? description
+      : `اطلب ${cleanTitle} من فاستر فولو بأفضل الأسعار وأسرع التنفيذ مع ضمان الجودة.`;
+  const seoDescription = truncate(rawDescription, 155);
+
   const fullTitle = `${seoTitle} | ${SITE_NAME}`;
   const fullCanonicalUrl = canonicalUrl ? `${BASE_URL}${canonicalUrl}` : BASE_URL;
   const finalOgImage = ogImage || DEFAULT_OG_IMAGE;
@@ -83,7 +96,7 @@ export const SEOHead = ({
         <link rel="alternate" hrefLang="x-default" href={fullCanonicalUrl} />
       )}
 
-      {/* Open Graph */}
+      {/* Open Graph — placed early for social crawlers */}
       <meta property="og:title" content={seoTitle} />
       <meta property="og:description" content={seoDescription} />
       <meta property="og:image" content={finalOgImage} />
