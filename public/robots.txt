@@ -16,7 +16,10 @@ Disallow: /dashboard/*
 Disallow: /admin
 Disallow: /admin/*
 Disallow: /api/*
-Disallow: /*?*
+Allow: /services?category=*
+Disallow: /auth?*
+Disallow: /dashboard?*
+Disallow: /admin?*
 Crawl-delay: 1
 
 User-agent: Googlebot-Image
@@ -58,7 +61,10 @@ Disallow: /dashboard/*
 Disallow: /admin
 Disallow: /admin/*
 Disallow: /api/*
-Disallow: /*?*
+Allow: /services?category=*
+Disallow: /auth?*
+Disallow: /dashboard?*
+Disallow: /admin?*
 Crawl-delay: 1
 
 User-agent: msnbot
@@ -175,7 +181,10 @@ Disallow: /dashboard/*
 Disallow: /admin
 Disallow: /admin/*
 Disallow: /api/*
-Disallow: /*?*
+Allow: /services?category=*
+Disallow: /auth?*
+Disallow: /dashboard?*
+Disallow: /admin?*
 Crawl-delay: 2
 
 # ===========================================

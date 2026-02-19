@@ -117,44 +117,75 @@ function generateServiceHTML(service: Service): string {
   </script>
   
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  
-  <!-- Redirect to SPA after crawler has seen content -->
-  <script>
-    // Only redirect for browsers, not crawlers
-    if (typeof window !== 'undefined' && !navigator.userAgent.match(/bot|crawl|spider|slurp|googlebot|bingbot|yandex|baidu|duckduck|facebot|twitter|linkedin|whatsapp|telegram/i)) {
-      window.location.replace('/services/${service.slug}');
-    }
-  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+    body { font-family: 'Cairo', Arial, sans-serif; direction: rtl; text-align: right; max-width: 800px; margin: 0 auto; padding: 20px; background: #f8f9fa; color: #333; }
+    .cta-btn { display: inline-block; background: #7c3aed; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 18px; transition: opacity 0.2s; }
+    .cta-btn:hover { opacity: 0.9; }
+    .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .info-box { margin-top: 20px; padding: 16px; background: #f0f0f5; border-radius: 8px; }
+    .info-box p { margin: 8px 0; }
+    h1 { color: #1a1a2e; font-size: 28px; margin-bottom: 16px; }
+    nav a { color: #7c3aed; text-decoration: none; }
+    footer a { color: #7c3aed; text-decoration: none; }
+  </style>
 </head>
-<body style="font-family: 'Cairo', Arial, sans-serif; direction: rtl; text-align: right; max-width: 800px; margin: 0 auto; padding: 20px; background: #f8f9fa;">
+<body>
   <nav style="margin-bottom: 20px; font-size: 14px; color: #666;">
-    <a href="/" style="color: #7c3aed;">الرئيسية</a> / 
-    <a href="/services" style="color: #7c3aed;">الخدمات</a> / 
-    <span>${escapeHtml(service.name_ar || service.name)}</span>
+    <a href="/">الرئيسية</a> / 
+    <a href="/services">الخدمات</a> / 
+    <span>\${escapeHtml(service.name_ar || service.name)}</span>
   </nav>
   
   <article>
-    <h1 style="color: #1a1a2e; font-size: 28px; margin-bottom: 16px;">${escapeHtml(service.name_ar || service.name)}</h1>
+    <h1>\${escapeHtml(service.name_ar || service.name)}</h1>
     
-    <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
-      <p style="color: #666; font-size: 16px; line-height: 1.8;">${escapeHtml(service.description_ar || service.description || 'خدمة احترافية من فاستر فولو')}</p>
+    <div class="card">
+      <p style="color: #666; font-size: 16px; line-height: 1.8;">\${escapeHtml(service.description_ar || service.description || 'خدمة احترافية من فاستر فولو')}</p>
       
-      <div style="margin-top: 20px; padding: 16px; background: #f0f0f5; border-radius: 8px;">
-        <p style="margin: 8px 0;"><strong>السعر:</strong> $${service.price} لكل 1000</p>
-        ${service.min_quantity ? `<p style="margin: 8px 0;"><strong>الحد الأدنى:</strong> ${service.min_quantity}</p>` : ''}
-        ${service.max_quantity ? `<p style="margin: 8px 0;"><strong>الحد الأقصى:</strong> ${service.max_quantity}</p>` : ''}
-        ${service.delivery_time ? `<p style="margin: 8px 0;"><strong>وقت التنفيذ:</strong> ${escapeHtml(service.delivery_time)}</p>` : ''}
+      <div class="info-box">
+        <p><strong>السعر:</strong> $\${service.price} لكل 1000</p>
+        \${service.min_quantity ? \`<p><strong>الحد الأدنى:</strong> \${service.min_quantity}</p>\` : ''}
+        \${service.max_quantity ? \`<p><strong>الحد الأقصى:</strong> \${service.max_quantity}</p>\` : ''}
+        \${service.delivery_time ? \`<p><strong>وقت التنفيذ:</strong> \${escapeHtml(service.delivery_time)}</p>\` : ''}
       </div>
     </div>
     
+    <section class="card" style="margin-top: 20px;">
+      <h2 style="font-size: 20px; color: #1a1a2e; margin-bottom: 12px;">لماذا فاستر فولو؟</h2>
+      <ul style="list-style: none; padding: 0;">
+        <li style="padding: 8px 0;">✅ تنفيذ فوري وسريع</li>
+        <li style="padding: 8px 0;">✅ حسابات حقيقية ومتفاعلة</li>
+        <li style="padding: 8px 0;">✅ ضمان مع تعويض فوري</li>
+        <li style="padding: 8px 0;">✅ دعم فني على مدار الساعة</li>
+        <li style="padding: 8px 0;">✅ أسعار تنافسية</li>
+      </ul>
+    </section>
+    
     <div style="text-align: center; margin-top: 30px;">
-      <a href="/services/${service.slug}" style="display: inline-block; background: #7c3aed; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 18px;">اطلب الآن</a>
+      <p style="margin-top: 16px;"><a href="/services" class="cta-btn" style="background: #e5e7eb; color: #333; font-size: 14px; padding: 10px 24px;">تصفح جميع الخدمات</a></p>
     </div>
   </article>
   
+  <section class="card" style="margin-top: 20px;">
+    <h2 style="font-size: 18px; color: #1a1a2e; margin-bottom: 12px;">خدمات أخرى</h2>
+    <p style="color: #666;">اكتشف المزيد من خدماتنا على <a href="/services" style="color: #7c3aed;">صفحة الخدمات</a>. نوفر خدمات لجميع منصات التواصل الاجتماعي بما في ذلك 
+      <a href="/services?category=instagram" style="color: #7c3aed;">انستقرام</a>، 
+      <a href="/services?category=tiktok" style="color: #7c3aed;">تيك توك</a>، 
+      <a href="/services?category=youtube" style="color: #7c3aed;">يوتيوب</a>، 
+      <a href="/services?category=twitter" style="color: #7c3aed;">تويتر</a>، 
+      <a href="/services?category=snapchat" style="color: #7c3aed;">سناب شات</a>.
+    </p>
+  </section>
+  
   <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #888; font-size: 14px;">
-    <p>© ${new Date().getFullYear()} فاستر فولو - جميع الحقوق محفوظة</p>
-    <p><a href="/services" style="color: #7c3aed;">تصفح جميع الخدمات</a></p>
+    <p>© \${new Date().getFullYear()} فاستر فولو - جميع الحقوق محفوظة</p>
+    <nav style="margin-top: 8px;">
+      <a href="/" style="color: #7c3aed; margin: 0 8px;">الرئيسية</a> |
+      <a href="/services" style="color: #7c3aed; margin: 0 8px;">الخدمات</a> |
+      <a href="/auth" style="color: #7c3aed; margin: 0 8px;">تسجيل الدخول</a> |
+      <a href="/blog" style="color: #7c3aed; margin: 0 8px;">المدونة</a>
+    </nav>
   </footer>
 </body>
 </html>`;
@@ -163,8 +194,12 @@ function generateServiceHTML(service: Service): string {
 async function generateServicePages() {
   console.log('🚀 Starting service pages generation...');
 
-  // Create output directory if it doesn't exist
-  if (!fs.existsSync(OUTPUT_DIR)) {
+  // Clean old generated files and recreate directory
+  if (fs.existsSync(OUTPUT_DIR)) {
+    const oldFiles = fs.readdirSync(OUTPUT_DIR).filter(f => f.endsWith('.html'));
+    oldFiles.forEach(f => fs.unlinkSync(path.join(OUTPUT_DIR, f)));
+    console.log(`🧹 Cleaned ${oldFiles.length} old HTML files`);
+  } else {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
   }
 
