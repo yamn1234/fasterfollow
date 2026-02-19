@@ -40,16 +40,6 @@ const Services = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const categoryParam = searchParams.get('category') || 'all';
   
-  // Find category ID from slug if needed
-  const initialCategory = useMemo(() => {
-    if (categoryParam === 'all') return 'all';
-    // Check if it's already a UUID
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryParam);
-    if (isUUID) return categoryParam;
-    // Otherwise find by slug
-    const cat = categories.find(c => c.slug === categoryParam);
-    return cat?.id || 'all';
-  }, [categoryParam, categories]);
   
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -60,8 +50,23 @@ const Services = () => {
 
   // Update selected category when categories load or URL changes
   useEffect(() => {
-    setSelectedCategory(initialCategory);
-  }, [initialCategory]);
+    if (categoryParam === 'all' || !categoryParam) {
+      setSelectedCategory('all');
+      return;
+    }
+    // Wait for categories to load
+    if (categories.length === 0) return;
+    
+    // Check if it's a UUID
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryParam);
+    if (isUUID) {
+      setSelectedCategory(categoryParam);
+    } else {
+      // Find by slug
+      const cat = categories.find(c => c.slug === categoryParam);
+      setSelectedCategory(cat?.id || 'all');
+    }
+  }, [categoryParam, categories]);
 
   const filteredServices = useMemo(() => {
     let result = services;
