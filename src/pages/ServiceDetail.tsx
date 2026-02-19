@@ -294,7 +294,12 @@ const ServiceDetail = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title={service.seo_title || service.name_ar || service.name}
-        description={service.seo_description || service.description_ar || service.description || ''}
+        description={
+          service.seo_description ||
+          service.description_ar ||
+          service.description ||
+          `احصل على ${service.name_ar || service.name} بسرعة وأمان من فاستر فولو. أفضل الأسعار مع ضمان التنفيذ ودعم فني على مدار الساعة.`
+        }
         keywords={service.seo_keywords || undefined}
         canonicalUrl={`/services/${slug}`}
         ogImage={service.og_image || service.image_url || undefined}
