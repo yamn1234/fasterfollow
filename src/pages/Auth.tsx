@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import SEOHead from "@/components/SEOHead";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -436,6 +437,11 @@ const Auth = () => {
   if (isResetPassword) {
     return (
       <div className="min-h-screen gradient-hero flex items-center justify-center p-4">
+        <SEOHead
+          title="تعيين كلمة مرور جديدة"
+          description="أعد تعيين كلمة مرور حسابك في فاستر فولو"
+          noIndex
+        />
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 right-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
           <div className="absolute bottom-20 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
@@ -559,6 +565,11 @@ const Auth = () => {
   if (is2FAVerify) {
     return (
       <div className="min-h-screen gradient-hero flex items-center justify-center p-4">
+        <SEOHead
+          title="التحقق بخطوتين"
+          description="تحقق من هويتك للدخول إلى حسابك في فاستر فولو"
+          noIndex
+        />
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 right-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
           <div className="absolute bottom-20 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
@@ -665,6 +676,11 @@ const Auth = () => {
   if (isVerifyCode) {
     return (
       <div className="min-h-screen gradient-hero flex items-center justify-center p-4">
+        <SEOHead
+          title="إدخال كود التحقق"
+          description="أدخل كود التحقق لإعادة تعيين كلمة مرورك في فاستر فولو"
+          noIndex
+        />
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 right-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
           <div className="absolute bottom-20 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
@@ -770,6 +786,11 @@ const Auth = () => {
   if (isForgotPassword) {
     return (
       <div className="min-h-screen gradient-hero flex items-center justify-center p-4">
+        <SEOHead
+          title="نسيت كلمة المرور"
+          description="استرجع كلمة مرور حسابك في فاستر فولو"
+          noIndex
+        />
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 right-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
           <div className="absolute bottom-20 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
@@ -850,6 +871,12 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen gradient-hero flex items-center justify-center p-4">
+      <SEOHead
+        title={isLogin ? "تسجيل الدخول" : "إنشاء حساب جديد"}
+        description={isLogin ? "سجّل دخولك إلى حسابك في فاستر فولو وأدر طلباتك ومتابعيك" : "أنشئ حسابك في فاستر فولو واستمتع بأفضل خدمات زيادة المتابعين"}
+        canonicalUrl="/auth"
+        noIndex
+      />
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />

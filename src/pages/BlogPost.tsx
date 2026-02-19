@@ -8,6 +8,8 @@ import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import SEOHead from '@/components/SEOHead';
+import JsonLd from '@/components/JsonLd';
 
 interface BlogPost {
   id: string;
@@ -16,11 +18,15 @@ interface BlogPost {
   slug: string;
   content: string | null;
   excerpt: string | null;
+  excerpt_ar: string | null;
   featured_image: string | null;
   published_at: string | null;
+  updated_at: string | null;
   views_count: number;
   seo_title: string | null;
   seo_description: string | null;
+  seo_keywords: string | null;
+  og_image: string | null;
   category_id: string | null;
 }
 
@@ -96,6 +102,11 @@ const BlogPostPage = () => {
   if (notFound || !post) {
     return (
       <div className="min-h-screen bg-background">
+        <SEOHead
+          title="المقال غير موجود"
+          description="المقال الذي تبحث عنه غير متوفر"
+          noIndex
+        />
         <Header />
         <main className="container py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">المقال غير موجود</h1>
@@ -112,10 +123,36 @@ const BlogPostPage = () => {
     );
   }
 
+  const pageTitle = post.seo_title || post.title_ar || post.title;
+  const pageDesc = post.seo_description || post.excerpt_ar || post.excerpt || '';
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={pageTitle}
+        description={pageDesc}
+        keywords={post.seo_keywords || undefined}
+        canonicalUrl={`/blog/${slug}`}
+        ogImage={post.og_image || post.featured_image || undefined}
+        ogType="article"
+        articlePublishedTime={post.published_at || undefined}
+        articleModifiedTime={post.updated_at || undefined}
+        articleAuthor="فاستر فولو"
+      />
+      <JsonLd
+        data={[
+          {
+            type: 'BreadcrumbList',
+            items: [
+              { name: 'الرئيسية', url: '/' },
+              { name: 'المدونة', url: '/blog' },
+              { name: pageTitle, url: `/blog/${slug}` },
+            ],
+          },
+        ]}
+      />
       <Header />
-      
+
       <main className="container py-8 max-w-4xl">
         <Button variant="ghost" asChild className="mb-6">
           <Link to="/blog">

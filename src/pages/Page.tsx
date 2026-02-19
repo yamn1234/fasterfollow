@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import SEOHead from '@/components/SEOHead';
 
 interface PageData {
   id: string;
@@ -15,6 +16,10 @@ interface PageData {
   content_ar: string | null;
   seo_title: string | null;
   seo_description: string | null;
+  seo_keywords: string | null;
+  og_image: string | null;
+  canonical_url: string | null;
+  is_indexable: boolean | null;
 }
 
 const PageView = () => {
@@ -43,13 +48,6 @@ const PageView = () => {
       }
 
       setPage(data);
-
-      // Update page title
-      if (data.seo_title) {
-        document.title = data.seo_title;
-      } else {
-        document.title = data.title_ar || data.title;
-      }
     } catch (error) {
       console.error('Error fetching page:', error);
       setNotFound(true);
@@ -73,6 +71,11 @@ const PageView = () => {
   if (notFound || !page) {
     return (
       <div className="min-h-screen bg-background">
+        <SEOHead
+          title="الصفحة غير موجودة"
+          description="الصفحة التي تبحث عنها غير متوفرة"
+          noIndex
+        />
         <Header />
         <main className="container py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">الصفحة غير موجودة</h1>
@@ -89,10 +92,22 @@ const PageView = () => {
     );
   }
 
+  const pageTitle = page.seo_title || page.title_ar || page.title;
+  const pageDesc = page.seo_description || '';
+  const canonicalPath = page.canonical_url || `/page/${slug}`;
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={pageTitle}
+        description={pageDesc}
+        keywords={page.seo_keywords || undefined}
+        canonicalUrl={canonicalPath}
+        ogImage={page.og_image || undefined}
+        noIndex={page.is_indexable === false}
+      />
       <Header />
-      
+
       <main className="container py-8 max-w-4xl">
         <Button variant="ghost" asChild className="mb-6">
           <Link to="/">

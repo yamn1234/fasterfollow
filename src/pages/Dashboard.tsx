@@ -11,6 +11,7 @@ import ProfileTab from "@/components/dashboard/ProfileTab";
 import SettingsTab from "@/components/dashboard/SettingsTab";
 import DashboardNavigation from "@/components/dashboard/DashboardNavigation";
 import MobileBottomNav from "@/components/dashboard/MobileBottomNav";
+import SEOHead from "@/components/SEOHead";
 
 export type TabType = "overview" | "new-order" | "orders" | "transactions" | "balance" | "coupon" | "support" | "profile" | "settings";
 
@@ -44,6 +45,12 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-background">
+      <SEOHead
+        title="لوحة التحكم"
+        description="لوحة تحكم فاستر فولو - أدر طلباتك ورصيدك وحسابك"
+        canonicalUrl="/dashboard"
+        noIndex
+      />
       <DashboardHeader onGoHome={() => setActiveTab("overview")} onNavigate={(tab) => setActiveTab(tab as TabType)} />
       <DashboardNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
       <main className="flex-1 p-3 md:p-6 overflow-auto pb-20 md:pb-6">
