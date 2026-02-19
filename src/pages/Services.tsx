@@ -29,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import SEOHead from '@/components/SEOHead';
 
 const Services = () => {
   const navigate = useNavigate();
@@ -232,6 +233,12 @@ const Services = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="جميع خدمات التواصل الاجتماعي"
+        description="اختر من بين مجموعة واسعة من خدمات زيادة المتابعين والتفاعل على انستجرام وتيك توك وسناب شات ويوتيوب وتويتر بأفضل الأسعار"
+        keywords="خدمات سوشيال ميديا, زيادة متابعين, لايكات, مشاهدات, تعليقات"
+        canonicalUrl="/services"
+      />
       <Header />
 
       <main className="container py-8">
