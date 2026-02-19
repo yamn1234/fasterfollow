@@ -44,6 +44,7 @@ Deno.serve(async (req) => {
       { loc: '/', priority: '1.0', changefreq: 'daily' },
       { loc: '/services', priority: '0.9', changefreq: 'daily' },
       { loc: '/blog', priority: '0.8', changefreq: 'daily' },
+      { loc: '/llm.html', priority: '0.5', changefreq: 'monthly' },
     ];
 
     // Fetch all active services

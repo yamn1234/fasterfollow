@@ -129,21 +129,43 @@ Disallow: /admin
 Crawl-delay: 2
 
 # ===========================================
-# AI Crawlers (Block to protect content)
+# AI Crawlers (Allow for GEO visibility)
 # ===========================================
 User-agent: GPTBot
-Disallow: /
+Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /admin
 
 User-agent: ChatGPT-User
+Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /admin
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /admin
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /admin
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /admin
+
+# Block AI training-only bots
+User-agent: Google-Extended
 Disallow: /
 
 User-agent: CCBot
-Disallow: /
-
-User-agent: anthropic-ai
-Disallow: /
-
-User-agent: Claude-Web
 Disallow: /
 
 User-agent: Bytespider
