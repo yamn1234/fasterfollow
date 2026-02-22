@@ -237,6 +237,37 @@ const BalanceTab = () => {
     }
   };
 
+  const handleFawaterakPayment = async () => {
+    if (!user) {
+      toast.error("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
+    setProcessingPayment(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('fawaterak-create-payment', {
+        body: {
+          amount: numericAmount + paymentFee,
+          userId: user.id,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.paymentUrl) {
+        window.location.href = data.paymentUrl;
+        return;
+      } else {
+        throw new Error("لم يتم الحصول على رابط الدفع");
+      }
+    } catch (error) {
+      console.error("Fawaterak error:", error);
+      toast.error("حدث خطأ في إنشاء طلب الدفع");
+      setProcessingPayment(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedGateway) {
       toast.error("يرجى اختيار طريقة الدفع");
@@ -268,6 +299,12 @@ const BalanceTab = () => {
     // ONE payment (Visa/Mastercard)
     if (selectedGateway.slug === 'one') {
       await handleOnePayment();
+      return;
+    }
+
+    // Fawaterak payment
+    if (selectedGateway.slug === 'fawaterak') {
+      await handleFawaterakPayment();
       return;
     }
 
@@ -566,6 +603,11 @@ const BalanceTab = () => {
                     <>
                       <CreditCard className="h-5 w-5" />
                       الدفع بالفيزا/ماستركارد
+                    </>
+                  ) : selectedGateway?.slug === 'fawaterak' ? (
+                    <>
+                      <CreditCard className="h-5 w-5" />
+                      الدفع عبر فواتيرك
                     </>
                   ) : selectedGateway?.gateway_type === 'manual' && selectedGateway?.redirect_url ? (
                     <>
