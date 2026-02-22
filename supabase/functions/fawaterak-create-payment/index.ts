@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { encode as hexEncode } from "https://deno.land/std@0.168.0/encoding/hex.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +10,16 @@ const corsHeaders = {
 
 const FAWATERAK_API_URL = "https://app.fawaterk.com/api/v2";
 
+async function generateHash(data: string, key: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(key);
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(data));
+  return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -16,6 +27,7 @@ serve(async (req) => {
 
   try {
     const apiKey = Deno.env.get("FAWATERAK_API_KEY");
+    const providerKey = Deno.env.get("FAWATERAK_PROVIDER_KEY");
     if (!apiKey) {
       throw new Error("Fawaterak API key not configured");
     }
@@ -42,12 +54,10 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user email
     const { data: authUser } = await supabase.auth.admin.getUserById(userId);
     const customerEmail = authUser?.user?.email || "customer@example.com";
     const customerName = authUser?.user?.user_metadata?.full_name || "Customer";
 
-    // Get user's current balance
     const { data: profile } = await supabase
       .from("profiles")
       .select("balance")
@@ -56,40 +66,49 @@ serve(async (req) => {
 
     const currentBalance = profile?.balance || 0;
 
-    // Webhook/redirect URL
     const webhookUrl = `${supabaseUrl}/functions/v1/fawaterak-webhook`;
 
-    // Use invoiceInitPay with payment_method_id = 2 (Visa/Card) directly
+    const requestBody: Record<string, unknown> = {
+      payment_method_id: 2,
+      cartTotal: amount.toFixed(2),
+      currency: "USD",
+      customer: {
+        first_name: customerName.split(" ")[0] || "Customer",
+        last_name: customerName.split(" ").slice(1).join(" ") || "User",
+        email: customerEmail,
+        phone: "0500000000",
+        address: "Digital Product",
+      },
+      redirectionUrls: {
+        successUrl: `${webhookUrl}?status=success&userId=${userId}`,
+        failUrl: `${webhookUrl}?status=fail&userId=${userId}`,
+        pendingUrl: `${webhookUrl}?status=pending&userId=${userId}`,
+      },
+      cartItems: [
+        {
+          name: "Account Balance Top-up",
+          price: amount.toFixed(2),
+          quantity: "1",
+        },
+      ],
+    };
+
+    const headers: Record<string, string> = {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    };
+
+    // Add hash if provider key is available
+    if (providerKey) {
+      const hash = await generateHash(JSON.stringify(requestBody), providerKey);
+      headers["Hash"] = hash;
+      console.log("Hash key generated and included in request");
+    }
+
     const paymentRes = await fetch(`${FAWATERAK_API_URL}/invoiceInitPay`, {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        payment_method_id: 2,
-        cartTotal: amount.toFixed(2),
-        currency: "USD",
-        customer: {
-          first_name: customerName.split(" ")[0] || "Customer",
-          last_name: customerName.split(" ").slice(1).join(" ") || "User",
-          email: customerEmail,
-          phone: "0500000000",
-          address: "Digital Product",
-        },
-        redirectionUrls: {
-          successUrl: `${webhookUrl}?status=success&userId=${userId}`,
-          failUrl: `${webhookUrl}?status=fail&userId=${userId}`,
-          pendingUrl: `${webhookUrl}?status=pending&userId=${userId}`,
-        },
-        cartItems: [
-          {
-            name: "Account Balance Top-up",
-            price: amount.toFixed(2),
-            quantity: "1",
-          },
-        ],
-      }),
+      headers,
+      body: JSON.stringify(requestBody),
     });
 
     const responseText = await paymentRes.text();
@@ -114,7 +133,6 @@ serve(async (req) => {
       );
     }
 
-    // Extract payment URL and invoice ID from response
     const data = paymentData?.data;
     const invoiceId = data?.invoice_id || data?.invoiceId || data?.invoice?.id;
     const paymentUrl = data?.payment_data?.redirectTo || 
@@ -128,7 +146,6 @@ serve(async (req) => {
       throw new Error("No payment URL received from Fawaterak");
     }
 
-    // Create pending transaction
     await supabase.from("transactions").insert({
       user_id: userId,
       type: "deposit",
