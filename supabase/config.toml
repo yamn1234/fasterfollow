@@ -62,3 +62,9 @@ verify_jwt = false
 
 [functions.two-factor-toggle]
 verify_jwt = false
+
+[functions.fawaterak-create-payment]
+verify_jwt = false
+
+[functions.fawaterak-webhook]
+verify_jwt = false
