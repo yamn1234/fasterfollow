@@ -38,17 +38,16 @@ serve(async (req) => {
 
     console.log(`Creating Fawaterak payment for user ${userId}, amount: $${amount}`);
 
-    // Get Supabase project URL for callback
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user email for the invoice
+    // Get user email
     const { data: authUser } = await supabase.auth.admin.getUserById(userId);
     const customerEmail = authUser?.user?.email || "customer@example.com";
     const customerName = authUser?.user?.user_metadata?.full_name || "Customer";
 
-    // Get user's current balance for transaction record
+    // Get user's current balance
     const { data: profile } = await supabase
       .from("profiles")
       .select("balance")
@@ -57,40 +56,10 @@ serve(async (req) => {
 
     const currentBalance = profile?.balance || 0;
 
-    // Step 1: Get available payment methods
-    const methodsRes = await fetch(`${FAWATERAK_API_URL}/getPaymentmethods`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!methodsRes.ok) {
-      const errText = await methodsRes.text();
-      console.error("Fawaterak getPaymentmethods error:", errText);
-      throw new Error("Failed to get payment methods from Fawaterak");
-    }
-
-    const methodsData = await methodsRes.json();
-    console.log("Payment methods:", JSON.stringify(methodsData));
-
-    // Find Visa/card payment method (usually PaymentMethodId = 2 for cards)
-    // We'll use the first available method or specifically look for card/visa
-    let paymentMethodId = 2; // Default to card payment
-    if (methodsData?.data && Array.isArray(methodsData.data)) {
-      const cardMethod = methodsData.data.find(
-        (m: any) => m.payment_id === 2 || m.name_en?.toLowerCase().includes("visa") || m.name_en?.toLowerCase().includes("card")
-      );
-      if (cardMethod) {
-        paymentMethodId = cardMethod.payment_id;
-      }
-    }
-
-    // Callback URL for webhook
+    // Webhook/redirect URL
     const webhookUrl = `${supabaseUrl}/functions/v1/fawaterak-webhook`;
 
-    // Step 2: Execute payment
+    // Use invoiceInitPay with payment_method_id = 2 (Visa/Card) directly
     const paymentRes = await fetch(`${FAWATERAK_API_URL}/invoiceInitPay`, {
       method: "POST",
       headers: {
@@ -98,8 +67,8 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        payment_method_id: paymentMethodId,
-        cartTotal: amount.toString(),
+        payment_method_id: 2,
+        cartTotal: amount.toFixed(2),
         currency: "USD",
         customer: {
           first_name: customerName.split(" ")[0] || "Customer",
@@ -109,40 +78,53 @@ serve(async (req) => {
           address: "Digital Product",
         },
         redirectionUrls: {
-          successUrl: `${supabaseUrl}/functions/v1/fawaterak-webhook?status=success&userId=${userId}`,
-          failUrl: `${supabaseUrl}/functions/v1/fawaterak-webhook?status=fail&userId=${userId}`,
-          pendingUrl: `${supabaseUrl}/functions/v1/fawaterak-webhook?status=pending&userId=${userId}`,
+          successUrl: `${webhookUrl}?status=success&userId=${userId}`,
+          failUrl: `${webhookUrl}?status=fail&userId=${userId}`,
+          pendingUrl: `${webhookUrl}?status=pending&userId=${userId}`,
         },
         cartItems: [
           {
             name: "Account Balance Top-up",
-            price: amount.toString(),
+            price: amount.toFixed(2),
             quantity: "1",
           },
         ],
       }),
     });
 
-    const paymentData = await paymentRes.json();
+    const responseText = await paymentRes.text();
+    console.log("Fawaterak raw response:", responseText);
 
-    if (!paymentRes.ok || !paymentData?.data) {
+    let paymentData;
+    try {
+      paymentData = JSON.parse(responseText);
+    } catch {
+      console.error("Failed to parse Fawaterak response:", responseText);
+      throw new Error("Invalid response from Fawaterak");
+    }
+
+    if (!paymentRes.ok || paymentData?.status === "error") {
       console.error("Fawaterak payment error:", JSON.stringify(paymentData));
+      const errMsg = typeof paymentData?.message === "string" 
+        ? paymentData.message 
+        : JSON.stringify(paymentData?.message || "Unknown error");
       return new Response(
-        JSON.stringify({ error: "Failed to create payment", details: paymentData }),
+        JSON.stringify({ error: `Fawaterak error: ${errMsg}` }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("Fawaterak payment created:", JSON.stringify(paymentData.data));
-
-    const invoiceId = paymentData.data.invoice_id || paymentData.data.invoiceId;
-    const paymentUrl = paymentData.data.payment_data?.redirectTo || 
-                       paymentData.data.payment_data?.redirect_to ||
-                       paymentData.data.redirectTo ||
-                       paymentData.data.redirect_to;
+    // Extract payment URL and invoice ID from response
+    const data = paymentData?.data;
+    const invoiceId = data?.invoice_id || data?.invoiceId || data?.invoice?.id;
+    const paymentUrl = data?.payment_data?.redirectTo || 
+                       data?.payment_data?.redirect_to ||
+                       data?.redirectTo ||
+                       data?.redirect_to ||
+                       data?.payment_data?.url;
 
     if (!paymentUrl) {
-      console.error("No redirect URL in response:", JSON.stringify(paymentData));
+      console.error("No redirect URL found in response:", JSON.stringify(paymentData));
       throw new Error("No payment URL received from Fawaterak");
     }
 
@@ -158,11 +140,10 @@ serve(async (req) => {
       payment_reference: String(invoiceId),
     });
 
+    console.log(`Fawaterak payment created: invoiceId=${invoiceId}, url=${paymentUrl}`);
+
     return new Response(
-      JSON.stringify({
-        paymentUrl,
-        invoiceId,
-      }),
+      JSON.stringify({ paymentUrl, invoiceId }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {
