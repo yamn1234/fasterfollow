@@ -69,7 +69,6 @@ serve(async (req) => {
     const webhookUrl = `${supabaseUrl}/functions/v1/fawaterak-webhook`;
 
     const requestBody: Record<string, unknown> = {
-      payment_method_id: paymentMethodId || 2,
       cartTotal: amount.toFixed(2),
       currency: "USD",
       customer: {
@@ -92,6 +91,11 @@ serve(async (req) => {
         },
       ],
     };
+
+    // Only include payment_method_id if explicitly specified
+    if (paymentMethodId) {
+      requestBody.payment_method_id = paymentMethodId;
+    }
 
     const headers: Record<string, string> = {
       "Authorization": `Bearer ${apiKey}`,
