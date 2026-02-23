@@ -107,6 +107,17 @@ const AdminUsers = () => {
         return;
       }
 
+      // Fetch emails from edge function
+      let emailMap: Record<string, string> = {};
+      try {
+        const { data: emailData, error: emailError } = await supabase.functions.invoke('get-user-emails');
+        if (!emailError && emailData?.emailMap) {
+          emailMap = emailData.emailMap;
+        }
+      } catch (e) {
+        console.error('Error fetching emails:', e);
+      }
+
       // Fetch roles for each user
       const usersWithRoles = await Promise.all(
         profiles.map(async (profile) => {
@@ -118,6 +129,7 @@ const AdminUsers = () => {
 
           return {
             ...profile,
+            email: emailMap[profile.user_id] || '',
             role: roleData?.role || 'user',
           };
         })
@@ -180,9 +192,11 @@ const AdminUsers = () => {
   };
 
   const filteredUsers = users.filter((user) => {
+    const query = searchQuery.toLowerCase();
     const matchesSearch =
-      user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.user_id.toLowerCase().includes(searchQuery.toLowerCase());
+      user.full_name?.toLowerCase().includes(query) ||
+      user.user_id.toLowerCase().includes(query) ||
+      user.email?.toLowerCase().includes(query);
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     return matchesSearch && matchesRole;
   });
@@ -352,7 +366,7 @@ const AdminUsers = () => {
                           <div>
                             <p className="font-medium">{user.full_name || 'بدون اسم'}</p>
                             <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-                              {user.user_id}
+                              {user.email || user.user_id}
                             </p>
                           </div>
                         </div>
