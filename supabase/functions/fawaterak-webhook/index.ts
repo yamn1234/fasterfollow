@@ -18,7 +18,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get the frontend URL for redirects
-    const siteUrl = Deno.env.get("SITE_URL") || "https://fasterfollow.lovable.app";
+    const siteUrl = Deno.env.get("SITE_URL") || "https://fasterfollow.net";
 
     // Handle GET redirect from Fawaterak (success/fail/pending redirects)
     if (req.method === "GET") {
