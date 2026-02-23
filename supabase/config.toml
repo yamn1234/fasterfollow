@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.export-auth-users]
 verify_jwt = false
+
+[functions.admin-get-users]
+verify_jwt = false
