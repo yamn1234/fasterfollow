@@ -32,7 +32,7 @@ serve(async (req) => {
       throw new Error("Fawaterak API key not configured");
     }
 
-    const { amount, userId } = await req.json();
+    const { amount, userId, paymentMethodId } = await req.json();
 
     if (!amount || amount <= 0) {
       return new Response(
@@ -69,7 +69,7 @@ serve(async (req) => {
     const webhookUrl = `${supabaseUrl}/functions/v1/fawaterak-webhook`;
 
     const requestBody: Record<string, unknown> = {
-      payment_method_id: 2,
+      payment_method_id: paymentMethodId || 2,
       cartTotal: amount.toFixed(2),
       currency: "USD",
       customer: {
