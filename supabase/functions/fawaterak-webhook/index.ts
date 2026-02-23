@@ -47,11 +47,24 @@ serve(async (req) => {
             const verifyData = await verifyRes.json();
             console.log("Invoice verification:", JSON.stringify(verifyData));
 
-            if (verifyData?.data?.invoice_status === "paid" || verifyData?.data?.status === "paid") {
-              const paidAmount = parseFloat(verifyData.data?.invoice_total || verifyData.data?.total || "0");
+            const invoiceStatus = verifyData?.data?.status;
+            const statusText = verifyData?.data?.status_text;
+            const isPaid = statusText === "paid" || invoiceStatus === "paid" || invoiceStatus === 1 || invoiceStatus === "1";
+            
+            if (isPaid) {
+              // Get the transaction to find the original USD amount
+              const { data: transaction } = await supabase
+                .from("transactions")
+                .select("*")
+                .eq("payment_reference", String(invoiceId))
+                .eq("user_id", userId)
+                .eq("payment_method", "fawaterak")
+                .single();
 
-              if (paidAmount > 0) {
-                // Get current balance
+              if (transaction && transaction.balance_after === transaction.balance_before) {
+                // Payment not yet processed - use the stored USD amount
+                const depositAmount = transaction.amount;
+
                 const { data: profile } = await supabase
                   .from("profiles")
                   .select("balance")
@@ -59,25 +72,61 @@ serve(async (req) => {
                   .single();
 
                 const currentBalance = profile?.balance || 0;
-                const newBalance = currentBalance + paidAmount;
 
-                // Update balance
+                // Check bonus
+                const { data: bonusEnabled } = await supabase
+                  .from("site_settings")
+                  .select("value")
+                  .eq("key", "bonus_enabled")
+                  .single();
+
+                let bonusAmount = 0;
+                if (bonusEnabled?.value === true || bonusEnabled?.value === "true") {
+                  const { data: bonusRates } = await supabase
+                    .from("bonus_settings")
+                    .select("*")
+                    .eq("is_active", true)
+                    .order("min_amount", { ascending: false });
+
+                  const applicableRate = bonusRates?.find(r => depositAmount >= r.min_amount);
+                  if (applicableRate) {
+                    bonusAmount = (depositAmount * applicableRate.bonus_percentage) / 100;
+                  }
+                }
+
+                const totalCredit = depositAmount + bonusAmount;
+                const newBalance = currentBalance + totalCredit;
+
                 await supabase
                   .from("profiles")
                   .update({ balance: newBalance })
                   .eq("user_id", userId);
 
-                // Update transaction
                 await supabase
                   .from("transactions")
                   .update({
                     balance_after: newBalance,
                     description: `Fawaterak deposit completed - Invoice: ${invoiceId}`,
                   })
-                  .eq("payment_reference", String(invoiceId))
-                  .eq("user_id", userId);
+                  .eq("id", transaction.id);
 
-                console.log(`Balance updated for user ${userId}: $${currentBalance} -> $${newBalance}`);
+                // Add bonus transaction if applicable
+                if (bonusAmount > 0) {
+                  await supabase.from("transactions").insert({
+                    user_id: userId,
+                    type: "bonus",
+                    amount: bonusAmount,
+                    balance_before: currentBalance + depositAmount,
+                    balance_after: newBalance,
+                    description: `مكافأة شحن ${applicableRate?.bonus_percentage}%`,
+                    payment_method: "fawaterak",
+                    payment_reference: String(invoiceId),
+                  });
+                }
+
+                console.log(`Balance updated for user ${userId}: $${currentBalance} -> $${newBalance} (deposit: $${depositAmount}, bonus: $${bonusAmount})`);
+              } else {
+                console.log(`Payment already processed for invoice ${invoiceId}`);
               }
             }
           } catch (verifyError) {
@@ -110,9 +159,10 @@ serve(async (req) => {
       console.log("Fawaterak webhook received:", JSON.stringify(body));
 
       const invoiceId = body.invoice_id || body.InvoiceId;
-      const status = body.payment_status || body.invoice_status || body.status;
+      const statusText = body.payment_status || body.invoice_status || body.status_text || body.status;
+      const isPaid = statusText === "paid" || body.status === 1 || body.status === "1";
 
-      if (status === "paid" && invoiceId) {
+      if (isPaid && invoiceId) {
         // Find the transaction
         const { data: transaction } = await supabase
           .from("transactions")
