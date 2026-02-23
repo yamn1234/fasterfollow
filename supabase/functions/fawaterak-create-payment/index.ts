@@ -92,8 +92,8 @@ serve(async (req) => {
       ],
     };
 
-    // Use provided payment method ID, or 0 to show all available methods (including Apple Pay)
-    requestBody.payment_method_id = paymentMethodId || 0;
+    // Default to 2 (Visa/Mastercard) if no specific payment method provided
+    requestBody.payment_method_id = paymentMethodId || 2;
 
     const headers: Record<string, string> = {
       "Authorization": `Bearer ${apiKey}`,
