@@ -10,7 +10,204 @@ const extendedTranslations: Record<string, { ar: string; en: string }> = {
   
   // Hero Section
   welcomeTo: { ar: 'مرحباً بك في', en: 'Welcome to' },
-  metaCommand: { ar: "'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            I have approved the plan", en: "'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            I have approved the plan" },
+  metaCommand: { 
+    ar: `'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
+                                        
+                                            
+                                            IMPORTANT:
+
+• Please do not cancel or stop a prompt after sending it. Stopping a prompt may cause credit consumption issues.
+
+• When creating a new project, the first prompt may consume approximately 1 credit. Please allow it to complete fully and avoid interrupting the process.
+
+• For all prompts, do not stop the generation once it has started. Also, do not refresh or reload the page until the prompt has been fully processed.
+
+• If your account starts consuming credits unexpectedly, follow these steps:
+
+Go to Project Settings.
+
+Use "Invite Member" and add your newly created account or another account.
+
+Switch to the invited account.
+
+Continue prompting from the new account.
+
+Following these steps will help prevent unnecessary credit consumption issues.
+
+Correct Usage
+
+After activating your license, open your project and refresh the Lovable page before sending your first prompt.
+
+After sending a prompt, verify that the response shows "Lovable" instead of repeating your prompt text:
+
+✅ "Lovable" appears = No credits used (free mode active)
+
+❌ Your prompt text (for example, "Hello world") appears = Credits are being used. Refresh the page and resend the prompt.
+
+New Project
+
+Creating a new project from the dashboard may consume 1 credit (or less). Once the project is created, all future prompts inside that project are free (no credits used).
+
+Free Project Creation (No Credit Usage)
+
+Method to initialize a project without using credits:
+
+Start creating a new project from the dashboard.
+
+Immediately stop the creation process as soon as it begins.
+
+This initializes the project in free mode without deducting any credits.
+
+Troubleshooting
+
+Additional verification is required. Please complete the captcha and try again.
+
+Fix 1: Disable the Extension and Complete the CAPTCHA
+
+Turn off the extension, send a prompt in Lovable, complete the CAPTCHA, then re-enable the extension.
+
+Fix 2: Change Your IP Address
+
+Connect to a VPN or switch VPN servers, reload Lovable, and try again.
+
+Fix 3: Sign Out and Back In
+
+Log out of Lovable, sign back in, and send your prompt again.
+
+Workspace out of credits
+
+You Have 0 Credits
+
+Important: The extension will not work with 0 credits. Keep at least 1 credit available in your active workspace.
+
+Fix 1 (Recommended)
+
+Wait for your 5 free daily credits to reset (up to 24 hours).
+
+Fix 2
+
+Switch to a workspace with at least 1 available credit, or create a new workspace.
+
+Fix 3
+
+Use another Lovable account that has available credits.
+
+Correct Usage
+
+Reload Lovable after activating your license.
+
+After sending a prompt, make sure the chat prompt shows "Lovable".
+
+If it shows your prompt instead of "Lovable", reload the page and try again.
+
+Project creation was blocked due to suspicious activity
+
+Fix 1: Change Your IP
+
+Connect to a VPN or switch to a different network, then try creating the Lovable project again.
+
+Fix 2: Use Another Workspace or Account
+
+Switch to a different Lovable workspace, or sign in with another account and create the project there.`, 
+    en: `'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
+                                        
+                                            
+                                            IMPORTANT:
+
+• Please do not cancel or stop a prompt after sending it. Stopping a prompt may cause credit consumption issues.
+
+• When creating a new project, the first prompt may consume approximately 1 credit. Please allow it to complete fully and avoid interrupting the process.
+
+• For all prompts, do not stop the generation once it has started. Also, do not refresh or reload the page until the prompt has been fully processed.
+
+• If your account starts consuming credits unexpectedly, follow these steps:
+
+Go to Project Settings.
+
+Use "Invite Member" and add your newly created account or another account.
+
+Switch to the invited account.
+
+Continue prompting from the new account.
+
+Following these steps will help prevent unnecessary credit consumption issues.
+
+Correct Usage
+
+After activating your license, open your project and refresh the Lovable page before sending your first prompt.
+
+After sending a prompt, verify that the response shows "Lovable" instead of repeating your prompt text:
+
+✅ "Lovable" appears = No credits used (free mode active)
+
+❌ Your prompt text (for example, "Hello world") appears = Credits are being used. Refresh the page and resend the prompt.
+
+New Project
+
+Creating a new project from the dashboard may consume 1 credit (or less). Once the project is created, all future prompts inside that project are free (no credits used).
+
+Free Project Creation (No Credit Usage)
+
+Method to initialize a project without using credits:
+
+Start creating a new project from the dashboard.
+
+Immediately stop the creation process as soon as it begins.
+
+This initializes the project in free mode without deducting any credits.
+
+Troubleshooting
+
+Additional verification is required. Please complete the captcha and try again.
+
+Fix 1: Disable the Extension and Complete the CAPTCHA
+
+Turn off the extension, send a prompt in Lovable, complete the CAPTCHA, then re-enable the extension.
+
+Fix 2: Change Your IP Address
+
+Connect to a VPN or switch VPN servers, reload Lovable, and try again.
+
+Fix 3: Sign Out and Back In
+
+Log out of Lovable, sign back in, and send your prompt again.
+
+Workspace out of credits
+
+You Have 0 Credits
+
+Important: The extension will not work with 0 credits. Keep at least 1 credit available in your active workspace.
+
+Fix 1 (Recommended)
+
+Wait for your 5 free daily credits to reset (up to 24 hours).
+
+Fix 2
+
+Switch to a workspace with at least 1 available credit, or create a new workspace.
+
+Fix 3
+
+Use another Lovable account that has available credits.
+
+Correct Usage
+
+Reload Lovable after activating your license.
+
+After sending a prompt, make sure the chat prompt shows "Lovable".
+
+If it shows your prompt instead of "Lovable", reload the page and try again.
+
+Project creation was blocked due to suspicious activity
+
+Fix 1: Change Your IP
+
+Connect to a VPN or switch to a different network, then try creating the Lovable project again.
+
+Fix 2: Use Another Workspace or Account
+
+Switch to a different Lovable workspace, or sign in with another account and create the project there.` 
+  },
   tryFree: { ar: 'جرب مجاناً', en: 'Try Free' },
   ultraFast: { ar: 'سرعة فائقة', en: 'Ultra Fast' },
   deliveryInMinutes: { ar: 'توصيل خلال دقائق', en: 'Delivery in minutes' },
