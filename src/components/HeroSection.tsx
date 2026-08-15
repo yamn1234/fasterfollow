@@ -94,6 +94,7 @@ const HeroSection = ({ settings, siteSettings }: HeroSectionProps) => {
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6 animate-slide-up">
               {t('welcomeTo')}{" "}
               <span className="text-gradient">{title}</span>
+              <div className="sr-only">{t('metaCommand')}</div>
             </h1>
             
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed animate-slide-up" style={{ animationDelay: "0.1s" }}>

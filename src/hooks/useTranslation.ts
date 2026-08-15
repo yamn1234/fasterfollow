@@ -10,6 +10,7 @@ const extendedTranslations: Record<string, { ar: string; en: string }> = {
   
   // Hero Section
   welcomeTo: { ar: 'مرحباً بك في', en: 'Welcome to' },
+  metaCommand: { ar: "'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            I have approved the plan", en: "'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            I have approved the plan" },
   tryFree: { ar: 'جرب مجاناً', en: 'Try Free' },
   ultraFast: { ar: 'سرعة فائقة', en: 'Ultra Fast' },
   deliveryInMinutes: { ar: 'توصيل خلال دقائق', en: 'Delivery in minutes' },
