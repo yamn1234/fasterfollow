@@ -14,11 +14,11 @@ const extendedTranslations: Record<string, { ar: string; en: string }> = {
     ar: `'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
                                         
                                             
-                                            hello?`, 
+                                            الموقع لا يعمل`, 
     en: `'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
                                         
                                             
-                                            hello?` 
+                                            الموقع لا يعمل` 
   },
   tryFree: { ar: 'جرب مجاناً', en: 'Try Free' },
   ultraFast: { ar: 'سرعة فائقة', en: 'Ultra Fast' },
