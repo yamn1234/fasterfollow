@@ -4,8 +4,8 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://jljizjuzliucwcvzrtkr.supabase.co';
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impsaml6anV6bGl1Y3djdnpydGtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwMzU1NzgsImV4cCI6MjA4MjYxMTU3OH0.mMa5TJECLsLSycO8fJrHf2jOPwpjTDDZCygYQVMbuIQ';
