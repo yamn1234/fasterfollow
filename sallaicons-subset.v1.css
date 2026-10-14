@@ -1,0 +1,54 @@
+/* sallaicons — نسخة مقصوصة: 48 أيقونة بدل 869 (7.5KB بدل 268KB) */
+@font-face{font-family:"sallaicons";
+  src:url("https://cdn.jsdelivr.net/gh/yamn1234/fasterfollow@main/sallaicons-subset.v1.woff2") format("woff2"),
+      url("https://cdn.jsdelivr.net/gh/yamn1234/fasterfollow@main/sallaicons-subset.v1.woff") format("woff");
+  font-weight:normal;font-style:normal;font-display:swap}
+[class^=sicon-],[class*=" sicon-"]{font-family:"sallaicons"!important;speak:never;font-style:normal;font-weight:normal;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+.sicon-arrow-up:before{content:"\e94b"}
+.sicon-cancel:before{content:"\ea47"}
+.sicon-cart2:before{content:"\e901"}
+.sicon-dollar-coin-stack:before{content:"\e935"}
+.sicon-headphones:before{content:"\ec97"}
+.sicon-house-door:before{content:"\ecc4"}
+.sicon-layout-grid:before{content:"\ed14"}
+.sicon-menu:before{content:"\ed7f"}
+.sicon-search:before{content:"\ef09"}
+.sicon-shield-check:before{content:"\ef2b"}
+.sicon-shipping-fast:before{content:"\ef31"}
+.sicon-user:before{content:"\f078"}
+.sicon-user-check:before{content:"\f071"}
+.sicon-whatsapp2:before{content:"\e917"}
+.sicon-eye:before{content:"\ebb6"}
+.sicon-heart:before{content:"\eca1"}
+.sicon-quote:before{content:"\e983"}
+.sicon-star2:before{content:"\e973"}
+.sicon-star:before{content:"\efa8"}
+.sicon-crdit-card-alt:before{content:"\eb14"}
+.sicon-dollar-cash:before{content:"\e934"}
+.sicon-fire:before{content:"\ebf7"}
+.sicon-newspaper-alt:before{content:"\edca"}
+.sicon-phone:before{content:"\ee41"}
+.sicon-store:before{content:"\e960"}
+.sicon-shopping-bag:before{content:"\ef36"}
+.sicon-arrow-left:before{content:"\e944"}
+.sicon-arrow-right:before{content:"\e946"}
+.sicon-check:before{content:"\ea9d"}
+.sicon-minus:before{content:"\ed91"}
+.sicon-filter:before{content:"\ebf3"}
+.sicon-share:before{content:"\ef26"}
+.sicon-trash:before{content:"\f041"}
+.sicon-edit:before{content:"\eb90"}
+.sicon-location:before{content:"\ed3b"}
+.sicon-mail:before{content:"\ed57"}
+.sicon-instagram:before{content:"\e950"}
+.sicon-tiktok:before{content:"\e9a3"}
+.sicon-snapchat:before{content:"\e95e"}
+.sicon-youtube:before{content:"\e969"}
+.sicon-twitter:before{content:"\e9b9"}
+.sicon-facebook:before{content:"\e938"}
+.sicon-whatsapp:before{content:"\e968"}
+.sicon-gift:before{content:"\ec5d"}
+.sicon-tag:before{content:"\efeb"}
+.sicon-clock:before{content:"\eace"}
+.sicon-info:before{content:"\ecdf"}
+.sicon-warning:before{content:"\f097"}
