@@ -1,0 +1,4 @@
+/* PingARLT — الأوزان المستخدمة في الصفحة الرئيسية فقط: 400 / 700 / 800 */
+@font-face{font-family:PingARLT;src:url("https://cdn.salla.network/fonts/lib/pingarlt/PingARLT-Regular.woff2") format("woff2"),url("https://cdn.salla.network/fonts/lib/pingarlt/PingARLT-Regular.woff") format("woff");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:PingARLT;src:url("https://cdn.salla.network/fonts/lib/pingarlt/PingARLT-Bold.woff2") format("woff2"),url("https://cdn.salla.network/fonts/lib/pingarlt/PingARLT-Bold.woff") format("woff");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:PingARLT;src:url("https://cdn.salla.network/fonts/lib/pingarlt/PingARLT-Heavy.woff2") format("woff2"),url("https://cdn.salla.network/fonts/lib/pingarlt/PingARLT-Heavy.woff") format("woff");font-weight:800;font-style:normal;font-display:swap}

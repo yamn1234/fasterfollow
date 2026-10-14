@@ -1,0 +1,17 @@
+/* sallaicons — نسخة مختصرة للصفحة الرئيسية (14 أيقونة بدل ~900) */
+@font-face{font-family:"sallaicons";src:url("https://cdn.salla.network/fonts/lib/sallaicons/sallaicons.woff?i91vnj") format("woff");font-weight:normal;font-style:normal;font-display:block}
+[class^=sicon-],[class*=" sicon-"]{font-family:"sallaicons"!important;speak:never;font-style:normal;font-weight:normal;font-variant:normal;text-transform:none;line-height:1;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+.sicon-arrow-up:before{content:"\e94b"}
+.sicon-cancel:before{content:"\ea47"}
+.sicon-cart2:before{content:"\e901"}
+.sicon-dollar-coin-stack:before{content:"\e935"}
+.sicon-headphones:before{content:"\ec97"}
+.sicon-house-door:before{content:"\ecc4"}
+.sicon-layout-grid:before{content:"\ed14"}
+.sicon-menu:before{content:"\ed7f"}
+.sicon-search:before{content:"\ef09"}
+.sicon-shield-check:before{content:"\ef2b"}
+.sicon-shipping-fast:before{content:"\ef31"}
+.sicon-user:before{content:"\f078"}
+.sicon-user-check:before{content:"\f071"}
+.sicon-whatsapp2:before{content:"\e917"}
