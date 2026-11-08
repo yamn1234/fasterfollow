@@ -1,0 +1,131 @@
+/* ff-seo v2 — Faster Follow structured data + H1 cleanup. No backslashes (Reparo-safe). */
+(function () {
+  if (window.__ffSeo) return; window.__ffSeo = 1;
+  var SITE = location.origin, BRAND = 'فاستر فولو';
+  var path = decodeURI(location.pathname);
+  function meta(n) { var m = document.querySelector('meta[property="' + n + '"],meta[name="' + n + '"]'); return m ? m.content : ''; }
+  function canon() { var l = document.querySelector('link[rel=canonical]'); return l ? l.href : location.href.split('?')[0]; }
+  function txt(e) { return e ? e.textContent.replace(/[ ]+/g, ' ').trim() : ''; }
+  function hasType(t) {
+    return [].some.call(document.querySelectorAll('script[type="application/ld+json"]'), function (s) {
+      /* top-level types only: Salla's related-products ItemList nests Product items and must not count */
+      try { var j = JSON.parse(s.textContent); return [].concat(j).some(function (x) {
+        return x && ([].concat(x['@type']).indexOf(t) > -1 || [].concat(x['@graph'] || []).some(function (g) { return [].concat(g['@type']).indexOf(t) > -1; }));
+      }); } catch (e) { return false; }
+    });
+  }
+  function add(obj, id) {
+    if (document.getElementById(id)) return;
+    var s = document.createElement('script'); s.type = 'application/ld+json'; s.id = id;
+    s.textContent = JSON.stringify(obj); document.head.appendChild(s);
+  }
+  function crumbs(list) {
+    return { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: list.map(function (c, i) {
+      return { '@type': 'ListItem', position: i + 1, name: c[0], item: c[1] }; }) };
+  }
+  function h1() { return txt(document.querySelector('h1')) || document.title.split('|')[0].trim(); }
+
+  /* keep a single H1: extra H1s become H2 with same classes */
+  function fixH1() {
+    var hs = document.querySelectorAll('h1');
+    for (var i = 1; i < hs.length; i++) {
+      var n = document.createElement('h2'); n.className = hs[i].className; n.innerHTML = hs[i].innerHTML;
+      hs[i].parentNode.replaceChild(n, hs[i]);
+    }
+  }
+
+  /* same endpoint the store's reviews summary uses */
+  async function rating(id) {
+    try {
+      var r = ((await salla.api.request('rating/summary/' + id)) || {}).data || {};
+      var cnt = +r.count; if (!cnt) return null;
+      var sum = 0, w = 0, rv = r.reviews || {};
+      Object.keys(rv).forEach(function (k) { sum += (+k) * (+rv[k]); w += +rv[k]; });
+      var val = w ? Math.round(sum / w * 10) / 10 : +r.rating;
+      if (!val) return null;
+      return { '@type': 'AggregateRating', ratingValue: val, reviewCount: cnt, bestRating: 5, worstRating: 1 };
+    } catch (e) { return null; }
+  }
+
+  async function product(id) {
+    if (hasType('Product')) return;
+    var d = {};
+    try { d = (await salla.api.product.getDetails(+id, ['options'])).data || {}; } catch (e) {}
+    /* API returns prices in the visitor's display currency: convert back to the store base currency (SAR) */
+    var bc = d.base_currency_price || {};
+    var base = +d.price || 0;
+    var f = 1;
+    try { var rates = salla.config.get('currencies') || {}, code = salla.config.get('user.currency_code');
+      if (code && rates[code] && +rates[code].amount) f = 1 / +rates[code].amount; } catch (e) {}
+    if (f === 1 && bc.amount && base) f = bc.amount / base;
+    var cur = bc.currency || 'SAR';
+    function money(x) { return Math.round(x * f * 100) / 100; }
+    var ops = d.options || [], adds = [];
+    function vals(o) { return (o.details || []).filter(function (x) { return !x.is_out && money(+x.additional_price || 0) < 99999 && !/غير متاح/.test(x.name || ''); }); }
+    /* required options; a value can unlock dependent required options (visibility_condition), priced on top of it */
+    ops.forEach(function (o) {
+      if (!o.required || o.visibility_condition) return;
+      var vs = vals(o); if (!vs.length) return;
+      var lo = Infinity, hi = -Infinity, cnt = 0;
+      vs.forEach(function (v) {
+        var l = +v.additional_price || 0, h = l, c = 1;
+        ops.forEach(function (dep) {
+          var vc = dep.visibility_condition;
+          if (!dep.required || !vc || vc.option != o.id || vc.value != v.id) return;
+          var p = vals(dep).map(function (x) { return +x.additional_price || 0; });
+          if (!p.length) return;
+          l += Math.min.apply(0, p); h += Math.max.apply(0, p); c *= p.length;
+        });
+        lo = Math.min(lo, l); hi = Math.max(hi, h); cnt += c;
+      });
+      adds.push([lo, hi, cnt]);
+    });
+    var lo = base, hi = base, n = 1;
+    adds.forEach(function (a) { lo += a[0]; hi += a[1]; n *= a[2]; });
+    lo = money(lo); hi = money(hi);
+    var avail = (d.is_available === false || d.is_out_of_stock) ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock';
+    var offers = hi > lo
+      ? { '@type': 'AggregateOffer', priceCurrency: cur, lowPrice: lo, highPrice: hi, offerCount: n, availability: avail, url: canon() }
+      : { '@type': 'Offer', priceCurrency: cur, price: lo, availability: avail, url: canon(), itemCondition: 'https://schema.org/NewCondition' };
+    var img = (d.image && d.image.url) || meta('og:image');
+    var p = { '@context': 'https://schema.org', '@type': 'Product', '@id': canon() + '#product', name: h1() || d.name,
+      description: meta('description') || meta('og:description'), image: img ? [img] : undefined, sku: String(d.sku || id),
+      brand: { '@type': 'Brand', name: BRAND }, url: canon(), offers: offers };
+    if (lo <= 0) delete p.offers;
+    var r = await rating(id);
+    if (r) p.aggregateRating = r;
+    if (!p.offers && !p.aggregateRating) return;
+    add(p, 'ff-ld-product');
+  }
+
+
+  function article() {
+    if (hasType('BlogPosting') || hasType('Article')) return;
+    var img = meta('og:image'), t = document.querySelector('time[datetime]');
+    var a = { '@context': 'https://schema.org', '@type': 'BlogPosting', headline: h1().slice(0, 110), description: meta('description'),
+      mainEntityOfPage: canon(), url: canon(), inLanguage: 'ar', image: img ? [img] : undefined,
+      author: { '@type': 'Organization', name: BRAND, url: SITE },
+      publisher: { '@type': 'Organization', name: BRAND, logo: { '@type': 'ImageObject', url: (window.salla && salla.config.get('store.logo')) || img } } };
+    if (t) a.datePublished = t.getAttribute('datetime');
+    add(a, 'ff-ld-article');
+  }
+
+  async function run() {
+    fixH1();
+    var home = [BRAND, SITE + '/'];
+    var m = path.match(/[/]p([0-9]+)$/);
+    if (m) {
+      await product(m[1]);
+      if (!hasType('BreadcrumbList')) add(crumbs([home, [h1(), canon()]]), 'ff-ld-bc');
+    } else if (/^[/]blog[/].+[/]a-?[0-9]+$/.test(path)) {
+      article(); /* Salla already renders a BreadcrumbList on blog posts */
+    }
+  }
+  /* Cloudflare Rocket Loader is on: window 'load' listeners are unreliable, so poll until DOM + Salla SDK are ready */
+  var t0 = Date.now();
+  (function wait() {
+    var ok = document.readyState !== 'loading' && window.salla && salla.api && salla.config && document.querySelector('h1');
+    if (ok || Date.now() - t0 > 15000) { try { run(); } catch (e) {} return; }
+    setTimeout(wait, 300);
+  })();
+})();
