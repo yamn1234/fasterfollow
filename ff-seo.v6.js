@@ -3,7 +3,9 @@
 (function () {
   if (location.pathname.indexOf('/pages/lp') !== 0 || window.__ffLpFix) return; window.__ffLpFix = 1;
   var B = 'https://cdn.assets.salla.network/theme-landing-page/master/';
-  fetch(B + 'index.html').then(function (r) { return r.text(); }).then(function (h) {
+  /* Run only after full load: starting Next.js while the page is still parsing (Rocket Loader) can hang the tab. */
+  if (document.readyState === 'complete') setTimeout(go, 300); else window.addEventListener('load', function () { setTimeout(go, 300); });
+  function go() { if (window.next) return; fetch(B + 'index.html').then(function (r) { return r.text(); }).then(function (h) {
     if (window.next) return;
     var have = {};
     [].forEach.call(document.scripts, function (s) { if (s.src) have[s.src.split('?')[0]] = 1; });
@@ -13,7 +15,7 @@
       if (have[u] || u.indexOf('polyfills') > -1 || u.indexOf(B) !== 0) continue;
       var s = document.createElement('script'); s.src = u; s.async = true; document.head.appendChild(s);
     }
-  }).catch(function () {});
+  }).catch(function () {}); }
 })();
 /* Landing pages: Salla's HTML block doesn't run inline scripts, so page widgets get their JS here. */
 (function () {
