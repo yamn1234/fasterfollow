@@ -470,3 +470,6 @@
 
 /* ===== فاستر فولو: منع قفز أقسام الرئيسية CLS (2026-11-10) ===== */
 (function(){var e=document.documentElement;if(!document.body||!document.body.classList.contains("index")||e.classList.contains("ff-home-ready")){e.classList.add("ff-home-ready");return}function n(){var t=document.getElementById("ff-best"),a=document.getElementById("ff-hero2")&&document.getElementById("ff-trustbar")&&document.getElementById("ff-how")&&document.getElementById("ff-qa");return a&&t&&(t.classList.contains("ffb-on")||performance.now()>2500)}var o=setInterval(function(){(n()||performance.now()>3e3)&&(clearInterval(o),requestAnimationFrame(function(){e.classList.add("ff-home-ready")}))},50)})();
+
+/* ===== فاستر فولو: منع قفز منتجات أقسام المنصات CLS (2026-11-10) ===== */
+(function(){var n=document.documentElement;if(!(!n.classList.contains("ff-qa-wait")||n.classList.contains("ff-qa-ready")))var a=setInterval(function(){(document.getElementById("ff-qa")||performance.now()>3e3)&&(clearInterval(a),requestAnimationFrame(function(){n.classList.add("ff-qa-ready")}))},50)})();
