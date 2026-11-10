@@ -1,4 +1,37 @@
 /* ff-seo v6 — Faster Follow structured data + H1 cleanup. No backslashes (Reparo-safe). */
+/* Quiet background calls: requests made by our own scripts (cdn.jsdelivr.net/gh/yamn1234) never show Salla error toasts to the shopper.
+   Also: ff-main's price refresh must only ask for a product price on product pages (on /cart it was asking with the cart id -> 410 toast). */
+(function () {
+  if (window.__ffQuiet) return; window.__ffQuiet = 1;
+  var onProduct = /p[0-9]+$/.test(location.pathname);
+  function ours() { try { return (new Error().stack || '').indexOf('yamn1234/fasterfollow') > -1; } catch (e) { return false; } }
+  function wrap(obj, name, guard) {
+    if (!obj || typeof obj[name] !== 'function' || obj[name].__ffq) return;
+    var orig = obj[name];
+    var fn = function () {
+      var self = this, args = arguments;
+      if (guard && guard(args)) return Promise.reject(new Error('ff-skip'));
+      if (!ours() || !salla.api || !salla.api.withoutNotifier) return orig.apply(self, args);
+      return salla.api.withoutNotifier(function () { return orig.apply(self, args); });
+    };
+    fn.__ffq = 1; obj[name] = fn;
+  }
+  function priceGuard(args) {
+    if (onProduct || !ours()) return false;
+    return true;
+  }
+  var n = 0;
+  (function go() {
+    var s = window.salla;
+    if (!s || !s.api || !s.api.product) { if (++n < 100) setTimeout(go, 100); return; }
+    wrap(s.api.product, 'getPrice', priceGuard);
+    if (s.product && s.product.api && s.product.api !== s.api.product) wrap(s.product.api, 'getPrice', priceGuard);
+    wrap(s.api.product, 'fetch'); wrap(s.api.product, 'getDetails');
+    if (s.api.component) wrap(s.api.component, 'getReviews');
+    if (s.cart) wrap(s.cart, 'details');
+    if (s.api.cart) wrap(s.api.cart, 'details');
+  })();
+})();
 /* Landing pages: Reparo drops one Next.js chunk (framework), so the page stays blank. Re-add any missing chunk from Salla's own build list. */
 (function () {
   if (location.pathname.indexOf('/pages/lp') !== 0 || window.__ffLpFix) return; window.__ffLpFix = 1;
