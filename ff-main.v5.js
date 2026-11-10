@@ -473,3 +473,6 @@
 
 /* ===== فاستر فولو: منع قفز منتجات أقسام المنصات CLS (2026-11-10) ===== */
 (function(){var n=document.documentElement;if(!(!n.classList.contains("ff-qa-wait")||n.classList.contains("ff-qa-ready")))var a=setInterval(function(){(document.getElementById("ff-qa")||performance.now()>3e3)&&(clearInterval(a),requestAnimationFrame(function(){n.classList.add("ff-qa-ready")}))},50)})();
+
+/* a11y labels for agent browsing: cart icon link + bought-together checkboxes */
+!function(){if(window.__ffA11y)return;window.__ffA11y=1;function f(){var a=document.querySelectorAll("a.s-cart-summary-wrapper:not([aria-label])"),i;for(i=0;i<a.length;i++)a[i].setAttribute("aria-label","سلة المشتريات");var c=document.querySelectorAll("input.s-bought-together-checkbox:not([aria-label])");for(i=0;i<c.length;i++){var it=c[i].closest(".s-bought-together-item"),n=it&&it.querySelector("[class*=title],[class*=name],h3,h4");var t=(n&&n.textContent||"").replace(/\s+/g," ").trim().slice(0,60);c[i].setAttribute("aria-label","إضافة "+(t||"المنتج")+" للطلب")}}f();if(window.MutationObserver){var t=0;new MutationObserver(function(){t||(t=setTimeout(function(){t=0;f()},400))}).observe(document.documentElement,{childList:!0,subtree:!0})}}();
