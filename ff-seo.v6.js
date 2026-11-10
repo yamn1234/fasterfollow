@@ -1,4 +1,20 @@
 /* ff-seo v6 — Faster Follow structured data + H1 cleanup. No backslashes (Reparo-safe). */
+/* Landing pages: Reparo drops one Next.js chunk (framework), so the page stays blank. Re-add any missing chunk from Salla's own build list. */
+(function () {
+  if (location.pathname.indexOf('/pages/lp') !== 0 || window.__ffLpFix) return; window.__ffLpFix = 1;
+  var B = 'https://cdn.assets.salla.network/theme-landing-page/master/';
+  fetch(B + 'index.html').then(function (r) { return r.text(); }).then(function (h) {
+    if (window.next) return;
+    var have = {};
+    [].forEach.call(document.scripts, function (s) { if (s.src) have[s.src.split('?')[0]] = 1; });
+    var re = /<script src="([^"]+_next[^"]+[.]js)"/g, m;
+    while ((m = re.exec(h))) {
+      var u = m[1];
+      if (have[u] || u.indexOf('polyfills') > -1 || u.indexOf(B) !== 0) continue;
+      var s = document.createElement('script'); s.src = u; s.async = true; document.head.appendChild(s);
+    }
+  }).catch(function () {});
+})();
 (function () {
   if (window.__ffSeo) return; window.__ffSeo = 1;
   var SITE = location.origin, BRAND = 'فاستر فولو';
