@@ -15,6 +15,31 @@
     }
   }).catch(function () {});
 })();
+/* Landing pages: Salla's HTML block doesn't run inline scripts, so page widgets get their JS here. */
+(function () {
+  if (location.pathname.indexOf('/pages/lp') !== 0 || window.__ffLpUi) return; window.__ffLpUi = 1;
+  window.ffQ = function (b) { var i = b.closest('.ff-faq-item'); if (!i) return; var o = i.classList.contains('ff-faq-open'); document.querySelectorAll('.ff-faq-item.ff-faq-open').forEach(function (e) { e.classList.remove('ff-faq-open'); }); if (!o) i.classList.add('ff-faq-open'); };
+  var tries = 0;
+  (function wait() {
+    var c = document.getElementById('igx-cnt');
+    if (!c) { if (++tries < 40) setTimeout(wait, 500); return; }
+    if (c.getAttribute('data-on')) return; c.setAttribute('data-on', '1');
+    var n = 1250, names = ['عبدالله', 'نورة', 'فهد', 'ريم', 'سلطان', 'لمى', 'خالد', 'سارة', 'ناصر', 'جود'], i = 0;
+    setInterval(function () { var e = document.getElementById('igx-cnt'); if (e) { n += Math.floor(Math.random() * 3) + 1; e.textContent = n.toLocaleString('en-US'); } }, 1400);
+    setInterval(function () { var t = document.getElementById('igx-tst'); if (t) { i = (i + 1) % names.length; t.textContent = 'بدأ يتابعك: ' + names[i]; } }, 3200);
+    document.addEventListener('click', function (ev) {
+      var b = ev.target.closest && ev.target.closest('#igx-code'); if (!b) return;
+      try { navigator.clipboard.writeText('FA10'); } catch (e) {}
+      b.textContent = 'تم النسخ'; setTimeout(function () { b.textContent = 'FA10'; }, 1800);
+    });
+    var s = document.getElementById('igx-stk'), pk = document.getElementById('igx-pk');
+    if (s && pk && 'IntersectionObserver' in window) {
+      var seen = false;
+      window.addEventListener('scroll', function () { s.classList.toggle('on', window.scrollY > 500 && !seen); }, { passive: true });
+      new IntersectionObserver(function (e) { seen = e[0].isIntersecting; if (seen) s.classList.remove('on'); }).observe(pk);
+    }
+  })();
+})();
 (function () {
   if (window.__ffSeo) return; window.__ffSeo = 1;
   var SITE = location.origin, BRAND = 'فاستر فولو';
