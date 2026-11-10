@@ -80,7 +80,7 @@
   /* same endpoint the store's reviews summary uses */
   async function rating(id) {
     try {
-      var r = ((await salla.api.request('rating/summary/' + id)) || {}).data || {};
+      var r = ((await (function(f){try{return window.salla&&salla.api&&salla.api.withoutNotifier?salla.api.withoutNotifier(f):f()}catch(e){return Promise.reject(e)}})(function () { return salla.api.request('rating/summary/' + id); })) || {}).data || {};
       var cnt = +r.count; if (!cnt) return null;
       var sum = 0, w = 0, rv = r.reviews || {};
       Object.keys(rv).forEach(function (k) { sum += (+k) * (+rv[k]); w += +rv[k]; });
@@ -116,7 +116,7 @@
   async function product(id) {
     var sallaHas = hasType('Product');
     var d = {};
-    try { d = (await salla.api.product.getDetails(+id, ['options'])).data || {}; } catch (e) {}
+    try { d = (await (function(f){try{return window.salla&&salla.api&&salla.api.withoutNotifier?salla.api.withoutNotifier(f):f()}catch(e){return Promise.reject(e)}})(function () { return salla.api.product.getDetails(+id, ['options']); })).data || {}; } catch (e) {}
     /* API returns prices in the visitor's display currency: convert back to the store base currency (SAR) */
     var bc = d.base_currency_price || {};
     var base = +d.price || 0;
