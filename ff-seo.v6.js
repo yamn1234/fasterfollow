@@ -256,3 +256,118 @@
     setTimeout(wait, 300);
   })();
 })();
+/* Checkout: backup gateway as a payment-method tile (replaces the top freshPay bar) + clear guidance when Salla rejects the payment. No backslashes. */
+(function () {
+  if (window.__ffAltPay || location.pathname.indexOf('/checkout') !== 0) return;
+  window.__ffAltPay = 1;
+  var CSS =
+    '#freshPayMainWrapper{display:none!important}' +
+    'ul.list--payment-methods li.ffalt-li{flex:1 0 100%!important;width:100%!important;max-width:100%!important;grid-column:1/-1!important;list-style:none}' +
+    'ul.list--payment-methods li.ffalt-li .ffalt-b{display:flex!important;align-items:center;justify-content:space-between;gap:10px;width:100%!important;max-width:100%!important;height:auto!important;min-height:58px;padding:10px 40px 10px 14px!important;border-radius:10px;border:1px dashed rgba(255,171,1,.55)!important;background:rgba(255,171,1,.06)!important;color:#fff;font-family:inherit;cursor:pointer;text-align:start}' +
+    'ul.list--payment-methods li.ffalt-li .ffalt-b.on{border-style:solid!important;border-color:#ffab01!important;background:rgba(255,171,1,.12)!important}' +
+    '.ffalt-b .t{display:flex;flex-direction:column;gap:2px;line-height:1.35}.ffalt-b .t b{font-size:14px;font-weight:800;color:#ffc53d}.ffalt-b .t small{font-size:11.5px;color:#c9d0e0}' +
+    '.ffalt-bg{display:flex;gap:4px;flex:0 0 auto;direction:ltr}.ffalt-bg span{display:inline-flex;align-items:center;height:20px;padding:0 6px;border-radius:5px;background:#fff;color:#111827;font-size:10px;font-weight:800}.ffalt-bg .ap{background:#000;color:#fff;box-shadow:0 0 0 1px #fff}.ffalt-bg .vi{color:#1a1f71;font-style:italic}.ffalt-bg .md{color:#00a650}' +
+    'body.ffalt-on ul.list--payment-methods li:not(.ffalt-li) button.active{background:rgb(11,18,34)!important;border-color:rgb(42,54,87)!important}' +
+    'body.ffalt-on [data-ffalt-hide]{display:none!important}' +
+    '#ffalt-panel{display:none;margin:14px 0 0;padding:14px;border-radius:14px;border:1px solid rgba(255,171,1,.35);background:#0b1222;color:#e5e7eb;direction:rtl}' +
+    'body.ffalt-on #ffalt-panel{display:block}' +
+    '#ffalt-panel h4{margin:0 0 6px;font-size:15px;font-weight:800;color:#fff}#ffalt-panel p{margin:0 0 10px;font-size:13px;line-height:1.8;color:#c9d0e0}' +
+    '#ffalt-panel ol{margin:0 0 12px;padding:0 18px 0 0;font-size:13px;line-height:1.9;color:#c9d0e0}' +
+    '#ffalt-panel #freshPayContainer{display:block;min-height:80px}' +
+    '.payment-alert{background:#fff4e5!important;border:1px solid #f59e0b!important;flex-wrap:wrap}' +
+    '.payment-alert .payment-alert__text{color:#7c2d12!important;font-weight:700!important;opacity:1!important}' +
+    '.payment-alert .ffalt-help{flex:1 0 100%;margin:8px 0 0;font-size:13px;line-height:1.8;color:#431407;font-weight:500}' +
+    '.payment-alert .ffalt-go{display:block;width:100%;margin:10px 0 0;min-height:44px;border:0;border-radius:12px;background:#111827;color:#ffc53d;font-family:inherit;font-size:14.5px;font-weight:800;cursor:pointer}' +
+    '@keyframes ffaltp{0%,100%{box-shadow:0 0 0 0 rgba(255,171,1,.0)}50%{box-shadow:0 0 0 6px rgba(255,171,1,.35)}}.ffalt-b.pulse{animation:ffaltp 1.2s ease 3}';
+  var st = document.createElement('style'); st.id = 'ffalt-css'; st.textContent = CSS;
+  (document.head || document.documentElement).appendChild(st);
+
+  var on = false;
+  function ul() { return document.querySelector('ul.list--payment-methods'); }
+  function panel() {
+    var p = document.getElementById('ffalt-panel');
+    if (p) return p;
+    var u = ul(); if (!u) return null;
+    /* the payment step block: append at its end (outside Vue-managed sibling lists) */
+    var host = u.closest('.payment_methods');
+    for (var i = 0; i < 3 && host; i++) host = host.parentElement;
+    host = host && host.parentElement;
+    if (!host) return null;
+    p = document.createElement('div'); p.id = 'ffalt-panel';
+    p.innerHTML = '<h4>الدفع عبر البوابة البديلة</h4>' +
+      '<p>نفس الطلب ونفس المبلغ، بس الدفع يتم من صفحة دفع ثانية آمنة. استخدمها إذا انرفضت بطاقتك أو ما كمل الدفع.</p>' +
+      '<ol><li>اضغط زر الدفع اللي تحت.</li><li>ادفع بمدى أو فيزا/ماستركارد أو Apple Pay.</li><li>بعد الدفع يوصلك تأكيد الطلب ونبدأ التنفيذ.</li></ol>' +
+      '<div class="ffalt-mount"></div>';
+    host.appendChild(p);
+    return p;
+  }
+  function markHide() {
+    var u = ul(); if (!u) return;
+    var pm = u.closest('.payment_methods');
+    var l1 = pm && pm.parentElement && pm.parentElement.parentElement;
+    var l2 = l1 && l1.parentElement;
+    if (!l1 || !l2) return;
+    [].forEach.call(l1.children, function (c) { if (!c.contains(pm)) c.setAttribute('data-ffalt-hide', ''); });
+    [].forEach.call(l2.children, function (c) { if (c !== l1 && !c.querySelector('.payment-alert') && !c.classList.contains('payment-alert')) c.setAttribute('data-ffalt-hide', ''); });
+  }
+  function openFresh() {
+    var p = panel(); if (!p) return;
+    var c = document.getElementById('freshPayContainer');
+    if (c && c.parentNode !== p.querySelector('.ffalt-mount')) p.querySelector('.ffalt-mount').appendChild(c);
+    if (c && typeof window.handleAbsoluteFreshPayment === 'function') {
+      c.style.display = 'none';
+      try { window.handleAbsoluteFreshPayment(); } catch (e) {}
+    }
+  }
+  function closeFresh() {
+    var c = document.getElementById('freshPayContainer'), m = document.getElementById('iframeMountPoint');
+    if (c) c.style.display = 'none';
+    if (m) m.innerHTML = '';
+  }
+  function setOn(v, scroll) {
+    on = v;
+    document.body.classList.toggle('ffalt-on', v);
+    var b = document.querySelector('.ffalt-b'); if (b) b.classList.toggle('on', v);
+    if (v) {
+      markHide(); openFresh();
+      var p = panel(); if (p && scroll) setTimeout(function () { p.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
+    } else closeFresh();
+  }
+  function tile() {
+    var u = ul(); if (!u || u.querySelector('li.ffalt-li')) return;
+    var dv = u.firstElementChild && u.firstElementChild.getAttributeNames().filter(function (a) { return a.indexOf('data-v-') === 0; })[0] || '';
+    var li = document.createElement('li'); li.className = 'ffalt-li'; if (dv) li.setAttribute(dv, '');
+    li.innerHTML = '<button type="button" class="btn btn--round btn--payment-option ffalt-b" aria-label="الدفع عبر البوابة البديلة">' +
+      '<span class="t"><b>بوابة الدفع البديلة</b><small>إذا انرفضت بطاقتك ادفع من هنا</small></span>' +
+      '<span class="ffalt-bg"><span class="md">mada</span><span class="vi">VISA</span><span class="ap">Apple Pay</span></span></button>';
+    if (on) li.firstChild.classList.add('on');
+    li.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); setOn(!on, true); }, true);
+    u.appendChild(li);
+  }
+  /* picking any Salla method switches back to Salla's own form */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('ul.list--payment-methods li:not(.ffalt-li) button');
+    if (b && on) setOn(false);
+  }, true);
+  function alertHelp() {
+    var a = document.querySelector('.payment-alert');
+    if (!a || a.querySelector('.ffalt-help')) return;
+    var h = document.createElement('div'); h.className = 'ffalt-help';
+    h.innerHTML = 'لا تشيل هم، طلبك محفوظ. جرّب بطاقة ثانية، أو كمّل الدفع عبر <b>بوابة الدفع البديلة</b> (مدى، فيزا، Apple Pay) بنفس المبلغ.' +
+      '<button type="button" class="ffalt-go">ادفع عبر البوابة البديلة</button>';
+    h.querySelector('button').addEventListener('click', function (e) {
+      e.preventDefault(); setOn(true, true);
+    });
+    a.appendChild(h);
+    var b = document.querySelector('.ffalt-b');
+    if (b) { b.classList.remove('pulse'); void b.offsetWidth; b.classList.add('pulse'); }
+  }
+  function tick() { tile(); alertHelp(); if (on) markHide(); }
+  var n = 0;
+  (function loop() { tick(); if (++n < 40) setTimeout(loop, 300); })();
+  if (window.MutationObserver) {
+    var q = 0;
+    new MutationObserver(function () { if (q) return; q = 1; setTimeout(function () { q = 0; tick(); }, 150); })
+      .observe(document.body || document.documentElement, { childList: true, subtree: true });
+  }
+})();
