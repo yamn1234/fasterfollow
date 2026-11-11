@@ -447,7 +447,7 @@
    Uses CSS order on the grid only: no DOM moves, no extra requests, works with infinite scroll. No backslashes (Reparo-safe). */
 (function () {
   if (window.__ffGrp) return; window.__ffGrp = 1;
-  var G = [['fol', 'متابعين'], ['sco', 'زيادة سكور'], ['lik', 'لايكات'], ['vie', 'مشاهدات'], ['com', 'تعليقات'], ['eng', 'تفاعل وباقات'], ['acf', 'حسابات متابعين'], ['acs', 'حسابات سكور'], ['acc', 'حسابات ويوزرات'], ['oth', 'خدمات أخرى']];
+  var G = [['fol', 'متابعين'], ['sco', 'زيادة سكور'], ['lik', 'لايكات'], ['vie', 'مشاهدات'], ['com', 'تعليقات'], ['eng', 'تفاعل وباقات'], ['acf', 'حسابات متابعين'], ['acs', 'حسابات سكور'], ['acc', 'حسابات ويوزرات'], ['oth', 'خدمات أخرى'], ['out', 'نفدت الكمية']];
   var IDX = {}; G.forEach(function (g, i) { IDX[g[0]] = i; });
   function has(n, a) { for (var i = 0; i < a.length; i++) if (n.indexOf(a[i]) > -1) return true; return false; }
   function kind(n) {
@@ -480,11 +480,12 @@
     var w = pl.querySelector('.s-products-list-wrapper'); if (!w) return;
     var cards = w.querySelectorAll(':scope > .s-product-card-entry');
     var heads = w.querySelectorAll(':scope > .ffgh');
-    if (sorted(pl)) { for (var h = 0; h < heads.length; h++) heads[h].classList.add('ffoff'); for (var q = 0; q < cards.length; q++) cards[q].style.order = ''; return; }
+    if (sorted(pl)) { for (var h = 0; h < heads.length; h++) heads[h].classList.add('ffoff'); for (var q = 0; q < cards.length; q++) cards[q].style.order = cards[q].classList.contains('s-product-card-out-of-stock') ? '99999' : ''; return; }
     var cnt = {}, used = 0, byk = {};
     for (var i = 0; i < cards.length; i++) {
       var c = cards[i], k = c.getAttribute('data-ffk');
       if (!k) { var t = c.querySelector('.s-product-card-content-title'); k = kind(t ? t.textContent : ''); c.setAttribute('data-ffk', k); }
+      if (c.classList.contains('s-product-card-out-of-stock')) k = 'out';
       if (!cnt[k]) { cnt[k] = 0; used++; byk[k] = []; }
       cnt[k]++; byk[k].push(c);
       c.style.order = String(IDX[k] * 1000 + 1 + i);
@@ -512,7 +513,7 @@
     /* small groups share a row (first fit, a later small group may move up next to an earlier one) */
     var packs = [];
     G.forEach(function (g) {
-      var k = g[0], n = cnt[k]; if (!n || n >= cols) return;
+      var k = g[0], n = cnt[k]; if (!n || n >= cols || k === 'out') return;
       for (var p = 0; p < packs.length; p++) if (packs[p].sum + n <= cols) { packs[p].ks.push(k); packs[p].sum += n; return; }
       packs.push({ ks: [k], sum: n });
     });
