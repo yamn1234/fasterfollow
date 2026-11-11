@@ -1,4 +1,7 @@
 /* ff-seo v6 — Faster Follow structured data + H1 cleanup. No backslashes (Reparo-safe). */
+/* First-order coupon popup (FA10, from ff-main) is turned off: block it before ff-main runs, and hide it if it was already created. The coupon stays in the hero. */
+window.__ffPromo = 1;
+(function () { var s = document.createElement('style'); s.textContent = '#ffp{display:none!important}'; (document.head || document.documentElement).appendChild(s); var p = document.getElementById('ffp'); if (p) p.remove(); })();
 /* Sub-category chips: hide empty image boxes (categories without an image rendered an empty dark square) and give every chip the same pill look. */
 (function () {
   if (document.getElementById('ff-subcat-fix')) return;
