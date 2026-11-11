@@ -481,12 +481,12 @@
     var cards = w.querySelectorAll(':scope > .s-product-card-entry');
     var heads = w.querySelectorAll(':scope > .ffgh');
     if (sorted(pl)) { for (var h = 0; h < heads.length; h++) heads[h].classList.add('ffoff'); for (var q = 0; q < cards.length; q++) cards[q].style.order = ''; return; }
-    var cnt = {}, used = 0;
+    var cnt = {}, used = 0, byk = {};
     for (var i = 0; i < cards.length; i++) {
       var c = cards[i], k = c.getAttribute('data-ffk');
       if (!k) { var t = c.querySelector('.s-product-card-content-title'); k = kind(t ? t.textContent : ''); c.setAttribute('data-ffk', k); }
-      if (!cnt[k]) { cnt[k] = 0; used++; }
-      cnt[k]++;
+      if (!cnt[k]) { cnt[k] = 0; used++; byk[k] = []; }
+      cnt[k]++; byk[k].push(c);
       c.style.order = String(IDX[k] * 1000 + 1 + i);
     }
     if (used < 2) { for (var j = 0; j < heads.length; j++) heads[j].classList.add('ffoff'); return; }
@@ -509,27 +509,25 @@
     /* small groups (fewer cards than one row) share a row: their headers sit side by side above their cards */
     var cols = getComputedStyle(w).gridTemplateColumns.split(' ').filter(Boolean).length;
     if (cols < 2) return;
-    var pack = [], sum = 0;
-    function flush() {
-      if (pack.length > 1) {
-        var base = IDX[pack[0]] * 1000 - 20, left = cols;
-        pack.forEach(function (k, n) {
-          var h = w.querySelector(':scope > .ffgh[data-k="' + k + '"]');
-          var sp = n === pack.length - 1 ? left : cnt[k];
-          left -= cnt[k];
-          h.style.order = String(base + n);
-          h.style.gridColumn = 'span ' + sp;
-        });
-      }
-      pack = []; sum = 0;
-    }
+    /* small groups share a row (first fit, a later small group may move up next to an earlier one) */
+    var packs = [];
     G.forEach(function (g) {
-      var n = cnt[g[0]]; if (!n) return;
-      if (n >= cols) { flush(); return; }
-      if (sum + n > cols) flush();
-      pack.push(g[0]); sum += n;
+      var k = g[0], n = cnt[k]; if (!n || n >= cols) return;
+      for (var p = 0; p < packs.length; p++) if (packs[p].sum + n <= cols) { packs[p].ks.push(k); packs[p].sum += n; return; }
+      packs.push({ ks: [k], sum: n });
     });
-    flush();
+    packs.forEach(function (pk) {
+      if (pk.ks.length < 2) return;
+      var base = IDX[pk.ks[0]] * 1000, left = cols;
+      pk.ks.forEach(function (k, n) {
+        var h = w.querySelector(':scope > .ffgh[data-k="' + k + '"]');
+        var sp = n === pk.ks.length - 1 ? left : cnt[k];
+        left -= cnt[k];
+        h.style.order = String(base - 20 + n);
+        h.style.gridColumn = 'span ' + sp;
+        byk[k].forEach(function (c, ci) { c.style.order = String(base + 1 + n * 100 + ci); });
+      });
+    });
   }
   var lists = [], tm = 0;
   function all() { for (var i = 0; i < lists.length; i++) run(lists[i]); }
