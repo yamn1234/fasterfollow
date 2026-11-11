@@ -371,3 +371,73 @@
       .observe(document.body || document.documentElement, { childList: true, subtree: true });
   }
 })();
+
+/* Sharp product-card images + hover preview. No backslashes (Reparo-safe).
+   Salla gives cards the 120x120 thumbnail of images uploaded by API, which is blurry at 220px+ on retina.
+   1) Swap thumbnail paths (bwxgX/<uuid>-WxH-KEY.ext) for the original (bwxgX/KEY.ext); Cloudflare resizing still serves a small file.
+   2) Desktop only: hovering a card image for a moment opens a large preview; the big file loads only on hover. */
+(function () {
+  if (window.__ffImg) return; window.__ffImg = 1;
+  var TH = /(cdn[.]salla[.]sa[/][^/]+[/]|bwxgX[/])[0-9a-f]{8}-[0-9a-f-]{27}-[0-9.]+x[0-9.]+-/;
+  function fix(u) {
+    if (!u || typeof u !== 'string' || !TH.test(u)) return u;
+    u = u.replace(TH, '$1');
+    /* card images are shown ~220-360px wide: 500px covers retina */
+    if (u.indexOf('/cdn-cgi/image/') > -1) u = u.replace(/width=[0-9]+/, function (m) { return +m.slice(6) < 500 ? "width=500" : m; });
+    return u;
+  }
+  var P = HTMLImageElement.prototype, d = Object.getOwnPropertyDescriptor(P, 'src');
+  if (d && d.set) Object.defineProperty(P, 'src', { configurable: true, enumerable: d.enumerable, get: function () { return d.get.call(this); }, set: function (v) { d.set.call(this, fix(v)); } });
+  var sa = Element.prototype.setAttribute;
+  Element.prototype.setAttribute = function (n, v) {
+    if (this.tagName === 'IMG') { var k = String(n).toLowerCase(); if (k === 'src' || k === 'data-src') v = fix(v); }
+    return sa.call(this, n, v);
+  };
+  function sweep() {
+    var a = document.querySelectorAll('img[src*="x"],img[data-src*="x"]');
+    for (var i = 0; i < a.length; i++) {
+      var im = a[i], ds = im.getAttribute('data-src'), s = im.getAttribute('src');
+      if (ds && TH.test(ds)) sa.call(im, 'data-src', fix(ds));
+      if (s && TH.test(s)) sa.call(im, 'src', fix(s));
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sweep); else sweep();
+  [600, 1500, 3000].forEach(function (t) { setTimeout(sweep, t); });
+
+  /* hover preview: real mouse + wide screen only */
+  if (!(window.matchMedia && matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1024px)').matches)) return;
+  var box = null, bimg = null, timer = 0, cur = null;
+  function big(u) {
+    u = fix(u || '');
+    if (u.indexOf('/cdn-cgi/image/') > -1) return u.replace(/width=[0-9]+/, 'width=900');
+    return u;
+  }
+  function make() {
+    var st = document.createElement('style');
+    st.textContent = '#ffzoom{position:fixed;z-index:2147482000;width:440px;height:440px;border-radius:18px;overflow:hidden;background:#111;box-shadow:0 24px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.08);pointer-events:none;opacity:0;transform:scale(.96);transition:opacity .16s ease,transform .16s ease}#ffzoom.on{opacity:1;transform:none}#ffzoom img{width:100%;height:100%;object-fit:cover;display:block}';
+    document.head.appendChild(st);
+    box = document.createElement('div'); box.id = 'ffzoom';
+    bimg = document.createElement('img'); bimg.alt = ''; bimg.decoding = 'async';
+    box.appendChild(bimg); document.body.appendChild(box);
+  }
+  function show(im) {
+    if (!box) make();
+    var r = im.getBoundingClientRect(), W = 440, gap = 16, vw = innerWidth, vh = innerHeight;
+    var left = r.right + gap + W <= vw ? r.right + gap : r.left - gap - W;
+    if (left < 8) left = Math.max(8, Math.min(vw - W - 8, r.left + r.width / 2 - W / 2));
+    var top = Math.max(8, Math.min(vh - W - 8, r.top + r.height / 2 - W / 2));
+    box.style.left = left + 'px'; box.style.top = top + 'px';
+    var u = big(im.currentSrc || im.src);
+    if (bimg.getAttribute('src') !== u) { box.classList.remove('on'); bimg.onload = function () { if (cur === im) box.classList.add('on'); }; bimg.src = u; }
+    else box.classList.add('on');
+  }
+  function hide() { clearTimeout(timer); cur = null; if (box) box.classList.remove('on'); }
+  document.addEventListener('mouseover', function (e) {
+    var im = e.target && e.target.closest && e.target.closest('.s-product-card-image img, .s-product-card-entry img.s-product-card-image-cover');
+    if (!im) { if (cur) hide(); return; }
+    if (im === cur) return;
+    hide(); cur = im;
+    timer = setTimeout(function () { if (cur === im) show(im); }, 350);
+  }, { passive: true });
+  window.addEventListener('scroll', hide, { passive: true });
+})();
