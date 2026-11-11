@@ -1,4 +1,11 @@
 /* ff-seo v6 — Faster Follow structured data + H1 cleanup. No backslashes (Reparo-safe). */
+/* Sub-category chips: hide empty image boxes (categories without an image rendered an empty dark square) and give every chip the same pill look. */
+(function () {
+  if (document.getElementById('ff-subcat-fix')) return;
+  var s = document.createElement('style'); s.id = 'ff-subcat-fix';
+  s.textContent = '.sub-categories .selected-cat-item:has(img:not([src])),.sub-categories .selected-cat-item:has(img[src=""]){display:none!important}a.sub-categories{background:rgb(41,41,41);padding:8px;border-radius:8px;justify-content:center;min-height:56px}';
+  (document.head || document.documentElement).appendChild(s);
+})();
 /* Quiet background calls: requests made by our own scripts (cdn.jsdelivr.net/gh/yamn1234) never show Salla error toasts to the shopper.
    Also: ff-main's price refresh must only ask for a product price on product pages (on /cart it was asking with the cart id -> 410 toast). */
 (function () {
