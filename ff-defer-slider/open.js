@@ -1,0 +1,5 @@
+(function(){if(window.ffDSo)return;window.ffDSo=1;if(innerWidth>=1024)return;
+function sp(s){var o=[],d=0,c='';for(var i=0;i<s.length;i++){var ch=s.charAt(i);if(ch==='(')d++;else if(ch===')')d--;if(ch===','&&d===0){o.push(c);c=''}else c+=ch}o.push(c);return o}
+var css='';function walk(l,w){for(var i=0;i<l.length;i++){var r=l[i];if(r.cssRules&&!r.selectorText){var t=r.cssText;walk(r.cssRules,t.slice(0,t.indexOf('{')));continue}var s=r.selectorText;if(!s||s.indexOf('salla-slider')<0)continue;var p=sp(s).filter(function(x){return x.indexOf('salla-slider')>-1}).map(function(x){return x.split('salla-slider').join('ff-defer-slider')}).join(',');var b=r.cssText.slice(r.cssText.indexOf('{'));css+=w?w+'{'+p+b+'}':p+b}}
+for(var k=0;k<document.styleSheets.length;k++){try{walk(document.styleSheets[k].cssRules,'')}catch(e){}}
+var st=document.createElement('style');st.setAttribute('data-ff','defer-slider');st.textContent=css;document.head.appendChild(st)})()
