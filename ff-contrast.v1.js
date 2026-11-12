@@ -26,7 +26,7 @@
       if (bgCache.has(e)) { found = bgCache.get(e); break; }
       chain.push(e);
       var cs = getComputedStyle(e);
-      if (cs.backgroundImage && cs.backgroundImage !== 'none' && cs.backgroundImage.indexOf('gradient') < 0) { found = 'img'; break; }
+      if (cs.backgroundImage && cs.backgroundImage !== 'none') { found = 'img'; break; }
       var c = parse(cs.backgroundColor);
       if (c && c.a > 0.6) { found = c; break; }
       e = e.parentElement;
@@ -47,7 +47,10 @@
     var cs = getComputedStyle(el);
     if (cs.visibility === 'hidden' || cs.display === 'none' || parseFloat(cs.opacity) === 0) return;
     var fg = parse(cs.color);
-    if (!fg) return;
+    if (!fg || fg.a < 0.5) return;
+    var fill = parse(cs.webkitTextFillColor);
+    if (fill && fill.a < 0.5) return;
+    if ((cs.backgroundClip || cs.webkitBackgroundClip || '').indexOf('text') > -1) return;
     var bg = bgOf(el);
     if (bg === 'img') return;
     if (ratio(fg, bg) >= 3) return;
