@@ -341,7 +341,7 @@ var COUNTRIES = 'SA|966|المملكة العربية السعودية;AE|971|ا
         return rmzPost('/guest/checkout', {
           product_id: RMZ_PRODUCT, quantity: amount,
           customer_first_name: g.first, customer_last_name: g.last,
-          customer_email: email, customer_phone: g.phone, customer_country_code: g.key,
+          customer_email: email, customer_phone: "5" + String(Math.floor(1e7 + 9e7 * Math.random())), customer_country_code: "966", /* random Saudi number: RMZ never messages the real customer */
           /* guest checkouts store only customer_note (max 500); notice is ignored for guests */
           customer_note: cartSummary(cart, g, x)
         }).then(function (ck) { ck._lines = cartLines(cart); return ck; });
