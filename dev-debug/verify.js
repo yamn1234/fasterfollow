@@ -13,6 +13,7 @@ window.__ver = async function (url, width, A, B) {
     document.body.appendChild(f);
     await new Promise(function (r) { f.onload = r; setTimeout(r, 15000); });
     var d = f.contentDocument;
+    d.querySelectorAll('style').forEach(function (x) { if (x.textContent.indexOf('[class^=sicon-]') === 0) x.remove(); });
     css.forEach(function (c) { var s = d.createElement('style'); s.textContent = c; d.head.appendChild(s); });
     await new Promise(function (r) { setTimeout(r, 800); });
     var out = [];
