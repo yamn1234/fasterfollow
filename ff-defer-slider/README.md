@@ -16,3 +16,5 @@ open.js mirrors every salla-slider CSS rule onto ff-defer-slider so the gallery 
 ## 2026-11-12 account pages
 - Cause of broken order pages after login: rule 39 (trimmed app.used.v5) applied on /account/* (it only excluded /orders). Added /account and /account/* to rule 39 excludes -> full theme app.css there.
 - Injection head[50] (/*): ff-avatar (user avatar white box fix). head[51] (/account, /account/*): ff-orders (dark/gold order list + order details). Source: ff-orders.v1.css @e17c6b1.
+- Thank-you page is /thankyou/<id> (no dash): added /thankyou,/thankyou/* to rule 39 excludes; injection head[52] (/thankyou*) = ff-thanks.v1.html @dd5a9c7 (dark card, steps, WhatsApp + back buttons, hides yellow band and empty shipments).
+- head[50] now = ff-usermenu.v1.css (avatar + dark user-menu dropdown), global.
