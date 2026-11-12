@@ -400,6 +400,8 @@ window.__ffPromo = 1;
     var a = document.querySelectorAll('img[src*="x"],img[data-src*="x"]');
     for (var i = 0; i < a.length; i++) {
       var im = a[i], ds = im.getAttribute('data-src'), s = im.getAttribute('src');
+      /* leave eager (LCP) images alone: swapping their src restarts the download and delays LCP */
+      if (im.getAttribute('loading') === 'eager') continue;
       if (ds && TH.test(ds)) sa.call(im, 'data-src', fix(ds));
       if (s && TH.test(s)) sa.call(im, 'src', fix(s));
     }
