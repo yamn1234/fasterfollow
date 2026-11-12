@@ -30,3 +30,11 @@ open.js mirrors every salla-slider CSS rule onto ff-defer-slider so the gallery 
 - Blinders 65,67,68,69,70 now also on "/"; 33 -> product-card.js data-ffsrc ("/"); 41 -> home.js data-ffsrc ("/").
 - ff/later (gtm AW) fallback 8s -> 15s; ff-main v11 (@1a1ebd4) releases held trackers 12s after load or on trusted interaction.
 - Results (mobile): home 88 -> 96 (TBT 60), categories 96, products 97-99, LCP <= 2.1s everywhere.
+
+## 2026-11-13 Reparo daily quota (30k worker requests)
+- Day stats: ~25k worker req; html 44%, json 33% (Salla /_app/e/api/s/track+page), js (bridge.js) ~3%. /cdn-cgi/* (rum, challenge) are not worker requests.
+- head 40/54: fetch wrapper drops track "Component Rendered" (returns {} 200 locally). Product View/page/cart events untouched.
+- blinder 67 (/*,/): bridge.js only loads if document/navigator.modelContext exists (bridge is a no-op otherwise).
+- blinder 32 repurposed (old 1.174 home css, backup ff_bl32_bak in reparo localStorage): footer /redirect/pages/* -> final page URLs (no 301s).
+- Product page same-origin worker calls: 5 -> 2 per view.
+- Open: product-card links use non-canonical slugs (no parens) -> 301 per click/crawl.
