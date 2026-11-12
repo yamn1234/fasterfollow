@@ -20,6 +20,7 @@ body.customer-orders-single .main-content .da-bgg{background:#111a2e!important;b
 body.customer-orders-single .main-content .space-y-4 > .min-w-full{border-radius:16px!important}
 body.customer-orders-single .main-content span.text-white[style*=background]{background:rgba(255,171,1,.14)!important;color:#ffc53d!important;border:1px solid rgba(255,171,1,.35);font-weight:700;padding:2px 12px!important}
 body.customer-orders-single .main-content span.text-white[style*=background] *{color:#ffc53d!important}
+body.customer-orders-single .main-content salla-button .s-button-outline *{color:#ffc53d!important}
 body.customer-orders-single .main-content salla-button .s-button-outline{color:#ffc53d!important;border-color:rgba(255,171,1,.5)!important;background:transparent!important;font-weight:700}
 /* digital services: hide the empty shipping header */
 body.customer-orders-single .shipping-orders > div:first-child{display:none!important}
@@ -33,8 +34,8 @@ body.customer-orders-single .s-order-details-options-item-name{color:#9aa6bf!imp
 body.customer-orders-single .s-order-details-option-default-text{color:#fff!important}
 /* totals card */
 body.customer-orders-single .s-order-totals-card-panel{background:#111a2e!important;border:1px solid #22304d!important;border-radius:16px!important}
-body.customer-orders-single .s-order-totals-card-heading{font-size:0!important}
-body.customer-orders-single .s-order-totals-card-heading:before{content:"ملخص الدفع";font-size:16px;font-weight:700;color:#fff}
 body.customer-orders-single .s-order-totals-card-label,body.customer-orders-single .s-order-totals-card-discount{color:#9aa6bf!important}
 body.customer-orders-single .s-order-totals-card-value{color:#fff!important}
-body.customer-orders-single .s-order-totals-card-row:last-child .s-order-totals-card-value{color:#ffc53d!important;font-weight:800}
+body.customer-orders-single .s-order-totals-card-total-label{color:#fff!important;font-weight:700}
+body.customer-orders-single .s-order-totals-card-total-value,body.customer-orders-single .s-order-totals-card-total-value b{color:#ffc53d!important;font-weight:800}
+body[class*=customer-orders] .main-content div,body[class*=customer-orders] .main-content dl,body[class*=customer-orders] .main-content dt,body[class*=customer-orders] .main-content dd{border-color:#22304d!important}
