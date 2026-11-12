@@ -58,6 +58,27 @@
     el.setAttribute('data-ffc', '1');
   }
 
+
+  /* customer account pages: white Salla cards -> brand dark cards (texts are then fixed by the contrast pass) */
+  function darkCards(root) {
+    if (!/(^| )customer-/.test(document.body.className)) return;
+    var mc = (root && root.closest && root.closest('.main-content')) ? root : document.querySelector('.main-content');
+    if (!mc) return;
+    var all = mc.getElementsByTagName('*');
+    for (var i = 0; i < all.length; i++) {
+      var e = all[i];
+      if (e.hasAttribute('data-ffd')) continue;
+      var r = e.getBoundingClientRect();
+      if (r.width < 120 || r.height < 40) continue;
+      var c = parse(getComputedStyle(e).backgroundColor);
+      if (c && c.a > 0.9 && c.r > 245 && c.g > 245 && c.b > 245) {
+        e.style.setProperty('background-color', '#111a2e', 'important');
+        e.style.setProperty('border', '1px solid #22304d', 'important');
+        e.setAttribute('data-ffd', '1');
+      }
+    }
+  }
+
   var queue = [], busy = false;
   function pump(deadline) {
     var t0 = Date.now();
@@ -70,6 +91,7 @@
   function later(fn) { if (window.requestIdleCallback) requestIdleCallback(fn, { timeout: 500 }); else setTimeout(fn, 30); }
   function scan(root) {
     if (!root || root.nodeType !== 1) return;
+    try { darkCards(root); } catch (e) {}
     queue.push(root);
     var all = root.getElementsByTagName('*');
     for (var i = 0; i < all.length; i++) queue.push(all[i]);
