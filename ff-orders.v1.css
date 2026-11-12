@@ -1,0 +1,40 @@
+/* ff-orders v1: customer account order pages (list + details) and user avatar, dark/gold brand */
+/* user avatar (header + bottom bar): no white box */
+salla-user-menu .s-user-menu-trigger{background:transparent!important;box-shadow:none!important;padding:0!important;min-width:0!important;width:auto!important;height:auto!important;border:0!important}
+salla-user-menu .s-user-menu-avatar-wrap{width:40px!important;height:40px!important;border-radius:10px!important;border:1px solid #22304d!important;overflow:hidden!important;display:flex!important;align-items:center;justify-content:center;background:#111a2e!important}
+salla-user-menu img.s-user-menu-trigger-avatar{width:30px!important;height:30px!important;border-radius:50%!important;object-fit:cover}
+
+/* page header strip */
+body[class*=customer-orders] .nav-title{background:#0e1628!important}
+body[class*=customer-orders] .nav-title img.profile-photo{border:2px solid #ffab01;border-radius:50%}
+
+/* ---------- orders list ---------- */
+body.customer-orders-index .s-orders-table-tbody-tr{background:#111a2e!important;border:1px solid #22304d!important;border-radius:16px!important;box-shadow:none!important;margin-bottom:12px}
+body.customer-orders-index .s-orders-table-tbody-tr *{border-color:#22304d}
+body.customer-orders-index .s-orders-mobile-title{color:#9aa6bf!important}
+body.customer-orders-index .s-orders-table-tbody-tr-td,body.customer-orders-index .s-orders-table-tbody-tr-td-content{color:#e5e7eb!important}
+body.customer-orders-index .s-orders-status-container{display:inline-flex!important;align-items:center;gap:6px;color:#ffc53d!important;background:rgba(255,171,1,.12);border:1px solid rgba(255,171,1,.35);padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
+
+/* ---------- order details ---------- */
+body.customer-orders-single .main-content .da-bgg{background:#111a2e!important;border:1px solid #22304d!important;border-radius:16px!important}
+body.customer-orders-single .main-content .space-y-4 > .min-w-full{border-radius:16px!important}
+body.customer-orders-single .main-content span.text-white[style*=background]{background:rgba(255,171,1,.14)!important;color:#ffc53d!important;border:1px solid rgba(255,171,1,.35);font-weight:700;padding:2px 12px!important}
+body.customer-orders-single .main-content span.text-white[style*=background] *{color:#ffc53d!important}
+body.customer-orders-single .main-content salla-button .s-button-outline{color:#ffc53d!important;border-color:rgba(255,171,1,.5)!important;background:transparent!important;font-weight:700}
+/* digital services: hide the empty shipping header */
+body.customer-orders-single .shipping-orders > div:first-child{display:none!important}
+body.customer-orders-single .order-item{border-bottom:0!important}
+body.customer-orders-single .order-item a.w-20{border-radius:12px;border:1px solid #22304d}
+body.customer-orders-single .order-item [class*="py-2.5"]{border-top:1px solid rgba(255,255,255,.06)}
+body.customer-orders-single .order-item [class*="py-2.5"] span{color:#9aa6bf}
+body.customer-orders-single .s-order-details-options-container{background:#16213a!important;border-radius:12px!important;border:0!important}
+body.customer-orders-single .s-order-details-options-title{color:#fff!important}
+body.customer-orders-single .s-order-details-options-item-name{color:#9aa6bf!important}
+body.customer-orders-single .s-order-details-option-default-text{color:#fff!important}
+/* totals card */
+body.customer-orders-single .s-order-totals-card-panel{background:#111a2e!important;border:1px solid #22304d!important;border-radius:16px!important}
+body.customer-orders-single .s-order-totals-card-heading{font-size:0!important}
+body.customer-orders-single .s-order-totals-card-heading:before{content:"ملخص الدفع";font-size:16px;font-weight:700;color:#fff}
+body.customer-orders-single .s-order-totals-card-label,body.customer-orders-single .s-order-totals-card-discount{color:#9aa6bf!important}
+body.customer-orders-single .s-order-totals-card-value{color:#fff!important}
+body.customer-orders-single .s-order-totals-card-row:last-child .s-order-totals-card-value{color:#ffc53d!important;font-weight:800}
