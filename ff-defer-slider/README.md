@@ -12,3 +12,7 @@ open.js mirrors every salla-slider CSS rule onto ff-defer-slider so the gallery 
 - Blinder 64 paint-gate script after gallery: made FCP wait (counted as render-blocking) -> disabled (/ff-off-gate).
 - Blinders 59-61 (font preload removal) are no-ops: blinders run before Reparo injections, so they can't edit injected code.
 - PSI mobile after: p1142472412 90 (FCP 1.1s, LCP 3.3s), p926222471 88. PSI is bimodal (some runs paint ~1-2s late on Salla JS).
+
+## 2026-11-12 account pages
+- Cause of broken order pages after login: rule 39 (trimmed app.used.v5) applied on /account/* (it only excluded /orders). Added /account and /account/* to rule 39 excludes -> full theme app.css there.
+- Injection head[50] (/*): ff-avatar (user avatar white box fix). head[51] (/account, /account/*): ff-orders (dark/gold order list + order details). Source: ff-orders.v1.css @e17c6b1.
