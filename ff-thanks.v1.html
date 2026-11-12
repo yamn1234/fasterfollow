@@ -1,0 +1,63 @@
+<style id="ff-thanks">
+body.thank-you .h-52.bg-primary{display:none!important}
+body.thank-you .container.mt-4{margin-top:18px}
+body.thank-you .container.mt-4>.da-bgg{background:#111a2e!important;border:1px solid #22304d!important;border-radius:18px!important;padding:22px 16px!important}
+body.thank-you .container.mt-4 .py-10{padding-top:6px!important;padding-bottom:8px!important}
+body.thank-you .container.mt-4 h1{color:#fff!important;font-size:21px!important;font-weight:800}
+body.thank-you .container.mt-4 h1+p{color:#9aa6bf!important;display:flex;align-items:center;gap:6px;justify-content:center;max-width:none!important}
+body.thank-you .container.mt-4 h1+p salla-button button{background:rgba(255,171,1,.12)!important;border:1px solid rgba(255,171,1,.4)!important;border-radius:999px!important;padding:4px 12px!important}
+body.thank-you .container.mt-4 h1+p salla-button button,body.thank-you .container.mt-4 h1+p salla-button button *{color:#ffc53d!important;font-weight:800}
+body.thank-you .container.mt-4 .s-button-solid{background:#ffab01!important;border-radius:12px!important;min-height:46px;padding:0 22px!important}
+body.thank-you .container.mt-4 .s-button-solid,body.thank-you .container.mt-4 .s-button-solid *{color:#111827!important;font-weight:800}
+body.thank-you .container.mt-4 article{background:rgba(255,171,1,.07);border:1px solid rgba(255,171,1,.3);border-radius:12px;padding:12px 14px!important;margin-top:14px;text-align:right!important}
+body.thank-you .container.mt-4 article p:empty,body.thank-you .container.mt-4 article p:has(>br:only-child){display:none}
+body.thank-you .container.mt-4 article,body.thank-you .container.mt-4 article *{color:#d8deea!important;font-size:13.5px;line-height:1.9}
+body.thank-you .container.mt-4 article:before{content:"وش يصير الحين؟";display:block;color:#ffc53d;font-weight:800;margin-bottom:2px}
+body.thank-you salla-order-shipments{display:none!important}
+.ff-ty-steps{display:flex;justify-content:space-between;position:relative;width:100%;max-width:340px;margin:14px auto 4px}
+.ff-ty-steps:before{content:"";position:absolute;top:13px;right:16%;left:16%;height:2px;background:#22304d}
+.ff-ty-steps .bar{position:absolute;top:13px;right:16%;width:34%;height:2px;background:#10b981}
+.ff-ty-steps .st{position:relative;z-index:1;width:33%;text-align:center;font-size:12px;color:#9aa6bf}
+.ff-ty-steps .st i{display:flex;width:28px;height:28px;margin:0 auto 6px;border-radius:50%;align-items:center;justify-content:center;background:#16213a;border:2px solid #22304d;font-style:normal;font-size:13px}
+.ff-ty-steps .st.done i{background:#10b981;border-color:#10b981;color:#06210f}
+.ff-ty-steps .st.now i{border-color:#ffab01;color:#ffab01}
+.ff-ty-steps .st.done,.ff-ty-steps .st.now{color:#fff}
+.ff-ty-btns{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.ff-ty-btns a{display:flex;align-items:center;justify-content:center;min-height:46px;border-radius:12px;font-weight:800;font-size:15px;text-decoration:none}
+.ff-ty-btns .wa{background:#22c55e;color:#06210f}
+.ff-ty-btns .home{border:1px solid #22304d;color:#e5e7eb}
+</style>
+<script>
+(function(){
+  function run(){
+    if(!document.body||!document.body.classList.contains('thank-you'))return;
+    var box=document.querySelector('.container.mt-4 .py-10');
+    if(!box||document.querySelector('.ff-ty-steps'))return;
+    var h1=box.querySelector('h1');
+    if(h1)h1.textContent='تم استلام طلبك بنجاح';
+    var num='';
+    var sp=box.querySelector('h1 ~ p salla-button span span');
+    if(sp)num=sp.textContent.trim();
+    var steps=document.createElement('div');
+    steps.className='ff-ty-steps';
+    steps.innerHTML=['<div class="bar"></div>','<div class="st done"><i>✓</i>تم الدفع</div>','<div class="st now"><i>●</i>قيد التنفيذ</div>','<div class="st"><i>3</i>مكتمل</div>'].join('');
+    var p=box.querySelector('h1 ~ p');
+    if(p&&p.nextSibling)box.insertBefore(steps,p.nextSibling);else box.appendChild(steps);
+    var msg=['السلام عليكم، طلبي في فاستر فولو',num?['رقم الطلب: ',num].join(''):''].join(String.fromCharCode(10));
+    var btns=document.createElement('div');
+    btns.className='ff-ty-btns';
+    var wa=document.createElement('a');
+    wa.className='wa';wa.target='_blank';wa.rel='noopener';
+    wa.href=['https://wa.me/966537763009?text=',encodeURIComponent(msg)].join('');
+    wa.textContent='تواصل معنا على واتساب';
+    var home=document.createElement('a');
+    home.className='home';home.href='/';home.textContent='الرجوع للمتجر';
+    btns.appendChild(wa);btns.appendChild(home);
+    var art=document.querySelector('.container.mt-4 article');
+    var card=document.querySelector('.container.mt-4 > .da-bgg');
+    if(art&&art.parentNode)art.parentNode.insertBefore(btns,art.nextSibling);else if(card)card.appendChild(btns);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
+  window.addEventListener('load',function(){setTimeout(run,300)});
+})();
+</script>

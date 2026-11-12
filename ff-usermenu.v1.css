@@ -1,0 +1,13 @@
+salla-user-menu .s-user-menu-trigger{background:transparent!important;box-shadow:none!important;padding:0!important;min-width:0!important;width:auto!important;height:auto!important;border:0!important}
+salla-user-menu .s-user-menu-avatar-wrap{width:40px!important;height:40px!important;border-radius:10px!important;border:1px solid #22304d!important;overflow:hidden!important;display:flex!important;align-items:center;justify-content:center;background:#111a2e!important}
+salla-user-menu img.s-user-menu-trigger-avatar{width:30px!important;height:30px!important;border-radius:50%!important;object-fit:cover}
+.s-user-menu-dropdown{background:#0e1628!important;color:#e5e7eb!important;border:1px solid #22304d!important}
+.s-user-menu-dropdown-header{background:#111a2e!important;border-color:#22304d!important}
+.s-user-menu-dropdown-header img{border:2px solid #ffab01;border-radius:50%}
+.s-user-menu-dropdown-header span{color:#9aa6bf!important}
+.s-user-menu-dropdown-header p{color:#fff!important;font-weight:700}
+.s-user-menu-dropdown-list,.s-user-menu-dropdown-item{border-color:#22304d!important}
+.s-user-menu-dropdown-item-link{color:#e5e7eb!important}
+.s-user-menu-dropdown-item-link i,.s-user-menu-dropdown-item-link svg{color:#ffab01!important}
+.s-user-menu-dropdown-item-link:hover{background:#16213a!important;color:#ffc53d!important}
+.s-user-menu-dropdown-item:last-child .s-user-menu-dropdown-item-link,.s-user-menu-dropdown-item:last-child .s-user-menu-dropdown-item-link i{color:#f87171!important}
