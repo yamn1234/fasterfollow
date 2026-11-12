@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تصميم صفحات الطلب</title>
+<style>
+:root{--bg:#0b1222;--card:#111a2e;--card2:#16213a;--line:#22304d;--text:#e5e7eb;--muted:#9aa6bf;--gold:#ffab01;--gold2:#ffc53d;--ok:#10b981}
+*{box-sizing:border-box}
+body{margin:0;background:#05080f;color:var(--text);font-family:Tahoma,"Segoe UI",system-ui,sans-serif}
+.wrap{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;padding:28px 16px}
+.cap{width:100%;text-align:center;color:var(--muted);font-size:13px;margin:0 0 -10px}
+.phone{width:375px;max-width:100%;background:var(--bg);border:1px solid #1d2840;border-radius:28px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.ph-title{background:#0e1628;color:var(--muted);font-size:12px;text-align:center;padding:8px;border-bottom:1px solid var(--line)}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:2px solid var(--gold)}
+.hdr img{width:44px;height:44px;border-radius:50%}
+.ic{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:18px}
+.pg{padding:18px 16px 26px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 16px;margin-bottom:14px}
+.ok{width:64px;height:64px;margin:4px auto 12px;border-radius:50%;background:rgba(16,185,129,.14);border:2px solid var(--ok);display:flex;align-items:center;justify-content:center}
+.ok svg{width:34px;height:34px;stroke:var(--ok)}
+h1{margin:0 0 6px;text-align:center;font-size:20px;color:#fff}
+h2{margin:0 0 12px;font-size:16px;color:#fff}
+.sub{margin:0 0 14px;text-align:center;font-size:13.5px;line-height:1.8;color:var(--muted)}
+.num{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto 4px}
+.num b{background:rgba(255,171,1,.12);border:1px solid rgba(255,171,1,.4);color:var(--gold2);padding:6px 14px;border-radius:999px;font-size:16px;letter-spacing:.5px}
+.num span{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:5px 10px;border-radius:999px}
+.steps{display:flex;justify-content:space-between;position:relative;margin:6px 4px 2px}
+.steps:before{content:"";position:absolute;top:13px;right:14%;left:14%;height:2px;background:var(--line)}
+.steps .bar{position:absolute;top:13px;right:14%;width:36%;height:2px;background:var(--ok)}
+.st{position:relative;z-index:1;text-align:center;width:33%;font-size:12px;color:var(--muted)}
+.st i{display:flex;width:28px;height:28px;margin:0 auto 6px;border-radius:50%;align-items:center;justify-content:center;background:var(--card2);border:2px solid var(--line);font-style:normal;font-size:13px}
+.st.done i{background:var(--ok);border-color:var(--ok);color:#06210f}
+.st.now i{border-color:var(--gold);color:var(--gold)}
+.st.done,.st.now{color:#fff}
+.next{background:rgba(255,171,1,.07);border:1px solid rgba(255,171,1,.3);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.9;color:#d8deea}
+.next b{color:var(--gold2)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;margin:0 0 10px;border-radius:12px;border:0;font:inherit;font-size:15px;font-weight:800;text-decoration:none}
+.btn.gold{background:var(--gold);color:#111827}
+.btn.wa{background:#22c55e;color:#06210f}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;font-size:13.5px;border-top:1px solid rgba(255,255,255,.05)}
+.row:first-child{border-top:0}
+.row span{color:var(--muted)}
+.row b{color:#fff;text-align:left}
+.row.total b{color:var(--gold2);font-size:16px}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.badge.run{background:rgba(255,171,1,.14);color:var(--gold2)}
+.badge.paid{background:rgba(16,185,129,.15);color:var(--ok)}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.top h2{margin:0}
+.date{font-size:12px;color:var(--muted);margin-top:4px}
+.prod{display:flex;gap:12px;align-items:center}
+.prod .th{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#1f2b47,#0f1830);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--gold);font-weight:800;font-size:12px;flex:0 0 auto}
+.prod .nm{font-size:14px;font-weight:700;color:#fff;line-height:1.6}
+.prod .q{font-size:12px;color:var(--muted)}
+.opts{margin-top:12px;background:var(--card2);border-radius:12px;padding:4px 12px}
+.crumb{font-size:12px;color:var(--muted);margin:0 0 12px}
+.two{display:flex;gap:10px}
+.two .btn{margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="cap">شكل مقترح على الجوال — الألوان والهوية نفس فاستر فولو (داكن + ذهبي)</p>
+
+  <!-- 1) صفحة شكراً -->
+  <div class="phone">
+    <div class="ph-title">صفحة «شكراً» بعد الطلب</div>
+    <div class="hdr"><div class="ic">☰</div><img src="https://i.ibb.co/yFC0nFs3/ff-logo-176.webp" alt="فاستر فولو"><div class="ic">🛒</div></div>
+    <div class="pg">
+      <div class="card">
+        <div class="ok"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+        <h1>تم استلام طلبك بنجاح</h1>
+        <p class="sub">شكراً لثقتك بفاستر فولو، احتفظ برقم الطلب عشان تتابع معنا.</p>
+        <div class="num"><b>#299719369</b><span>نسخ</span></div>
+      </div>
+      <div class="card">
+        <h2>حالة طلبك</h2>
+        <div class="steps"><div class="bar"></div>
+          <div class="st done"><i>✓</i>تم الدفع</div>
+          <div class="st now"><i>●</i>قيد التنفيذ</div>
+          <div class="st"><i>3</i>مكتمل</div>
+        </div>
+      </div>
+      <div class="next" style="margin-bottom:14px"><b>وش يصير الحين؟</b><br>طلبك دخل التنفيذ تلقائياً. لو عندك أي استفسار راسلنا على واتساب برقم الطلب.</div>
+      <a class="btn gold" href="#">عرض تفاصيل الطلب والفاتورة</a>
+      <a class="btn wa" href="#">تواصل معنا على واتساب</a>
+      <a class="btn ghost" href="#">الرجوع للمتجر</a>
+    </div>
+  </div>
+
+  <!-- 2) صفحة تفاصيل الطلب -->
+  <div class="phone">
+    <div class="ph-title">صفحة «تفاصيل الطلب»</div>
+    <div class="hdr"><div class="ic">☰</div><img src="https://i.ibb.co/yFC0nFs3/ff-logo-176.webp" alt="فاستر فولو"><div class="ic">🛒</div></div>
+    <div class="pg">
+      <p class="crumb">الرئيسية › طلباتي › #299719369</p>
+      <div class="card">
+        <div class="top"><div><h2>طلب #299719369</h2><div class="date">12 نوفمبر 2026</div></div><span class="badge run">قيد التنفيذ</span></div>
+        <div class="steps"><div class="bar"></div>
+          <div class="st done"><i>✓</i>تم الدفع</div>
+          <div class="st now"><i>●</i>قيد التنفيذ</div>
+          <div class="st"><i>3</i>مكتمل</div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>الخدمة</h2>
+        <div class="prod"><div class="th">صورة<br>المنتج</div><div><div class="nm">حساب انستقرام 100K متابع حقيقي</div><div class="q">الكمية: 1</div></div></div>
+        <div class="opts">
+          <div class="row"><span>الرابط / اليوزر</span><b>@username</b></div>
+          <div class="row"><span>الباقة</span><b>100K</b></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>ملخص الدفع</h2>
+        <div class="row"><span>المجموع</span><b>450 ر.س</b></div>
+        <div class="row"><span>الخصم</span><b>0 ر.س</b></div>
+        <div class="row"><span>طريقة الدفع</span><b>مدى</b></div>
+        <div class="row"><span>حالة الدفع</span><b><span class="badge paid">مدفوع</span></b></div>
+        <div class="row total"><span>الإجمالي</span><b>450 ر.س</b></div>
+      </div>
+      <div class="two"><a class="btn ghost" href="#">طباعة الفاتورة</a><a class="btn wa" href="#">واتساب</a></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
