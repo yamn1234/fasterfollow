@@ -21,3 +21,12 @@ open.js mirrors every salla-slider CSS rule onto ff-defer-slider so the gallery 
 - head[40] loader now ff-main.v9.js @d6c6a57 (= v8 + ff-contrast: fixes dark-on-dark system texts site-wide after load in idle chunks; dark cards on customer-* pages).
 - head[53] (/*/p*): ff-bpi - moves Salla "before product info" html block (.s-before-product-info, rendered late by JS -> CLS 0.33 on p1993833332) below the product (flex order) + dark styling. p1993833332 PSI 55 -> 86, CLS 0.36 -> 0.009.
 - Top-5 products PSI mobile (2026-11-12): p1893857930 82, p989524931 85, p528958087 84, p448533154 81, p1993833332 86 (after fix).
+
+## 2026-11-13 home + categories
+- Reparo admin moved: /en/client/domain/330/{blinders,injects,speeds} (singular "domain").
+- Root cause of TBT variance: Salla custom-code footer script dispatches synthetic window scroll+touchstart (welcome-banner booster) -> fired every "first interaction" trigger at ~1s.
+  Fix: all our triggers ignore !e.isTrusted (blinder 66 loader + ffnf, head 40/54 ff/later arm, ff-main v11 FF00/FF_AP0).
+- Blinder 66 loader now generic: loads every script[data-ffsrc] under /themes/1034648396/ in DOM order; also patches DOMContentLoaded. Pages: /*/p*, /.
+- Blinders 65,67,68,69,70 now also on "/"; 33 -> product-card.js data-ffsrc ("/"); 41 -> home.js data-ffsrc ("/").
+- ff/later (gtm AW) fallback 8s -> 15s; ff-main v11 (@1a1ebd4) releases held trackers 12s after load or on trusted interaction.
+- Results (mobile): home 88 -> 96 (TBT 60), categories 96, products 97-99, LCP <= 2.1s everywhere.
