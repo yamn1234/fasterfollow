@@ -161,8 +161,15 @@ return !!document.querySelector(".ff-cart-tip")}
 var n=0;(function t(){if(!run()&&++n<40)setTimeout(t,300)})();
 })();
 ;(function(){"use strict";if(window.__ffSingleOpt)return;window.__ffSingleOpt=1;
-/* package options are Salla "checkbox" (multi) options: make them behave like a single choice so the
-   customer can switch package in product/cart without ending up with 2 packages or an empty required group */
-var RX=/^options\[\d+\]\[\]$/;
-document.addEventListener("click",function(e){var t=e.target;if(!t||t.tagName!=="INPUT"||t.type!=="checkbox"||!RX.test(t.name||""))return;var f=t.form||t.closest("form");if(!f)return;var g=f.querySelectorAll('input[type="checkbox"]'),i,others=0;for(i=0;i<g.length;i++)if(g[i]!==t&&g[i].name===t.name&&g[i].checked)others++;if(!t.checked){if(!others)e.preventDefault();return}for(i=0;i<g.length;i++)if(g[i]!==t&&g[i].name===t.name&&g[i].checked){g[i].checked=false;g[i].required=false}},true);
+/* Required package groups are Salla "checkbox" (multi) options. Make them behave like one choice:
+   tapping another package switches to it, tapping the selected one keeps it (no empty required group). */
+var RX=/^options\[\d+\]\[\]$/,DG=/[0-9٠-٩]/;
+function lbl(i){var l=i.closest("label");return l?l.textContent:""}
+document.addEventListener("click",function(e){var t=e.target;if(!t||t.tagName!=="INPUT"||t.type!=="checkbox"||!RX.test(t.name||""))return;
+var box=t.closest('.s-product-options-option[data-option-required="true"]');if(!box)return;
+var g=box.querySelectorAll('input[type="checkbox"]'),i,others=0,pk=true;
+for(i=0;i<g.length;i++){if(g[i].name!==t.name)continue;if(!DG.test(lbl(g[i])))pk=false;if(g[i]!==t&&g[i].checked)others++}
+if(!t.checked){if(!others)e.preventDefault();return}
+if(!pk)return;
+for(i=0;i<g.length;i++)if(g[i]!==t&&g[i].name===t.name&&g[i].checked){g[i].checked=false;g[i].required=false}},true);
 })();
