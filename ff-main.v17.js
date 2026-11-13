@@ -175,5 +175,5 @@ for(i=0;i<g.length;i++)if(g[i]!==t&&g[i].name===t.name&&g[i].checked){g[i].check
 })();
 ;(function(){"use strict";if(window.__ffCo17||!/^\/(ar\/)?checkout/.test(location.pathname))return;window.__ffCo17=1;
 var s=document.createElement("style");s.id="ff-co-css";
-s.textContent="#freshPayContainer{background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible!important}#freshPayContainer>div:first-child{border:1px solid rgba(255,171,1,.35)!important;border-radius:12px!important;margin-bottom:10px!important}#iframeMountPoint iframe{color-scheme:normal!important;height:56px!important;border-radius:14px}";
+s.textContent="#freshPayContainer{background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible!important}#freshPayContainer>div:first-child{border:1px solid rgba(255,171,1,.35)!important;border-radius:12px!important;margin-bottom:10px!important}#iframeMountPoint iframe{color-scheme:normal!important}";
 (document.head||document.documentElement).appendChild(s)})();
