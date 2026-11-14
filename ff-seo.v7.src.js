@@ -566,7 +566,7 @@ window.__ffPromo = 1;
     '.s-product-card-quick-view-btn button i,.s-product-card-quick-view-btn button svg{color:#ffab01!important;fill:currentColor;font-size:15px!important}',
     '.s-product-card-quick-view-btn button:after{content:"عرض سريع";font-size:12px;font-weight:700;line-height:1;color:#ffab01;white-space:nowrap}',
     /* modal frame */
-    M + ' .s-modal-body{width:min(880px,calc(100vw - 24px))!important;max-width:none!important;padding:0!important;border-radius:20px!important;overflow:hidden!important;background:#0d1426!important;border:1px solid rgba(255,171,1,.2)!important;box-shadow:0 30px 80px rgba(0,0,0,.6)!important}',
+    M + ' .s-modal-body{width:min(880px,calc(100vw - 24px))!important;max-width:none!important;padding:0!important;border-radius:20px!important;overflow:hidden!important;background:#0d1426!important;border:1px solid rgba(255,171,1,.2)!important;box-shadow:0 30px 80px rgba(0,0,0,.6)!important;height:auto!important;max-height:calc(100vh - 24px)!important;max-height:calc(100dvh - 24px)!important}',
     M + ' .s-modal-header{position:absolute;top:12px;left:12px;z-index:20;margin:0!important;padding:0!important}',
     M + ' .s-modal-close{width:34px!important;height:34px!important;border-radius:50%!important;background:rgba(255,255,255,.08)!important;color:#fff!important;border:1px solid rgba(255,255,255,.14)!important}',
     Q + ' .angel-quick-view__wrapper{display:grid!important;grid-template-columns:minmax(0,40%) minmax(0,1fr);align-items:start;gap:0!important}',
@@ -615,7 +615,7 @@ window.__ffPromo = 1;
       M + ' .s-modal-body{width:calc(100vw - 16px)!important;border-radius:18px!important}' +
       Q + ' .angel-quick-view__wrapper{grid-template-columns:minmax(0,1fr)}' +
       Q + ' .angel-quick-view__images{display:none!important}' +
-      Q + ' .angel-quick-view__content{max-height:86vh;padding:16px 14px 0 14px!important}' +
+      Q + ' .angel-quick-view__content{max-height:calc(100vh - 110px);max-height:calc(100dvh - 110px);padding:16px 14px 0 14px!important}' + '.ffqv-sum p{display:none}' +
       Q + ' .angel-quick-view__details>a{display:flex;align-items:center;gap:10px}' +
       '.ffqv-th{display:block}' +
       Q + ' .angel-quick-view__title{font-size:16px!important}' +
