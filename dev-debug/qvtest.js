@@ -1,4 +1,4 @@
-document.querySelectorAll('style').forEach(function(x){if(x.textContent.indexOf('.ffqv-sum{margin:10px')>-1)x.remove()});(function(g){document.getElementById=function(i){return i==='angel-quick-view'?null:g.call(document,i)}})(document.getElementById);
+document.querySelectorAll('style').forEach(function(x){if(x.textContent.indexOf('.ffqv-sum{margin:10px')>-1)x.remove()});(function(g){document.getElementById=function(i){if(i==='angel-quick-view'&&String(new Error().stack).indexOf('ff-seo.v6')>-1)return null;return g.call(document,i)}})(document.getElementById);
 /* Quick view v7: compact sheet (mobile + desktop), packages as tappable tiles, short summary,
    sticky bar with direct purchase (opens the guest mini checkout of ff-gc) + add to cart.
    No backslashes (Reparo-safe). Loads nothing extra until the visitor opens a quick view. */
