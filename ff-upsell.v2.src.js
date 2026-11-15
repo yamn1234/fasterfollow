@@ -123,7 +123,7 @@
         cb.addEventListener('change', function () {
           rw.classList.toggle('on', cb.checked); rw.querySelector('label').classList.toggle('on', cb.checked);
           var t = 0, n = 0; [].forEach.call(box.querySelectorAll('.row'), function (r2) { if (r2.querySelector('input[type=checkbox]').checked) { t += rows[+r2.getAttribute('data-j')].price; n++; } });
-          var tt = box.querySelector('.tot'); tt.hidden = !n; tt.textContent = n ? ('تنضاف ' + n + ' خدمة بـ' + M(t) + ' مع طلبك') : '';
+          var tt = box.querySelector('.tot'); tt.hidden = !n; tt.innerHTML = n ? ('تنضاف ' + n + ' خدمة بـ' + M(t) + ' مع طلبك') : '';
         });
       });
       PG = { pid: pid, el: el, d: d, box: box, rows: rows, own: own };
@@ -176,7 +176,8 @@
     var bad = ownMissing(list);
     if (bad) { e.preventDefault(); e.stopImmediatePropagation(); e.stopPropagation(); bad.scrollIntoView({ block: 'center' }); bad.focus(); return; }
     var link = mainLink();
-    var isAdd = !!t.closest('salla-add-product-button') || /السلة|سلة/.test(t.textContent || '');
+    var isQ = t.matches('.ffqb,salla-quick-buy,salla-mini-checkout-widget');
+    var isAdd = !isQ && (!!t.closest('salla-add-product-button') || /السلة|سلة/.test(t.textContent || ''));
     if (isAdd) { pending = { list: list, link: link, ts: Date.now() }; return; }
     /* quick buy / direct buy: put everything in the cart and go straight to checkout */
     var opts = mainOpts(); if (!opts) return; /* let the store show its own validation */
