@@ -49,7 +49,7 @@
     el.setAttribute('data-ffup', '1');
     var fm = el.closest('form[id^="item-"]');
     var pidP = fm ? cartMap().then(function (m) { return m[fm.getAttribute('id').replace('item-', '')] || 0; })
-      : Promise.resolve(+(salla.config && salla.config.get && salla.config.get('page.id')) || +el.getAttribute('product-id') || 0);
+      : Promise.resolve(+el.getAttribute('product-id') || 0);
     pidP.then(function (pid) { return pid ? det(pid) : null; }).then(function (d) {
       if (!d || !d.options) return;
       var base = num(d.price);
