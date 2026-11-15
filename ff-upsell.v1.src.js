@@ -44,7 +44,8 @@
     var radios = el.querySelectorAll('input[type=radio][name^="options["],input[type=checkbox][name^="options["]');
     if (!radios.length) return;
     el.setAttribute('data-ffup', '1');
-    var pid = +el.getAttribute('product-id') || +(salla.config && salla.config.get && salla.config.get('page.id')) || 0;
+    var fm = el.closest('form[id^="item-"]'), hid = fm && fm.querySelector('input[name=id]');
+    var pid = hid ? +hid.value : (+el.getAttribute('product-id') || +(salla.config && salla.config.get && salla.config.get('page.id')) || 0);
     if (!pid) return;
     det(pid).then(function (d) {
       if (!d || !d.options) return;
