@@ -16,6 +16,9 @@
     if (!DC[id]) DC[id] = salla.api.product.getDetails(id, ['options']).then(function (r) { return r && r.data; }).catch(function () { delete DC[id]; return null; });
     return DC[id];
   }
+  var CM = null;
+  function cartD() { if (!CM) CM = salla.api.cart.details().then(function (r) { return (r && r.data && r.data.cart && r.data.cart.items) || []; }).catch(function () { return []; }); return CM; }
+  function cartMap() { return cartD().then(function (it) { var m = {}; it.forEach(function (i) { m[String(i.id)] = i.product_id; }); return m; }); }
   function num(v) { if (v && typeof v === 'object') v = v.amount; v = parseFloat(v); return isNaN(v) ? 0 : v; }
   function M(v) { v = Math.round(v * 100) / 100; try { var s = salla.money(v); if (s) return s; } catch (e) {} return v + ' ر.س'; }
   function qty(s) {
@@ -44,10 +47,10 @@
     var radios = el.querySelectorAll('input[type=radio][name^="options["],input[type=checkbox][name^="options["]');
     if (!radios.length) return;
     el.setAttribute('data-ffup', '1');
-    var fm = el.closest('form[id^="item-"]'), hid = fm && fm.querySelector('input[name=id]');
-    var pid = hid ? +hid.value : (+el.getAttribute('product-id') || +(salla.config && salla.config.get && salla.config.get('page.id')) || 0);
-    if (!pid) return;
-    det(pid).then(function (d) {
+    var fm = el.closest('form[id^="item-"]');
+    var pidP = fm ? cartMap().then(function (m) { return m[fm.getAttribute('id').replace('item-', '')] || 0; })
+      : Promise.resolve(+(salla.config && salla.config.get && salla.config.get('page.id')) || +el.getAttribute('product-id') || 0);
+    pidP.then(function (pid) { return pid ? det(pid) : null; }).then(function (d) {
       if (!d || !d.options) return;
       var base = num(d.price);
       var groups = {};
@@ -93,8 +96,7 @@
     if (xsDone || !document.body.classList.contains('cart')) return;
     var last = document.querySelectorAll('form[id^="item-"]'); if (!last.length) return;
     xsDone = true;
-    salla.api.cart.details().then(function (r) {
-      var items = (r && r.data && r.data.cart && r.data.cart.items) || [];
+    cartD().then(function (items) {
       var inCart = {}; items.forEach(function (it) { inCart[it.product_id] = 1; });
       var picks = [], used = {};
       items.forEach(function (it) {
