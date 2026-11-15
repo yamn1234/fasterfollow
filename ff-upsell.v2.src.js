@@ -33,6 +33,13 @@
     if (!DC[id]) DC[id] = salla.api.product.getDetails(id, ['options']).then(function (r) { return r && r.data; }).catch(function () { delete DC[id]; return null; });
     return DC[id];
   }
+  var PC = {};
+  /* live price of one package (getDetails can serve stale cached option prices) */
+  function lp(pid, oid, vid, multi) {
+    var k = pid + '_' + vid;
+    if (!PC[k]) { var o = {}; o[oid] = multi ? [vid] : vid; PC[k] = salla.api.product.getPrice({ id: pid, quantity: 1, options: o }).then(function (r) { return num(r && r.data && r.data.price); }).catch(function () { delete PC[k]; return 0; }); }
+    return PC[k];
+  }
   function num(v) { if (v && typeof v === 'object') v = v.amount; v = parseFloat(v); return isNaN(v) ? 0 : v; }
   function M(v) { v = Math.round(v * 100) / 100; try { var s = salla.money(v); if (s) return s; } catch (e) {} return v + ' ر.س'; }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -64,23 +71,31 @@
   function cartMap() { return cartD().then(function (it) { var m = {}; it.forEach(function (i) { m[String(i.id)] = i.product_id; }); return m; }); }
   function nudge(el, d) {
     var radios = el.querySelectorAll('input[type=radio][name^="options["],input[type=checkbox][name^="options["]');
-    var base = num(d.price), groups = {};
+    var groups = {};
     [].forEach.call(radios, function (i) { (groups[i.name] = groups[i.name] || []).push(i); });
     Object.keys(groups).forEach(function (name) {
       var oid = +name.replace(/[^0-9]/g, '');
       var o = d.options.filter(function (x) { return +x.id === oid; })[0];
       if (!o || !o.details || o.details.length < 2) return;
-      var vals = o.details.map(function (v) { return { id: String(v.id), q: qty(v.name), p: base + num(v.additional_price) }; });
+      var multi = /multiple|checkbox/.test(o.type);
+      var vals = o.details.map(function (v) { return { id: String(v.id), q: qty(v.name) }; });
       if (vals.filter(function (v) { return v.q > 0; }).length < 2) return;
       var inputs = groups[name];
       var host = inputs[0].closest('.s-product-options-option') || inputs[0].parentElement.parentElement;
       var box = document.createElement('div'); box.className = 'ffup'; box.hidden = true; host.appendChild(box);
+      var tok = 0;
       function upd() {
         var chk = inputs.filter(function (i) { return i.checked; }), cur = chk[0];
         if (chk.length !== 1) { box.hidden = true; return; }
         var k = -1; vals.forEach(function (v, j) { if (v.id === String(cur.value)) k = j; });
         var c = vals[k], n = vals[k + 1];
-        if (!c || !n || !c.q || !n.q || n.q <= c.q || !c.p || n.p <= c.p) { box.hidden = true; return; }
+        if (!c || !n || !c.q || !n.q || n.q <= c.q) { box.hidden = true; return; }
+        var my = ++tok;
+        Promise.all([lp(d.id, oid, +c.id, multi), lp(d.id, oid, +n.id, multi)]).then(function (pp) { if (my === tok) show(cur, c, n, pp[0], pp[1]); });
+      }
+      function show(cur, c, n, cp, np) {
+        if (!cp || np <= cp) { box.hidden = true; return; }
+        c.p = cp; n.p = np;
         var pct = Math.round((1 - (n.p / n.q) / (c.p / c.q)) * 100);
         if (pct < 5) { box.hidden = true; return; }
         box.innerHTML = '<div class="ffup-t">بزيادة <b>' + M(n.p - c.p) + '</b> بس تاخذ <b>' + fq(n.q) + '</b> بدل ' + fq(c.q) + '<span class="ffup-s">سعر الوحدة أرخص ' + pct + '%</span></div><button type="button" class="ffup-b">رقّ الباقة</button>';
@@ -109,8 +124,13 @@
         var a = A[k], x = ds[j]; if (!x || !x.options) return;
         var o = x.options.filter(function (z) { return +z.id === a[1]; })[0]; if (!o) return;
         var v = (o.details || []).filter(function (z) { return +z.id === a[2]; })[0]; if (!v) return;
-        rows.push({ a: a, multi: /multiple|checkbox/.test(o.type), price: num(x.price) + num(v.additional_price) });
+        rows.push({ a: a, multi: /multiple|checkbox/.test(o.type) });
       });
+      return Promise.all(rows.map(function (r) { return lp(r.a[0], r.a[1], r.a[2], r.multi); })).then(function (pp) {
+        rows.forEach(function (r, j) { r.price = pp[j]; });
+        return rows.filter(function (r) { return r.price > 0; });
+      });
+    }).then(function (rows) {
       if (!rows.length || document.querySelector('.ffad')) return;
       var box = document.createElement('div'); box.className = 'ffad';
       box.innerHTML = '<h4>أضف مع طلبك</h4>' + rows.map(function (r, j) {
@@ -237,8 +257,10 @@
           var d = ds[j]; if (!d) return;
           var o = (d.options || []).filter(function (z) { return +z.id === p.a[1]; })[0]; if (!o) return;
           var v = (o.details || []).filter(function (z) { return +z.id === p.a[2]; })[0]; if (!v) return;
-          p.multi = /multiple|checkbox/.test(o.type); p.price = num(d.price) + num(v.additional_price); rows.push(p);
+          p.multi = /multiple|checkbox/.test(o.type); rows.push(p);
         });
+        return Promise.all(rows.map(function (p) { return lp(p.a[0], p.a[1], p.a[2], p.multi); })).then(function (pp) { rows.forEach(function (p, j) { p.price = pp[j]; }); return rows.filter(function (p) { return p.price > 0; }); });
+      }).then(function (rows) {
         if (!rows.length) return;
         var box = document.createElement('div'); box.className = 'ffxs';
         box.innerHTML = '<h3>يكمّل طلبك</h3>' + rows.map(function (p, j) {
