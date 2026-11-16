@@ -176,16 +176,22 @@
   function addAddons(list, link) {
     return list.reduce(function (p, it) {
       return p.then(function () {
-        var a = it.r.a, opts = {}, l = it.lk ? it.lk.value.trim() : link;
+        var a = it.r.a, opts = {}, l = cleanLink(it.lk ? it.lk.value : link);
         if (!l) return;
         opts[a[1]] = it.r.multi ? [a[2]] : a[2]; opts[a[3]] = l;
         return salla.api.cart.addItem({ id: a[0], quantity: 1, options: opts }).catch(function () {});
       });
     }, Promise.resolve());
   }
+  /* keep only the link itself: first URL in the text, or the first word (username) */
+  function cleanLink(v) {
+    v = String(v || '').trim();
+    var m = v.match(/https?:[/][/][^ ]+/i);
+    return m ? m[0] : v.split(' ')[0];
+  }
   function ownMissing(list) {
     var bad = null;
-    list.forEach(function (it) { if (it.lk) { var ok = /^https?:[/][/]|^www[.]|[.](com|net|be|ly)[/]/i.test(it.lk.value.trim()); it.lk.classList.toggle('err', !ok); if (!ok && !bad) bad = it.lk; } });
+    list.forEach(function (it) { if (it.lk) { it.lk.value = cleanLink(it.lk.value); var ok = /^https?:[/][/]|^www[.]|[.](com|net|be|ly)[/]/i.test(it.lk.value); it.lk.classList.toggle('err', !ok); if (!ok && !bad) bad = it.lk; } });
     return bad;
   }
   var pending = null, busy = false;
