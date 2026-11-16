@@ -1,7 +1,7 @@
 /* ff-ty: branded hero on the Salla thank-you page (replaces the confetti illustration) */
 (function () {
   if (window.__ffTy) return; window.__ffTy = 1;
-  var LOGO = 'https://cdn.jsdelivr.net/gh/yamn1234/fasterfollow@main/brand/logo-badge-176.webp';
+  var LOGO = 'https://cdn.jsdelivr.net/gh/yamn1234/fasterfollow@7ae8014/brand/ff-logo-dark-224.webp';
   function isTy() { return /^[/]thankyou[/]/.test(location.pathname) || (document.body && document.body.classList.contains('thank-you')); }
   if (!isTy()) return;
   var st = document.createElement('style');
@@ -9,8 +9,8 @@
     'body.thank-you .container.mt-4 .py-10>img,body.thank-you .container.mt-4 .py-10>svg,body.thank-you .container.mt-4 .py-10>picture,body.thank-you .container.mt-4 .py-10>lottie-player,body.thank-you .container.mt-4 .py-10>.ff-ty-old{display:none!important}' +
     '.ff-ty-hero{display:flex;flex-direction:column;align-items:center;margin:4px auto 14px}' +
     '.ff-ty-hero .rg{position:relative;width:118px;height:118px;border-radius:50%;padding:4px;background:conic-gradient(from 210deg,#ffd76a,#ffab01,#ff8a00,#ffd76a);box-shadow:0 0 0 6px rgba(255,171,1,.08),0 12px 34px -10px rgba(255,150,0,.55)}' +
-    '.ff-ty-hero .in{width:100%;height:100%;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}' +
-    '.ff-ty-hero .in img{width:100%;height:100%;object-fit:cover;display:block}' +
+    '.ff-ty-hero .in{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 50% 40%,#1b2742,#0e1526);display:flex;align-items:center;justify-content:center;overflow:hidden}' +
+    '.ff-ty-hero .in img{width:84%;height:84%;object-fit:contain;display:block}' +
     '.ff-ty-hero .ok{position:absolute;top:0;left:0;width:34px;height:34px;border-radius:50%;background:#10b981;border:3px solid #111a2e;display:flex;align-items:center;justify-content:center}' +
     '.ff-ty-hero .sp{position:absolute;color:#ffc53d;opacity:.9}.ff-ty-hero .sp.a{top:-6px;right:-14px;width:16px}.ff-ty-hero .sp.b{top:30px;left:-22px;width:11px;opacity:.65}.ff-ty-hero .sp.c{bottom:-2px;right:-20px;width:9px;opacity:.5}' +
     '.ff-ty-hero .tg{margin-top:14px;display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:rgba(255,171,1,.1);border:1px solid rgba(255,171,1,.3);color:#ffc53d;font-size:12.5px;font-weight:700}' +
