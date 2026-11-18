@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:P;font-weight:400;src:url(node_modules/@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-arabic-400-normal.woff2)}
+@font-face{font-family:P;font-weight:500;src:url(node_modules/@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-arabic-500-normal.woff2)}
+@font-face{font-family:P;font-weight:600;src:url(node_modules/@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-arabic-600-normal.woff2)}
+@font-face{font-family:P;font-weight:700;src:url(node_modules/@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-arabic-700-normal.woff2)}
+@font-face{font-family:P;font-weight:500;src:url(node_modules/@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-latin-500-normal.woff2);unicode-range:U+0000-00FF}
+@font-face{font-family:P;font-weight:600;src:url(node_modules/@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-latin-600-normal.woff2);unicode-range:U+0000-00FF}
+@font-face{font-family:P;font-weight:700;src:url(node_modules/@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-latin-700-normal.woff2);unicode-range:U+0000-00FF}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1000px;height:1000px;overflow:hidden;font-family:P;color:#f2f2f4;
+ background:radial-gradient(700px 520px at 18% 30%,rgba(254,44,85,.10),transparent 70%),radial-gradient(600px 500px at 90% 90%,rgba(37,244,238,.06),transparent 70%),#0d0d10;position:relative}
+.hd{position:absolute;top:40px;right:48px;display:flex;align-items:center;gap:16px}
+.lg{width:80px;height:80px;border-radius:18px;background:#fff;display:flex;align-items:center;justify-content:center}
+.lg img{width:68px}
+.hd b{display:block;font-size:24px;font-weight:700}.hd span{font-size:15px;color:#9a9aa3}
+.pill{position:absolute;top:58px;left:48px;height:42px;padding:0 18px;border-radius:21px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600}
+.pill i{width:10px;height:10px;border-radius:50%;background:#25f4ee;box-shadow:0 0 0 3px rgba(37,244,238,.18)}
+.copy{position:absolute;top:160px;right:48px;width:470px}
+.kick{display:inline-block;background:#25f4ee;color:#071012;font-weight:700;font-size:16px;padding:4px 14px;border-radius:7px;box-shadow:3px 3px 0 #fe2c55}
+.ha{font-size:52px;font-weight:700;line-height:1.15;margin-top:12px}
+.hb{font-size:96px;font-weight:700;line-height:1;margin-top:2px;color:#fff;text-shadow:-4px 0 0 #25f4ee,4px 3px 0 #fe2c55;position:relative;display:inline-block}
+.sw{display:block;margin-top:-6px}
+.lead{font-size:19px;line-height:1.75;color:#cfcfd6;margin-top:16px}
+.lead b{color:#fff}
+.feats{margin-top:20px;display:flex;flex-direction:column;gap:12px}
+.f{height:62px;border-radius:12px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);display:flex;align-items:center;gap:14px;padding:0 16px}
+.ic{width:38px;height:38px;border-radius:9px;border:1px solid rgba(37,244,238,.35);background:rgba(37,244,238,.08);display:flex;align-items:center;justify-content:center;flex:0 0 38px}
+.ic svg{width:20px;height:20px;stroke:#25f4ee;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.f b{font-size:18px;font-weight:700}.f span{font-size:15px;color:#9a9aa3;margin-right:6px}
+.cta{position:absolute;right:48px;top:826px;width:470px;height:68px;border-radius:14px;background:#fe2c55;box-shadow:0 8px 0 #c01e40;display:flex;align-items:center;justify-content:center;gap:14px;font-size:26px;font-weight:700;color:#fff}
+.foot{position:absolute;bottom:0;left:0;right:0;height:70px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;padding:0 48px;font-size:17px;font-weight:600;color:#e6e6ea}
+.foot .it{display:flex;align-items:center;gap:8px}.foot svg{width:18px;height:18px;stroke:#25f4ee;fill:none;stroke-width:2}
+/* phone */
+.ph{position:absolute;top:160px;left:62px;width:372px;height:752px;border-radius:56px;background:#1b1b1f;border:2px solid #3a3a40;box-shadow:0 30px 60px rgba(0,0,0,.55);padding:12px}
+.scr{width:100%;height:100%;border-radius:45px;background:#111114;overflow:hidden;position:relative}
+.isl{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:108px;height:32px;border-radius:16px;background:#000}
+.sb{position:absolute;top:20px;left:34px;right:34px;display:flex;justify-content:space-between;direction:ltr;font-size:16px;font-weight:600}
+.nm{position:absolute;top:72px;width:100%;text-align:center;font-weight:700;font-size:17px;direction:ltr}
+.av{position:absolute;top:112px;left:50%;transform:translateX(-50%);width:92px;height:92px;border-radius:50%;padding:4px;background:conic-gradient(#25f4ee,#fe2c55,#25f4ee)}
+.av div{width:100%;height:100%;border-radius:50%;background:#2a2a30;border:3px solid #111114;display:flex;align-items:center;justify-content:center}
+.av svg{width:44px;height:44px;fill:#77777f}
+.un{position:absolute;top:214px;width:100%;text-align:center;font-weight:700;font-size:18px;direction:ltr}
+.stats{position:absolute;top:252px;left:24px;right:24px;display:flex;justify-content:space-around;text-align:center}
+.stats b{display:block;font-size:20px;font-weight:700;direction:ltr}.stats span{font-size:13px;color:#9a9aa3}
+.stats .hl b{background:rgba(37,244,238,.14);border-radius:6px;padding:0 6px;color:#fff}
+.grid{position:absolute;top:330px;left:0;right:0;display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.grid div{height:116px;position:relative;background:linear-gradient(160deg,#3a2730,#1d1d24)}
+.grid div:nth-child(2n){background:linear-gradient(160deg,#20323a,#1a1a20)}
+.grid div:nth-child(3n){background:linear-gradient(160deg,#302a3e,#19191f)}
+.grid span{position:absolute;bottom:6px;left:8px;font-size:12px;font-weight:600;direction:ltr}
+.note{position:absolute;left:250px;width:250px;height:66px;border-radius:14px;background:#f4f4f6;color:#111;display:flex;align-items:center;gap:10px;padding:0 12px;box-shadow:0 12px 26px rgba(0,0,0,.45)}
+.note .ni{width:38px;height:38px;border-radius:9px;background:#111;display:flex;align-items:center;justify-content:center;flex:0 0 38px}
+.note .ni svg{width:20px;height:20px;stroke:#fe2c55;fill:none;stroke-width:2.2}
+.note b{display:block;font-size:15px}.note span{font-size:12.5px;color:#55555c}
+.home{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:#fff;opacity:.85}
+</style></head><body>
+<div class="hd"><div class="lg"><img src="logo-1000.png"></div><div><b>فاستر فولو</b><span>خدمات رقمية موثوقة</span></div></div>
+<div class="pill"><i></i>خدمات تيك توك</div>
+
+<div class="ph"><div class="scr">
+ <div class="isl"></div>
+ <div class="sb"><span>9:41</span><span>●●● ▬</span></div>
+ <div class="nm">Reem.Daily</div>
+ <div class="av"><div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21c.8-4.3 4.3-6.8 8.5-6.8s7.7 2.5 8.5 6.8z"/></svg></div></div>
+ <div class="un">@reem.daily</div>
+ <div class="stats">
+  <div><b>48.2K</b><span>إعجاب</span></div>
+  <div class="hl"><b>6,140</b><span>متابع</span></div>
+  <div><b>212</b><span>يتابع</span></div>
+ </div>
+ <div class="grid">
+  <div><span>▶ 24.7K</span></div><div><span>▶ 9,318</span></div><div><span>▶ 13.1K</span></div>
+  <div><span>▶ 6,904</span></div><div><span>▶ 18.5K</span></div><div><span>▶ 4,276</span></div>
+  <div><span>▶ 11.2K</span></div><div><span>▶ 7,650</span></div><div><span>▶ 15.8K</span></div>
+ </div>
+ <div class="home"></div>
+</div></div>
+<div class="note" style="top:528px;left:222px;width:244px"><div class="ni"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.3-5.5 6.5-5.5s5.9 2.1 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.6c2 .7 3.3 2.6 3.5 5.4"/></svg></div><div><b>متابعين جدد</b><span>انضافوا لحسابك اليوم</span></div></div>
+<div class="note" style="top:742px;left:22px"><div class="ni"><svg viewBox="0 0 24 24"><path d="M12 20.5s-8-4.6-8-10.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 3c0 5.9-8 10.5-8 10.5z"/></svg></div><div><b>لايكات ومشاهدات</b><span>بدأت توصل على الفيديو</span></div></div>
+
+<div class="copy">
+ <span class="kick">3 خدمات بطلب واحد</span>
+ <div class="ha">بكج نمو</div>
+ <div class="hb">تيك توك</div>
+ <svg class="sw" width="320" height="18" viewBox="0 0 320 18"><path d="M4 12 C 80 2, 200 2, 316 10" stroke="#25f4ee" stroke-width="5" fill="none" stroke-linecap="round"/></svg>
+ <p class="lead">متابعين عرب ولايكات ومشاهدات <b>في طلب واحد</b>، وبسعر أقل من لو تشتريها كل وحدة لحالها.</p>
+ <div class="feats">
+  <div class="f"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.3-5.5 6.5-5.5s5.9 2.1 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.6c2 .7 3.3 2.6 3.5 5.4"/></svg></div><div><b>متابعين عرب حقيقيين</b><span>· من إعلانات ممولة</span></div></div>
+  <div class="f"><div class="ic"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div><div><b>لايكات ومشاهدات</b><span>· تبدأ خلال دقائق</span></div></div>
+  <div class="f"><div class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg></div><div><b>بدون كلمة مرور</b><span>· اليوزر ورابط الفيديو يكفي</span></div></div>
+  <div class="f"><div class="ic"><svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.6"/></svg></div><div><b>وفّر 10%</b><span>· عن شرائها منفصلة</span></div></div>
+ </div>
+</div>
+<div class="cta">اطلب الآن <svg width="22" height="22" viewBox="0 0 24 24" style="fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><path d="M15 5l-7 7 7 7"/></svg></div>
+<div class="foot">
+ <span class="it"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.3-5.5 6.5-5.5s5.9 2.1 6.5 5.5"/></svg>متابعين عرب حقيقيين</span>
+ <span class="it"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>بدون كلمة مرور</span>
+ <span style="direction:ltr">+966 53 776 3009</span>
+ <span>fasterfollow.com</span>
+</div>
+</body></html>
