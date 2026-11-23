@@ -1,0 +1,59 @@
+{
+  "id": "/?app=ff",
+  "name": "فاستر فولو",
+  "short_name": "فاستر فولو",
+  "description": "متجر فاستر فولو لخدمات التواصل الاجتماعي والمنتجات الرقمية",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "https://fasterfollow.com/?utm_source=pwa&utm_medium=app",
+  "scope": "https://fasterfollow.com/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B0B0C",
+  "theme_color": "#0B0B0C",
+  "categories": [
+    "shopping"
+  ],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "طلباتي",
+      "url": "https://fasterfollow.com/orders",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "السلة",
+      "url": "https://fasterfollow.com/cart",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
