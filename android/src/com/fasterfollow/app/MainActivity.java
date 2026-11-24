@@ -20,6 +20,7 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -28,6 +29,13 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends Activity {
 
@@ -135,7 +143,7 @@ public class MainActivity extends Activity {
         s.setSupportMultipleWindows(false);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
-        s.setUserAgentString(s.getUserAgentString() + " FasterFollowApp/1.0");
+        s.setUserAgentString(s.getUserAgentString() + " FasterFollowApp/1.1");
 
         CookieManager cm = CookieManager.getInstance();
         cm.setAcceptCookie(true);
@@ -253,7 +261,62 @@ public class MainActivity extends Activity {
         + "(d.head||d.documentElement).appendChild(s);"
         + "try{localStorage.setItem('ffpwa_installed','1')}catch(e){}}catch(e){}})();";
 
+    /* Runs before the store script: tells it this is the installed app (standalone), so the app design loads */
+    static final String STANDALONE_JS =
+        "(function(){try{if(window.__ffApk)return;window.__ffApk=1;var mm=window.matchMedia;"
+        + "window.matchMedia=function(q){if(/display-mode[ ]*:[ ]*(standalone|fullscreen|minimal-ui)/.test(String(q))){"
+        + "return{matches:/standalone/.test(String(q)),media:String(q),onchange:null,addListener:function(){},removeListener:function(){},"
+        + "addEventListener:function(){},removeEventListener:function(){},dispatchEvent:function(){return false}}}"
+        + "return mm.call(window,q)};}catch(e){}})();";
+
+    static boolean isStoreMainJs(Uri u) {
+        String path = u.getPath();
+        if (path == null) return false;
+        int i = path.lastIndexOf('/');
+        String f = path.substring(i + 1);
+        return f.startsWith("ff-main.v") && f.endsWith(".js");
+    }
+
+    WebResourceResponse patchedMainJs(WebResourceRequest r) {
+        HttpURLConnection c = null;
+        try {
+            c = (HttpURLConnection) new URL(r.getUrl().toString()).openConnection();
+            c.setConnectTimeout(15000);
+            c.setReadTimeout(20000);
+            String ua = r.getRequestHeaders() != null ? r.getRequestHeaders().get("User-Agent") : null;
+            if (ua != null) c.setRequestProperty("User-Agent", ua);
+            if (c.getResponseCode() != 200) return null;
+            InputStream in = c.getInputStream();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            out.write((STANDALONE_JS + "\n").getBytes("UTF-8"));
+            byte[] b = new byte[16384];
+            int n;
+            while ((n = in.read(b)) > 0) out.write(b, 0, n);
+            in.close();
+            Map<String, String> h = new HashMap<String, String>();
+            h.put("Access-Control-Allow-Origin", "*");
+            h.put("Cache-Control", "public, max-age=3600");
+            return new WebResourceResponse("application/javascript", "utf-8", 200, "OK", h,
+                    new ByteArrayInputStream(out.toByteArray()));
+        } catch (Exception e) {
+            return null;
+        } finally {
+            if (c != null) c.disconnect();
+        }
+    }
+
     class Client extends WebViewClient {
+        @Override
+        public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {
+            try {
+                if ("GET".equalsIgnoreCase(r.getMethod()) && isStoreMainJs(r.getUrl())) {
+                    return patchedMainJs(r);
+                }
+            } catch (Exception ignored) {
+            }
+            return null;
+        }
+
         /* API 24+ (no @Override: compiled against API 23) */
         public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
             return route(r.getUrl());
