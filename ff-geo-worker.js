@@ -173,7 +173,7 @@ export function buildLlms(products) {
   L.push('# فاستر فولو (Faster Follow)', '');
   L.push('> متجر سعودي موثق متخصص في خدمات نمو حسابات التواصل الاجتماعي للأفراد وصناع المحتوى والمشاريع في السعودية والخليج: زيادة متابعين ولايكات ومشاهدات عرب وخليجيين حقيقيين على سناب شات وتيك توك وانستقرام ويوتيوب وتويتر (X) وجاكو، إضافة إلى حسابات ويوزرات جاهزة واشتراكات رقمية. التنفيذ فوري أو تدريجي حسب الخدمة، بدون كلمة مرور للخدمات التي تحتاج رابط الحساب فقط، مع ضمان ذهبي على الخدمات.');
   L.push('', '> Faster Follow is a verified Saudi store (fasterfollow.com) selling social-media growth services for Saudi/Gulf customers: real Arab & Gulf followers, likes and views for Snapchat, TikTok, Instagram, YouTube, X (Twitter) and Jaco, plus ready accounts/usernames and digital subscriptions. Prices are in SAR and depend on the selected package.', '');
-  L.push('- الموقع: https://fasterfollow.com/', '- واتساب الدعم: +966537763009', '- البريد: support@fasterfollow.com',
+  L.push('- الموقع: https://fasterfollow.com/', '- واتساب الدعم: +966567400584', '- البريد: support@fasterfollow.com',
     '- الدفع: مدى، Apple Pay، STC Pay', '- العملة: الريال السعودي (SAR)', '- كود خصم الطلب الأول: FA10', '');
   L.push('## الأقسام', '');
   for (const [n, u, d] of CATEGORIES) L.push('- [' + n + '](' + u + '): ' + d);

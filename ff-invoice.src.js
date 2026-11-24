@@ -55,7 +55,7 @@
     if (services) msg.push('الخدمة: ' + services);
     if (link) msg.push('الرابط / اليوزر: ' + link);
     if (amount) msg.push('المبلغ: ' + amount + ' ' + currency);
-    o.querySelector('.wa').href = 'https://wa.me/966537763009?text=' + encodeURIComponent(msg.join('\n'));
+    o.querySelector('.wa').href = 'https://wa.me/966567400584?text=' + encodeURIComponent(msg.join('\n'));
     var cp = o.querySelector('.cp');
     if (!orderId) cp.style.display = 'none';
     cp.addEventListener('click', function () {
